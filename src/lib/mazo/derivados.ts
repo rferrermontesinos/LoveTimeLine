@@ -9,7 +9,7 @@ import type { Cara, DatosCarta, VarianteCaja } from "@/lib/carta/tipos";
 import { obtenerPlantilla, obtenerEstilo } from "@/lib/estilos";
 import type { FotoImportada } from "@/lib/importar/procesar";
 import { textoRecuerdos } from "@/lib/carta/textos";
-import { esFoto, type Carta, type CartaFoto, type CartaTexto, type Mazo } from "./tipos";
+import { esFoto, type Carta, type CartaFoto, type CartaTexto, type FotoCaja, type Mazo } from "./tipos";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 
 const ANCHO_FOTO_MM = PRINT.carta.anchoMm + 2 * PRINT.sangradoMm;
@@ -77,6 +77,18 @@ export function fotosVivas(mazo: Pick<Mazo, "cartas" | "caja">): Set<string> {
   const ids = new Set(mazo.cartas.filter(esFoto).map((c) => c.id));
   if (mazo.caja?.origen === "propia") ids.add(mazo.caja.id);
   return ids;
+}
+
+/**
+ * Fotos sueltas al abrir el configurador: de las que había en el dispositivo al abrirlo, las que
+ * no usa ninguno de estos mazos (el guardado y el de ahora). Sin mazo, todas: una importación
+ * cortada antes de guardar el primer mazo no deja fotos personales sin forma de borrarlas. Solo
+ * mira las de antes de abrir: una foto recién guardada cuya carta aún no ha entrado en el mazo
+ * nunca está en la lista.
+ */
+export function fotosSueltas(alAbrir: Iterable<string>, ...mazos: (Pick<Mazo, "cartas" | "caja"> | null)[]): string[] {
+  const vivas = new Set(mazos.flatMap((m) => (m ? [...fotosVivas(m)] : [])));
+  return [...alAbrir].filter((id) => !vivas.has(id));
 }
 
 /** Resolución efectiva de impresión: la peor de las dos caras. */
@@ -195,6 +207,46 @@ export function fotoCaja(mazo: Pick<Mazo, "cartas" | "portadaId" | "caja">): Fot
   const elegida = caja?.origen === "carta" ? mazo.cartas.filter(esFoto).find((c) => c.id === caja.cartaId) : undefined;
   const carta = elegida ?? cartaPortada(mazo);
   return carta ? { id: carta.id, ancho: carta.ancho, recorte: carta.recorteReverso } : null;
+}
+
+/**
+ * Proporción (ancho / alto) de la foto en la cara de la caja personalizada: la misma que en la
+ * portada, a todo el ancho con sangrado y hasta la banda del título.
+ */
+export function proporcionCaja(mazo: Pick<Mazo, "estiloId">): number {
+  const plantilla = obtenerPlantilla(obtenerEstilo(mazo.estiloId).plantilla);
+  return proporcionReverso(PRINT.carta.altoMm - plantilla.portada.banda);
+}
+
+/**
+ * Resolución con la que se imprimiría la foto de la caja. Al dibujarla, el recorte se ajusta a la
+ * proporción de la cara recortando por el centro: si es más ancho, se pierde ancho.
+ */
+export function pppFotoCaja(foto: Pick<FotoDeCaja, "recorte">, proporcion: number): number {
+  const r = foto.recorte;
+  return Math.round(pppEfectivo({ ...r, ancho: Math.min(r.ancho, r.alto * proporcion) }, ANCHO_FOTO_MM));
+}
+
+/**
+ * Foto propia para la caja (una foto que no es carta), con el recorte inicial centrado a la
+ * proporción de la cara de la caja. De la foto solo se guardan sus datos, no los metadatos.
+ */
+export function cajaPropia(
+  f: Pick<FotoImportada, "id" | "nombreArchivo" | "tipoArchivo" | "hash" | "ancho" | "alto" | "anchoOriginal" | "altoOriginal">,
+  proporcion: number,
+): Extract<FotoCaja, { origen: "propia" }> {
+  return {
+    origen: "propia",
+    id: f.id,
+    nombreArchivo: f.nombreArchivo,
+    tipoArchivo: f.tipoArchivo,
+    hash: f.hash,
+    ancho: f.ancho,
+    alto: f.alto,
+    anchoOriginal: f.anchoOriginal,
+    altoOriginal: f.altoOriginal,
+    recorte: recorteCentrado(f.ancho, f.alto, proporcion),
+  };
 }
 
 /**

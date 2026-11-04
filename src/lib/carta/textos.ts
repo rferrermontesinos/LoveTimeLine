@@ -47,6 +47,6 @@ export function nombreDeIdioma(codigo: string, locale: string): string {
 /** Textos del folleto de instrucciones en el idioma del mazo (independiente del de la interfaz). */
 export function textosFolleto(idiomaMazo: string) {
   const m = mensajesDe(idiomaMazo);
-  return { juego: m.juego, modos: m.modos, instrucciones: m.instrucciones, pregunta: m.carta.pregunta, marca: BRAND_NAME };
+  return { idioma: idiomaMazo, juego: m.juego, modos: m.modos, instrucciones: m.instrucciones, pregunta: m.carta.pregunta, marca: BRAND_NAME };
 }
 export type TextosFolleto = ReturnType<typeof textosFolleto>;

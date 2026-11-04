@@ -1,0 +1,120 @@
+/*
+ * Escena de «Cómo se juega» (ver escena.ts): la foto de la mesa de fondo y cada pieza colocada en
+ * % de la escena. Vertical en el móvil y apaisada desde 48rem (768 px), el mismo punto que `md`.
+ * Cada pieza trae sus medidas de los dos formatos en variables (--x-v… vertical, --x-a… apaisada).
+ */
+
+.escena {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border-radius: 28px;
+  background-color: #4a2e1d;
+  background-image: var(--fondo-v);
+  background-size: cover;
+  background-position: center;
+  container-type: inline-size;
+  isolation: isolate;
+}
+
+.pieza {
+  position: absolute;
+  left: var(--x-v);
+  top: var(--y-v);
+  width: var(--w-v);
+  transform: translate(-50%, -50%) rotate(var(--g-v));
+}
+
+.pieza[data-solo="apaisada"] {
+  display: none;
+}
+
+/* Cartas que asoman debajo de otra (mazo de robo, comodines): solo el canto, del color del mazo. */
+.debajo {
+  position: absolute;
+  inset: 0;
+  border-radius: 7%/5%;
+  box-shadow: 0 6px 14px rgba(20, 20, 20, 0.28);
+}
+
+/* El hueco discontinuo de la línea donde va a entrar la carta. */
+.hueco {
+  aspect-ratio: 63 / 88;
+  border: 2px dashed rgba(245, 240, 230, 0.92);
+  border-radius: 7%/5%;
+  background: rgba(245, 240, 230, 0.14);
+}
+
+/* La carta que se va a colocar flota un poco sobre su hueco. */
+.flota {
+  animation: flotar 2.4s ease-in-out infinite alternate;
+}
+
+.flota > * {
+  filter: drop-shadow(0 18px 18px rgba(20, 20, 20, 0.35));
+}
+
+@keyframes flotar {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4%);
+  }
+}
+
+/* Números que remiten a la leyenda. */
+.marca {
+  position: absolute;
+  z-index: 20;
+  left: var(--x-v);
+  top: var(--y-v);
+  width: 7.5%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  box-shadow: 0 2px 8px rgba(20, 20, 20, 0.4);
+  font-weight: 800;
+  font-variation-settings: "opsz" 96, "wdth" 75;
+  font-size: 4.4cqw;
+  line-height: 1;
+}
+
+@media (min-width: 48rem) {
+  .escena {
+    aspect-ratio: 16 / 10;
+    background-image: var(--fondo-a);
+  }
+
+  .pieza {
+    left: var(--x-a);
+    top: var(--y-a);
+    width: var(--w-a);
+    transform: translate(-50%, -50%) rotate(var(--g-a));
+  }
+
+  .pieza[data-solo="apaisada"] {
+    display: block;
+  }
+
+  .pieza[data-solo="vertical"] {
+    display: none;
+  }
+
+  .marca {
+    left: var(--x-a);
+    top: var(--y-a);
+    width: 2.8%;
+    font-size: 1.65cqw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flota {
+    animation: none;
+  }
+}

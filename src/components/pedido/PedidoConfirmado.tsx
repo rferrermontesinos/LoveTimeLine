@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { PRINT } from "@config/print";
+import { DESCARGA_PDF } from "@config/prototipo";
 import { CartaPortada } from "@/components/carta/CartaPortada";
 import { VistaCaja } from "@/components/carta/VistaCaja";
 import { VistaCarta } from "@/components/carta/VistaCarta";
+import { usePrepararSinConexion } from "@/components/crear/SinConexion";
 import { Boton, BotonEnlace } from "@/components/ui/Boton";
 import { Aviso, Franja, Micro } from "@/components/ui/Piezas";
 import { ordenarPorFecha } from "@/domain/mazo/ordenar";
@@ -13,7 +16,6 @@ import type { Catalogo } from "@/domain/precios/tipos";
 import { decodificarFoto } from "@/lib/fotos/cache";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { iconosDelMazo } from "@/lib/mazo/derivados";
-import { descargar, generarPdfMazo, nombreArchivoPdf } from "@/lib/pdf/imprimir";
 import { cartasImpresas, planImpresion } from "@/lib/pdf/plan";
 
 export function PedidoConfirmado({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: string | null }) {
@@ -27,7 +29,6 @@ export function PedidoConfirmado({ catalogo, sessionId }: { catalogo: Catalogo; 
 
 function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: string | null }) {
   const t = useTranslations("confirmado");
-  const tj = useTranslations("juego");
   const locale = useLocale();
   const { estado, mazo, despachar } = useMazo();
   const [verificacion, setVerificacion] = useState<"pagado" | "pendiente" | null>(null);
@@ -35,6 +36,8 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
   const [resultado, setResultado] = useState<"listo" | "error" | null>(null);
   const iconos = useMemo(() => (mazo ? iconosDelMazo(mazo, catalogo) : new Map<string, string>()), [mazo, catalogo]);
   const pedido = mazo?.pedido ?? null;
+  // Para poder volver a esta página sin conexión (el código ya se adelantó en el configurador).
+  usePrepararSinConexion({ precargar: false });
 
   // Vuelta de Stripe: comprobamos el pago en el servidor antes de darlo por hecho.
   const debeComprobar = !!sessionId && !!pedido && pedido.modo === "stripe" && pedido.estado !== "pagado";
@@ -76,14 +79,22 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
   }
 
   const simulado = pedido.modo === "simulado";
+  const pagado = pedido.estado === "pagado";
   const muestra = ordenarPorFecha(mazo.cartas).find((c) => c.fecha) ?? mazo.cartas[0] ?? null;
   const pais = catalogo.paises.find((p) => p.activo);
+  // La descarga del archivo, solo en el prototipo (config/prototipo.ts) y con el pedido pagado.
+  const pasos = [
+    DESCARGA_PDF ? t("paso1", { sangrado: PRINT.sangradoMm, marcas: PRINT.marcasCorte.activas ? "si" : "no" }) : t("paso1SinDescarga"),
+    t("aJugar"),
+  ];
 
   const generar = async () => {
     setResultado(null);
     const plan = planImpresion({ mazo, catalogo, iconos });
     setProgreso({ hecha: 0, total: plan.length * 2 });
     try {
+      // El generador (pdf-lib y el dibujo a 300 ppp) pesa: solo se carga al pedir el archivo.
+      const { descargar, generarPdfMazo, nombreArchivoPdf } = await import("@/lib/pdf/imprimir");
       const bytes = await generarPdfMazo({
         plan,
         estiloId: mazo.estiloId,
@@ -138,25 +149,32 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1200px] gap-6 px-4 pt-10 sm:px-6 lg:grid-cols-2">
-        <section className="relative space-y-4 overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 shadow-[var(--shadow-carta)]">
-          <h2 className="tipo-subtitular text-xl">{t("descargarPdf")}</h2>
-          <p className="text-sm text-tinta-2">{t("textoPrototipo")}</p>
-          <Boton tamano="lg" onClick={() => void generar()} disabled={!!progreso}>
-            {progreso ? t("generando", { hecha: progreso.hecha, total: progreso.total }) : t("descargarPdf")}
-          </Boton>
-          {progreso && <Franja valor={progreso.total ? progreso.hecha / progreso.total : 0} etiqueta={t("generando", { hecha: progreso.hecha, total: progreso.total })} />}
-          <p aria-live="polite" className="min-h-5 text-sm">
-            {resultado === "listo" && <span className="text-verde-texto">✓ {t("pdfListo")}</span>}
-            {resultado === "error" && <span className="text-rojo-texto">{t("pdfError")}</span>}
-          </p>
-        </section>
+      <div className={`mx-auto grid max-w-[1200px] gap-6 px-4 pt-10 sm:px-6 ${DESCARGA_PDF ? "lg:grid-cols-2" : ""}`}>
+        {DESCARGA_PDF && (
+          <section className="relative space-y-4 overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 shadow-[var(--shadow-carta)]" data-testid="bloque-descarga">
+            <h2 className="tipo-subtitular text-xl">{t("archivo")}</h2>
+            <p className="text-sm text-tinta-2">{t("textoPrototipo")}</p>
+            {pagado ? (
+              <>
+                <Boton tamano="lg" onClick={() => void generar()} disabled={!!progreso}>
+                  {progreso ? t("generando", { hecha: progreso.hecha, total: progreso.total }) : t("descargarPdf")}
+                </Boton>
+                {progreso && <Franja valor={progreso.total ? progreso.hecha / progreso.total : 0} etiqueta={t("generando", { hecha: progreso.hecha, total: progreso.total })} />}
+                <p aria-live="polite" className="min-h-5 text-sm">
+                  {resultado === "listo" && <span className="text-verde-texto">✓ {t("pdfListo")}</span>}
+                  {resultado === "error" && <span className="text-rojo-texto">{t("pdfError")}</span>}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm font-semibold">{t("descargaPendiente")}</p>
+            )}
+          </section>
+        )}
 
         <section className="space-y-4 rounded-[var(--radius-carta)] bg-papel-2 p-6">
           <h2 className="tipo-subtitular text-xl">{t("siguientes")}</h2>
           <ol className="space-y-3">
-            {/* Las instrucciones plegables van en la caja: ya no se imprimen desde aquí. */}
-            {[t("paso1"), tj("consejo")].map((texto, i) => (
+            {pasos.map((texto, i) => (
               <li key={i} className="flex gap-3">
                 <span aria-hidden="true" className="tipo-titular grid h-8 w-8 shrink-0 place-items-center rounded-[0_0_10px_0] bg-rosa text-lg">
                   {i + 1}

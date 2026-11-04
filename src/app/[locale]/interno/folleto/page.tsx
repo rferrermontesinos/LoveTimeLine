@@ -26,7 +26,7 @@ export default async function Folleto({
   const mecanicas = catalogo.mecanicas
     .filter((m) => m.activo)
     .sort((a, b) => a.orden - b.orden)
-    .map((m) => ({ id: m.id, icono: m.icono ?? null }));
+    .map((m) => ({ id: m.id, icono: m.icono ?? null, cartasFisicas: m.cartasFisicas }));
   return (
     <>
       <div className="print:hidden">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
@@ -8,12 +8,13 @@ import { Aviso, Chip, Franja, Micro, Pestana } from "@/components/ui/Piezas";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 import { fechaCorta, fechaLegible } from "@/domain/fechas/formato";
 import { sesionDeEscaneo } from "@/domain/fechas/sesion";
-import { guardarFoto } from "@/lib/almacen/idb";
+import { esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo } from "@/lib/importar/procesar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaDesdeFoto, proporcionReversoDe } from "@/lib/mazo/derivados";
-import { esFoto, type Carta, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
+import { ideasParaProponer } from "@/lib/mazo/recuerdos";
+import { esFoto, type Carta, type CartaFoto, type CartaTexto, type Mazo } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 import { SelectorFecha } from "./SelectorFecha";
 
@@ -21,6 +22,8 @@ interface Resumen {
   anadidas: number;
   repetidas: number;
   errores: number;
+  /** Fotos que no se han podido guardar porque no queda espacio en el dispositivo. */
+  sinEspacio: number;
 }
 
 /** Fechas sugeridas puestas de una vez: se puede deshacer mientras el mazo no cambie otra vez. */
@@ -37,7 +40,8 @@ export function PasoFotos() {
   const t = useTranslations();
   const locale = useLocale();
   const { mazo, despachar, puedeDeshacer } = useMazo();
-  const { cotizacion, irAPaso, irASiguientePendiente, pendientes, versiones, hoy } = useCrear();
+  const { cotizacion, irAPaso, irASiguientePendiente, pendientes, versiones, hoy, abrirRecuerdo, recuerdoAnadido } = useCrear();
+  const id = useId();
   const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
   const [resumen, setResumen] = useState<Resumen | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
@@ -48,6 +52,8 @@ export function PasoFotos() {
   const [loteSugeridas, setLoteSugeridas] = useState<LoteSugeridas | null>(null);
   const inputFotos = useRef<HTMLInputElement>(null);
   const inputCarpeta = useRef<HTMLInputElement>(null);
+  // Solo se confirma aquí lo añadido durante esta visita al paso, no un recuerdo de antes.
+  const [anadidoAlEntrar] = useState(recuerdoAnadido);
 
   const hashes = useMemo(() => new Set(mazo?.cartas.filter(esFoto).map((c) => c.hash)), [mazo?.cartas]);
   const consentido = !!mazo?.consentimientoFotos;
@@ -57,16 +63,11 @@ export function PasoFotos() {
       if (!mazo || archivos.length === 0) return;
       const imagenes = archivos.filter(esImagenCompatible);
       const vistos = new Set(hashes);
-      const res: Resumen = { anadidas: 0, repetidas: 0, errores: archivos.length - imagenes.length };
+      const res: Resumen = { anadidas: 0, repetidas: 0, errores: archivos.length - imagenes.length, sinEspacio: 0 };
       setResumen(null);
       setLoteSugeridas(null);
       setProgreso({ hechas: 0, total: imagenes.length });
       const propReverso = proporcionReversoDe(mazo);
-      let lote: Carta[] = [];
-      const volcar = () => {
-        if (lote.length) despachar({ tipo: "anadirCartas", cartas: lote });
-        lote = [];
-      };
       let hechas = 0;
       await enCola(
         imagenes.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
@@ -82,9 +83,11 @@ export function PasoFotos() {
           hechas++;
           if (r.ok && r.valor) {
             res.anadidas++;
-            lote.push(r.valor);
-            if (lote.length >= 6) volcar();
+            // Cada carta entra en el mazo en cuanto su foto está guardada: si la subida se corta
+            // (se cierra la pestaña, se va la batería), lo subido hasta ahí ya está en el mazo.
+            despachar({ tipo: "anadirCartas", cartas: [r.valor] });
           } else if (r.ok) res.repetidas++;
+          else if (esErrorDeEspacio(r.error)) res.sinEspacio++;
           else {
             res.errores++;
             console.warn("No se pudo leer", r.entrada.name, r.error);
@@ -92,7 +95,6 @@ export function PasoFotos() {
           setProgreso({ hechas, total: imagenes.length });
         },
       );
-      volcar();
       setProgreso(null);
       setResumen(res);
     },
@@ -103,12 +105,17 @@ export function PasoFotos() {
   if (loteSugeridas && !loteSugeridas.despues && mazo && mazo !== loteSugeridas.antes) setLoteSugeridas({ ...loteSugeridas, despues: mazo });
 
   if (!mazo) return null;
-  const fotos = mazo.cartas.filter(esFoto);
-  const conFecha = fotos.filter((c) => c.fecha).length;
-  const sugeridas = fotos.filter(conSugerencia).length;
-  const sinFecha = fotos.length - conFecha - sugeridas;
+  // Los recuentos y la cuadrícula cuentan todas las cartas: fotos y recuerdos sin foto.
+  const cartas = mazo.cartas;
+  const conFecha = cartas.filter((c) => c.fecha).length;
+  const sugeridas = cartas.filter(conSugerencia).length;
+  const sinFecha = cartas.length - conFecha - sugeridas;
   // Solo en mazos guardados antes de que las fechas dudosas dejaran de rellenarse solas.
-  const porRevisar = fotos.filter((c) => c.fecha && c.revisar).length;
+  const porRevisar = cartas.filter((c) => c.fecha && c.revisar).length;
+  // Las ideas y los textos de las cartas van en el idioma del mazo, que puede no ser el de la página.
+  const lang = mazo.idiomaMazo.split("-")[0] !== locale.split("-")[0] ? mazo.idiomaMazo : undefined;
+  const ideas = resumen && resumen.anadidas > 0 ? ideasParaProponer(mazo.idiomaMazo, cartas) : [];
+  const anadido = recuerdoAnadido && recuerdoAnadido !== anadidoAlEntrar && cartas.some((c) => c.id === recuerdoAnadido.id) ? recuerdoAnadido : null;
   const sesion = sesionDeEscaneo(mazo.cartas);
   const idsSugeridas = mazo.cartas.filter(conSugerencia).map((c) => c.id);
   const seleccionSugeridas = mazo.cartas.filter((c) => seleccion.has(c.id) && conSugerencia(c)).map((c) => c.id);
@@ -147,6 +154,7 @@ export function PasoFotos() {
         <span className="text-sm leading-relaxed">{t("fotos.consentimiento")}</span>
       </label>
 
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]">
       {/* Zona para soltar */}
       <div
         onDragOver={(e) => {
@@ -204,6 +212,30 @@ export function PasoFotos() {
         <p className={`mt-4 text-sm ${consentido ? "text-tinta-2" : "font-semibold text-tinta"}`}>{consentido ? t("fotos.privacidad") : t("fotos.consentimientoFalta")}</p>
       </div>
 
+      {/* Recuerdos sin foto: no necesitan el permiso de las fotos */}
+      <section aria-labelledby={`${id}-sin-foto`} className="flex flex-col gap-3 rounded-[var(--radius-carta)] bg-blanco p-6 sm:p-8">
+        <div className="flex items-start gap-3">
+          <span aria-hidden="true" className="grid h-12 w-9 shrink-0 place-items-center rounded-[6px] border-2 border-tinta bg-papel text-[0.7rem] font-bold">
+            Aa
+          </span>
+          <div className="min-w-0 space-y-1">
+            <h2 id={`${id}-sin-foto`} className="tipo-subtitular text-lg">
+              {t("fotos.sinFoto.titulo")}
+            </h2>
+            <p className="text-sm text-tinta-2">{t("fotos.sinFoto.texto")}</p>
+          </div>
+        </div>
+        <Boton variante="secundario" tamano="sm" className="mt-auto self-start max-sm:min-h-11" onClick={() => abrirRecuerdo()}>
+          + {t("crear.recuerdo.boton")}
+        </Boton>
+        {anadido && (
+          <p className="text-sm font-semibold text-verde-texto">
+            ✓ <span lang={lang}>{t("crear.recuerdo.anadido", { texto: anadido.texto })}</span>
+          </p>
+        )}
+      </section>
+      </div>
+
       {progreso && (
         <div className="space-y-2" aria-live="polite">
           <Franja valor={progreso.total ? progreso.hechas / progreso.total : 0} etiqueta={t("fotos.procesando", progreso)} />
@@ -211,15 +243,38 @@ export function PasoFotos() {
         </div>
       )}
       {resumen && (
-        <Aviso tono={resumen.errores ? "aviso" : "exito"}>
+        <Aviso tono={resumen.sinEspacio ? "error" : resumen.errores ? "aviso" : "exito"}>
           <span className="font-semibold">{t("fotos.procesadas", { n: resumen.anadidas })}</span>
           {resumen.repetidas > 0 && <> · {t("fotos.repetidas", { n: resumen.repetidas })}</>}
           {resumen.errores > 0 && <> · {t("fotos.errores", { n: resumen.errores })}</>}
+          {resumen.sinEspacio > 0 && <> · {t("fotos.sinEspacio", { n: resumen.sinEspacio })}</>}
         </Aviso>
+      )}
+      {ideas.length > 0 && (
+        <section aria-labelledby={`${id}-pregunta`} className="space-y-2 rounded-[14px] bg-papel-2 p-4" data-testid="ideas-tras-subir">
+          <h2 id={`${id}-pregunta`} className="font-semibold">
+            {t("fotos.sinFoto.pregunta")}
+          </h2>
+          <p className="text-sm text-tinta-2">{t("fotos.sinFoto.preguntaAyuda")}</p>
+          <ul className="flex flex-wrap gap-2">
+            {ideas.map((i) => (
+              <li key={i}>
+                <button type="button" lang={lang} onClick={() => abrirRecuerdo(i)} className={CLASES_IDEA}>
+                  {i}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button type="button" onClick={() => abrirRecuerdo()} className={CLASES_IDEA}>
+                + {t("fotos.sinFoto.otro")}
+              </button>
+            </li>
+          </ul>
+        </section>
       )}
 
       {/* Herramientas: cuántas tienen fecha, sugerencias y acciones */}
-      {fotos.length > 0 && (
+      {cartas.length > 0 && (
         <div className="space-y-3">
           <ul className="flex flex-wrap items-center gap-2" aria-label={t("fotos.resumenFechas")}>
             <li>
@@ -311,18 +366,30 @@ export function PasoFotos() {
       {mazo.cartas.length === 0 && !progreso ? (
         <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>
       ) : (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-6 lg:grid-cols-8" aria-label={t("fotos.titulo")}>
-          {mazo.cartas.filter(esFoto).map((c) => (
-            <Miniatura
-              key={c.id}
-              carta={c}
-              locale={locale}
-              version={versiones[c.id] ?? 0}
-              seleccionable={modoSeleccion}
-              seleccionada={seleccion.has(c.id)}
-              alPulsar={() => (modoSeleccion ? alternar(c.id) : irAPaso(2, c.id))}
-            />
-          ))}
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-6 lg:grid-cols-8" aria-label={t("fotos.tusCartas")}>
+          {cartas.map((c) =>
+            esFoto(c) ? (
+              <Miniatura
+                key={c.id}
+                carta={c}
+                locale={locale}
+                version={versiones[c.id] ?? 0}
+                seleccionable={modoSeleccion}
+                seleccionada={seleccion.has(c.id)}
+                alPulsar={() => (modoSeleccion ? alternar(c.id) : irAPaso(2, c.id))}
+              />
+            ) : (
+              <MiniaturaTexto
+                key={c.id}
+                carta={c}
+                locale={locale}
+                lang={lang}
+                seleccionable={modoSeleccion}
+                seleccionada={seleccion.has(c.id)}
+                alPulsar={() => (modoSeleccion ? alternar(c.id) : irAPaso(2, c.id))}
+              />
+            ),
+          )}
         </ul>
       )}
 
@@ -398,6 +465,9 @@ export function PasoFotos() {
   );
 }
 
+/** Las ideas de recuerdo como chips: mismo aspecto que en el diálogo, con 44 px de alto en el móvil. */
+const CLASES_IDEA = "min-h-10 rounded-full border-2 border-linea bg-blanco px-3.5 text-left text-sm font-semibold transition-colors hover:border-tinta max-sm:min-h-11";
+
 /** Punto de la miniatura y de los contadores: lleno con fecha, en anillo si solo hay sugerencia. */
 function Punto({ estado, color = "var(--color-verde)" }: { estado: "fecha" | "sugerida"; color?: string }) {
   return estado === "fecha" ? (
@@ -469,6 +539,57 @@ function Miniatura({
           {t(`confianza.${confianza}`)}
         </Micro>
       )}
+    </li>
+  );
+}
+
+/** Recuerdo sin foto en la cuadrícula: su texto sobre papel y, abajo, la fecha como en las fotos. */
+function MiniaturaTexto({
+  carta,
+  locale,
+  lang,
+  seleccionable,
+  seleccionada,
+  alPulsar,
+}: {
+  carta: CartaTexto;
+  locale: string;
+  lang: string | undefined;
+  seleccionable: boolean;
+  seleccionada: boolean;
+  alPulsar: () => void;
+}) {
+  const t = useTranslations("fotos");
+  const estadoFecha = carta.fecha ? fechaLegible(carta.fecha, locale) : t("sinFecha");
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={alPulsar}
+        aria-pressed={seleccionable ? seleccionada : undefined}
+        aria-label={`${t("recuerdoSinFoto", { texto: carta.descripcion })}. ${estadoFecha}`}
+        className={`group relative block w-full overflow-hidden rounded-[12px] bg-blanco text-left shadow-[inset_0_0_0_2px_var(--color-linea)] outline-offset-2 transition-shadow hover:shadow-[inset_0_0_0_2px_var(--color-tinta)] ${seleccionada ? "outline outline-4 outline-cobalto" : ""}`}
+      >
+        <span className="flex aspect-[63/88] w-full items-center justify-center px-2.5 pb-8 pt-3">
+          <span lang={lang} className="line-clamp-5 break-words text-center text-[0.8rem] font-semibold leading-snug">
+            {carta.descripcion}
+          </span>
+        </span>
+        {carta.destacada && (
+          <span className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-tinta text-[13px] text-rosa" title={t("estrella")}>
+            ★
+          </span>
+        )}
+        {seleccionable && (
+          <span className={`absolute left-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-md border-2 border-papel text-sm font-bold ${seleccionada ? "bg-cobalto text-papel" : "bg-tinta/40"}`}>
+            {seleccionada ? "✓" : ""}
+          </span>
+        )}
+        <span className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 rounded-b-[12px] bg-papel-2 px-2 py-1.5 text-[0.75rem] font-semibold">
+          {carta.fecha && <Punto estado="fecha" />}
+          <span className="truncate">{carta.fecha ? fechaCorta(carta.fecha, locale) : t("sinFecha")}</span>
+        </span>
+      </button>
     </li>
   );
 }

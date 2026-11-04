@@ -16,9 +16,13 @@ import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaPortada, fotoCaja } from "@/lib/mazo/derivados";
 import { esFoto, type CampoMazo, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
+import { BloqueCaja } from "./BloqueCaja";
 import { useCrear } from "./contexto";
 
-/** Paso 3: estilo, color, portada, dedicatoria, tono, idioma y mecánicas gratis, con la vista previa al lado. */
+/**
+ * Paso 3: colores (la elección principal), título, dedicatoria, portada, caja, tono, idioma y
+ * mecánicas gratis, con la vista previa al lado. El estilo solo se elige si hay más de uno.
+ */
 export function PasoEstilo() {
   const t = useTranslations("estilo");
   const tc = useTranslations("comun");
@@ -34,6 +38,7 @@ export function PasoEstilo() {
   const plantilla = obtenerPlantilla(estilo.plantilla);
   const cambiar = <C extends CampoMazo>(campo: C, valor: Mazo[C]) => despachar({ tipo: "cambiar", campo, valor });
   const portada = cartaPortada(mazo);
+  const fotos = mazo.cartas.filter(esFoto);
   const muestra = mazo.cartas.find((c) => c.fecha && c.id !== portada?.id) ?? mazo.cartas.find((c) => c.id !== portada?.id) ?? portada;
   const mecanicas = catalogo.mecanicas.filter((m) => m.activo).sort((a, b) => a.orden - b.orden);
   const versionPortada = portada ? (versiones[portada.id] ?? 0) : 0;
@@ -79,49 +84,52 @@ export function PasoEstilo() {
         </aside>
 
         <div className="min-w-0 space-y-9">
-          <Bloque titulo={t("estilo")}>
-            <div role="radiogroup" aria-label={t("estilo")} className="grid gap-3 sm:grid-cols-2">
-              {ESTILOS.map((e) => {
-                const activo = e.id === estilo.id;
-                return (
-                  <Opcion key={e.id} nombre={`${id}-estilo`} activo={activo} alElegir={() => cambiar("estiloId", e.id)} etiqueta={textoEn(e.nombre, locale)}>
-                    <span
-                      className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-[16px] border-2 bg-blanco p-4 pl-[4.5rem] transition-colors ${activo ? "border-tinta" : "border-transparent hover:border-linea"}`}
-                    >
-                      <span aria-hidden="true" className="tipo-titular absolute left-0 top-0 flex h-[60px] w-[44px] items-start rounded-[0_0_14px_0] pl-2.5 pt-2 text-[28px] leading-[0.85]" style={{ background: obtenerPaleta(e, null).fondo, color: obtenerPaleta(e, null).texto }}>
-                        ?
+          {ESTILOS.length > 1 && (
+            <Bloque titulo={t("estilo")}>
+              <div role="radiogroup" aria-label={t("estilo")} className="grid gap-3 sm:grid-cols-2">
+                {ESTILOS.map((e) => {
+                  const activo = e.id === estilo.id;
+                  return (
+                    <Opcion key={e.id} nombre={`${id}-estilo`} activo={activo} alElegir={() => cambiar("estiloId", e.id)} etiqueta={textoEn(e.nombre, locale)}>
+                      <span
+                        className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-[16px] border-2 bg-blanco p-4 pl-[4.5rem] transition-colors ${activo ? "border-tinta" : "border-transparent hover:border-linea"}`}
+                      >
+                        <span aria-hidden="true" className="tipo-titular absolute left-0 top-0 flex h-[60px] w-[44px] items-start rounded-[0_0_14px_0] pl-2.5 pt-2 text-[28px] leading-[0.85]" style={{ background: obtenerPaleta(e, null).fondo, color: obtenerPaleta(e, null).texto }}>
+                          ?
+                        </span>
+                        <span className="font-bold">{textoEn(e.nombre, locale)}</span>
+                        <span className="text-sm text-tinta-2">{textoEn(e.descripcion, locale)}</span>
+                        <span aria-hidden="true" className="mt-auto flex gap-1.5 pt-1">
+                          {e.paletas.map((ti) => (
+                            <span key={ti.id} className="h-4 w-4 rounded-full ring-1 ring-tinta/15" style={{ background: ti.fondo }} />
+                          ))}
+                        </span>
+                        {activo && <Marca />}
                       </span>
-                      <span className="font-bold">{textoEn(e.nombre, locale)}</span>
-                      <span className="text-sm text-tinta-2">{textoEn(e.descripcion, locale)}</span>
-                      <span aria-hidden="true" className="mt-auto flex gap-1.5 pt-1">
-                        {e.paletas.map((ti) => (
-                          <span key={ti.id} className="h-4 w-4 rounded-full ring-1 ring-tinta/15" style={{ background: ti.fondo }} />
-                        ))}
-                      </span>
-                      {activo && <Marca />}
-                    </span>
-                  </Opcion>
-                );
-              })}
-            </div>
-          </Bloque>
+                    </Opcion>
+                  );
+                })}
+              </div>
+            </Bloque>
+          )}
 
-          <Bloque titulo={t("tinta")}>
-            <div role="radiogroup" aria-label={t("tinta")} className="flex flex-wrap gap-4">
+          {/* Colores: cada muestra es una carta pequeña con el fondo, el texto y el detalle de acento. */}
+          <Bloque titulo={t("tinta")} ayuda={t("tintaAyuda")}>
+            <div role="radiogroup" aria-label={t("tinta")} className="flex flex-wrap gap-x-3 gap-y-4">
               {estilo.paletas.map((ti) => {
                 const activo = ti.id === paleta.id;
                 return (
                   <Opcion key={ti.id} nombre={`${id}-tinta`} activo={activo} alElegir={() => cambiar("paletaId", ti.id)} etiqueta={textoEn(ti.nombre, locale)}>
-                    <span className="flex w-20 flex-col items-center gap-2">
+                    <span className="flex w-[4.75rem] flex-col items-center gap-2">
                       <span
                         aria-hidden="true"
-                        className={`relative block h-16 w-16 overflow-hidden rounded-full ring-offset-2 ring-offset-papel transition-shadow ${activo ? "ring-[3px] ring-tinta" : "ring-1 ring-tinta/15"}`}
+                        className={`relative block h-[88px] w-[63px] overflow-hidden rounded-[10px] ring-offset-2 ring-offset-papel transition-shadow ${activo ? "ring-[3px] ring-tinta" : "ring-1 ring-tinta/15"}`}
                         style={{ background: ti.fondo }}
                       >
-                        <span className="absolute inset-x-0 bottom-[22%] flex h-2.5 gap-[2px] px-2" style={{ background: ti.acento }} />
-                        <span className="tipo-titular absolute left-3 top-2 text-xl leading-none" style={{ color: ti.texto }}>
+                        <span className="tipo-titular absolute left-2 top-2 text-[1.4rem] leading-none" style={{ color: ti.texto }}>
                           19
                         </span>
+                        <span className="absolute left-2 top-[2.45rem] h-[3px] w-5 rounded-full" style={{ background: ti.acento }} />
                       </span>
                       <span className={`text-center text-sm ${activo ? "font-bold" : "text-tinta-2"}`}>{textoEn(ti.nombre, locale)}</span>
                     </span>
@@ -173,10 +181,11 @@ export function PasoEstilo() {
             </p>
           </Bloque>
 
-          <Bloque titulo={t("portada")} ayuda={mazo.cartas.length ? t("portadaAyuda") : t("sinFotos")}>
-            {mazo.cartas.length > 0 && (
+          {/* La portada solo puede llevar una foto: los recuerdos sin foto no se ofrecen. */}
+          <Bloque titulo={t("portada")} ayuda={fotos.length ? t("portadaAyuda") : t("sinFotos")}>
+            {fotos.length > 0 && (
               <div role="radiogroup" aria-label={t("portada")} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 pt-1 sm:mx-0 sm:px-1">
-                {mazo.cartas.filter(esFoto).map((c) => (
+                {fotos.map((c) => (
                   <MiniPortada
                     key={c.id}
                     carta={c}
@@ -190,6 +199,8 @@ export function PasoEstilo() {
               </div>
             )}
           </Bloque>
+
+          <BloqueCaja />
 
           <Bloque titulo={t("tono")}>
             <div role="radiogroup" aria-label={t("tono")} className="flex flex-wrap gap-3">

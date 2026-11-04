@@ -3,6 +3,9 @@
  * con uno o varios espacios de nombres de primer nivel; aquí se juntan en un solo objeto.
  * Para añadir un idioma: copiar la carpeta messages/es, traducirla y sumarla aquí y en
  * src/i18n/routing.ts. TypeScript exige que cada idioma tenga las mismas claves que el español.
+ * Excepción: messages/<idioma>/interno.json (textos de las herramientas internas) no se junta
+ * aquí a propósito, para que no llegue a las páginas públicas; lo carga
+ * src/lib/carta/textosInternos.ts solo desde /interno.
  */
 import carta from "./es/carta.json";
 import cartas from "./es/cartas.json";

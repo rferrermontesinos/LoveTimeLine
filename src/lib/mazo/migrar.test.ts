@@ -77,6 +77,14 @@ describe("migrar un mazo guardado", () => {
     expect(migrarMazo(actual)).toEqual(actual);
   });
 
+  it("recuerda la carta abierta del paso 2, si la hay", () => {
+    const actual = migrarMazo(v1())!;
+    expect(actual.cartaAbierta).toBeUndefined();
+    expect(migrarMazo({ ...actual, cartaAbierta: "a" })?.cartaAbierta).toBe("a");
+    expect(migrarMazo({ ...actual, cartaAbierta: null })?.cartaAbierta).toBeNull();
+    expect(migrarMazo({ ...actual, cartaAbierta: 7 })?.cartaAbierta).toBeUndefined();
+  });
+
   it("descarta lo que no se puede leer y arregla lo que se puede", () => {
     expect(migrarMazo(null)).toBeNull();
     expect(migrarMazo("mazo")).toBeNull();

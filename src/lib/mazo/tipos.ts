@@ -127,6 +127,8 @@ export interface Mazo {
   /** Momento en que se aceptó el permiso para usar las fotos (RGPD). */
   consentimientoFotos: number | null;
   paso: Paso;
+  /** Carta abierta en el paso 2, para volver a ella otro día. Opcional: los mazos antiguos no la traen. */
+  cartaAbierta?: string | null;
   cartas: Carta[];
   pedido: Pedido | null;
 }

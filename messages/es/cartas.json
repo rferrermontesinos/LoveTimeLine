@@ -26,6 +26,9 @@
     "descripcionAyuda": "Sale en la cara de la fecha. Hasta {max} caracteres.",
     "descripcionContador": "{n} / {max}",
     "descripcionEnAnverso": "Mostrarla también en la cara de la foto, como pista",
+    "textoRecuerdo": "Texto del recuerdo",
+    "textoRecuerdoAyuda": "Sale en las dos caras de la carta. Hasta {max} caracteres.",
+    "completarHueco": "Completar <h>{hueco}</h>",
     "estrella": "Recuerdo estrella",
     "estrellaAyuda": "Quien la acierte, juega otra vez. Hasta {max} por mazo.",
     "estrellaMax": "Ya tienes {max} recuerdos estrella.",
@@ -39,8 +42,24 @@
     "calidadJusta": "Justa ({ppp} ppp): puede verse algo borrosa",
     "calidadConfirmar": "Imprimir igualmente",
     "calidadConfirmada": "Confirmado: se imprimirá así",
-    "sinCartas": "Primero añade fotos en el paso 1.",
+    "sinCartas": "Aún no hay cartas. Añade fotos en el paso 1 o escribe un recuerdo sin foto.",
     "irAFotos": "Ir a las fotos",
-    "atajos": "Atajos: ← y → para moverte entre cartas."
+    "atajos": "Atajos: ← y → para moverte entre cartas.",
+    "ideas": {
+      "conocimos": "El día que nos conocimos",
+      "primeraCita": "Nuestra primera cita",
+      "primerBeso": "Nuestro primer beso",
+      "primerViaje": "Primer viaje juntos",
+      "vivirJuntos": "Nos fuimos a vivir juntos",
+      "llaves": "Nos dieron las llaves de casa",
+      "prometimos": "Nos prometimos",
+      "boda": "Nuestra boda",
+      "nacio": "Nació [nombre]",
+      "abuelo": "Nacimiento del abuelo [nombre]",
+      "bodaAbuelos": "Boda de los abuelos",
+      "cole": "Primer día de cole de [nombre]",
+      "mascota": "Llegó [mascota] a casa",
+      "bodasPlata": "Bodas de plata"
+    }
   }
 }

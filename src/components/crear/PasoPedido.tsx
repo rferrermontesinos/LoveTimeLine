@@ -3,6 +3,7 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PRINT } from "@config/print";
+import { VistaCaja } from "@/components/carta/VistaCaja";
 import { VistaCarta } from "@/components/carta/VistaCarta";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso, Interruptor } from "@/components/ui/Piezas";
@@ -13,10 +14,13 @@ import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from 
 import { textoEn } from "@/domain/precios/tipos";
 import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
-import { paraValidar } from "@/lib/mazo/derivados";
+import { extraCajaPersonalizada, fotoCaja, paraValidar } from "@/lib/mazo/derivados";
 import { esFoto, esTexto } from "@/lib/mazo/tipos";
 import type { Carta, Pedido } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
+import { OfertasPedido } from "./Ofertas";
+import { OpcionesPack } from "./SelectorPack";
+import { useSinConexion } from "./SinConexion";
 
 interface RespuestaCheckout {
   modo: "simulado" | "stripe";
@@ -28,19 +32,22 @@ interface RespuestaCheckout {
   sessionId?: string;
 }
 
-/** Paso 4: la línea del tiempo ordenada, las comprobaciones, los extras y el pago. */
+/** Paso 4: la línea del tiempo ordenada, las comprobaciones, el pack y sus ofertas, los extras y el pago. */
 export function PasoPedido() {
   const t = useTranslations("pedido");
   const tc = useTranslations("comun");
+  const tr = useTranslations("crear.recuerdo");
+  const tg = useTranslations("crear.guardado");
   const locale = useLocale();
   const router = useRouter();
   const id = useId();
-  const { mazo, despachar, guardarAhora } = useMazo();
-  const { catalogo, cotizacion, iconos, irAPaso, versiones } = useCrear();
+  const { mazo, despachar, guardarAhora, guardado } = useMazo();
+  const { catalogo, cotizacion, iconos, irAPaso, versiones, abrirRecuerdo } = useCrear();
   const hoy = useMemo(() => new Date(), []);
   const [revisado, setRevisado] = useState(false);
   const [pagando, setPagando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const sinConexion = useSinConexion();
 
   const validacion = useMemo(
     () =>
@@ -56,8 +63,12 @@ export function PasoPedido() {
   const dinero = (cents: number) => formatearImporte(cents, cotizacion.moneda, locale);
   const bloqueantes = validacion.avisos.filter((a) => GRAVEDAD[a.tipo] === "bloquea");
   const puedePagar = validacion.puedePagar && cotizacion.sePuedePagar;
+  // Sin conexión no se llega a Stripe; con el mazo cambiado en otra pestaña, esta no puede guardar el pedido.
+  const enConflicto = guardado.tipo === "conflicto";
   const extras = catalogo.extras.filter((x) => x.activo).sort((a, b) => a.orden - b.orden);
   const base = baseMazo(cotizacion);
+  const idCaja = extraCajaPersonalizada(catalogo)?.id ?? null;
+  const caja = fotoCaja(mazo);
 
   const etiquetaLinea = (l: LineaCotizacion): string => {
     switch (l.tipo) {
@@ -105,9 +116,14 @@ export function PasoPedido() {
   const accionAviso = (a: AvisoMazo) => {
     if (a.tipo === "faltan-cartas")
       return (
-        <Boton tamano="sm" variante="secundario" onClick={() => irAPaso(1)}>
-          {t("anadirFotos")}
-        </Boton>
+        <div className="flex flex-wrap gap-2">
+          <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={() => irAPaso(1)}>
+            {t("anadirFotos")}
+          </Boton>
+          <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={() => abrirRecuerdo()}>
+            {tr("boton")}
+          </Boton>
+        </div>
       );
     const carta = primeraCarta(a);
     return (
@@ -226,6 +242,18 @@ export function PasoPedido() {
             )}
           </section>
 
+          {/* El pack, para cambiarlo aquí mismo, y sus ofertas */}
+          <section aria-labelledby={`${id}-pack`} className="space-y-3">
+            <div>
+              <h2 id={`${id}-pack`} className="tipo-subtitular text-xl">
+                {t("pack.titulo")}
+              </h2>
+              <p className="mt-1 text-sm text-tinta-2">{t("pack.ayuda")}</p>
+            </div>
+            <OpcionesPack />
+            <OfertasPedido />
+          </section>
+
           {/* Extras de pago */}
           <section aria-labelledby={`${id}-extras`} className="space-y-3">
             <h2 id={`${id}-extras`} className="tipo-subtitular text-xl">
@@ -249,6 +277,20 @@ export function PasoPedido() {
                       }
                       descripcion={textoEn(x.descripcion, locale)}
                     />
+                    {activo && x.id === idCaja && (
+                      <div className="mt-3 flex items-center gap-3 border-t border-linea pt-3">
+                        <VistaCaja mazo={mazo} catalogo={catalogo} cara="anverso" variante="personalizada" etiquetas={null} version={caja ? (versiones[caja.id] ?? 0) : 0} ancho={52} className="shrink-0" />
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <p className="text-sm">
+                            <span className="font-semibold">{t("fotoCaja")}</span>
+                            {!caja && <span className="block text-tinta-2">{t("sinFotoCaja")}</span>}
+                          </p>
+                          <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={() => irAPaso(3, undefined, "caja")}>
+                            {caja ? t("cambiarFotoCaja") : t("elegirFotoCaja")}
+                          </Boton>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -258,13 +300,8 @@ export function PasoPedido() {
 
         {/* Resumen y pago */}
         <aside aria-labelledby={`${id}-resumen`} className="lg:sticky lg:top-36 lg:self-start">
-          <div className="relative overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 shadow-[var(--shadow-carta)]">
-            <span aria-hidden="true" className="absolute inset-x-0 top-0 flex h-3 gap-[3px] bg-rojo px-2 py-[3px]">
-              {Array.from({ length: 12 }, (_, i) => (
-                <span key={i} className="flex-1 rounded-[2px] bg-papel/70" />
-              ))}
-            </span>
-            <h2 id={`${id}-resumen`} className="tipo-subtitular mt-2 text-xl">
+          <div className="rounded-[var(--radius-carta)] bg-blanco p-6 shadow-[var(--shadow-carta)]">
+            <h2 id={`${id}-resumen`} className="tipo-subtitular text-xl">
               {t("resumen")}
             </h2>
             <dl className="mt-4 divide-y divide-linea text-sm">
@@ -288,11 +325,27 @@ export function PasoPedido() {
               {t("confirmacion")}
             </label>
 
-            <Boton tamano="lg" className="mt-5 w-full" disabled={!puedePagar || !revisado || pagando} onClick={() => void pagar()} aria-describedby={`${id}-estado-pago`}>
+            <Boton
+              tamano="lg"
+              className="mt-5 w-full"
+              disabled={!puedePagar || !revisado || pagando || sinConexion || enConflicto}
+              onClick={() => void pagar()}
+              aria-describedby={`${id}-estado-pago`}
+            >
               {pagando ? t("pagando") : t("pagarPrueba", { total: dinero(cotizacion.totalCents) })}
             </Boton>
             <p id={`${id}-estado-pago`} className="mt-2 min-h-5 text-sm" aria-live="polite">
-              {!puedePagar && bloqueantes.length > 0 ? <span className="text-rojo-texto">{t("bloquea")}</span> : !revisado ? <span className="text-tinta-2">{t("faltaConfirmar")}</span> : null}
+              {!puedePagar && bloqueantes.length > 0 ? (
+                <span className="text-rojo-texto">{t("bloquea")}</span>
+              ) : sinConexion ? (
+                <span className="text-tinta-2" data-testid="motivo-sin-conexion">
+                  {t("sinConexionPagar")}
+                </span>
+              ) : enConflicto ? (
+                <span className="text-tinta-2">{tg("conflicto")}</span>
+              ) : !revisado ? (
+                <span className="text-tinta-2">{t("faltaConfirmar")}</span>
+              ) : null}
             </p>
             {error && (
               <Aviso tono="error" className="mt-3">

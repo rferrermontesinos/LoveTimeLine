@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 /** Diálogo modal nativo: foco atrapado y Escape para cerrar sin código extra. */
 export function Dialogo({
@@ -19,6 +20,7 @@ export function Dialogo({
   ancho?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const t = useTranslations("comun");
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -42,8 +44,14 @@ export function Dialogo({
             <h2 id="dialogo-titulo" className="tipo-titular text-xl">
               {titulo}
             </h2>
-            <button type="button" onClick={alCerrar} className="grid h-10 w-10 place-items-center rounded-full text-xl hover:bg-papel-2" aria-label="Cerrar">
-              ×
+            <button
+              type="button"
+              onClick={alCerrar}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl hover:bg-papel-2 max-sm:h-11 max-sm:w-11"
+              aria-label={t("cerrar")}
+              title={t("cerrar")}
+            >
+              <span aria-hidden="true">×</span>
             </button>
           </header>
           <div className="overflow-y-auto px-5 py-4">{children}</div>

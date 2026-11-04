@@ -33,6 +33,16 @@ export function tieneHueco(texto: string): boolean {
   return HUECO.test(texto);
 }
 
+/**
+ * Posición del primer hueco (con sus corchetes), para dejarlo seleccionado y escribir encima el
+ * nombre. Null si no hay. Las posiciones son las de JavaScript (unidades UTF-16), como las de
+ * `setSelectionRange`.
+ */
+export function rangoHueco(texto: string): { inicio: number; fin: number } | null {
+  const m = HUECO.exec(texto);
+  return m ? { inicio: m.index, fin: m.index + m[0].length } : null;
+}
+
 /** Lo que le falta a una carta de texto: nada, el texto o rellenar un hueco. */
 export function textoPendiente(texto: string): "texto-vacio" | "texto-con-hueco" | null {
   if (!texto.trim()) return "texto-vacio";

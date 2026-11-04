@@ -35,8 +35,8 @@
     "incluido": "Included",
     "desde": "from {precio}",
     "cargando": "Loading…",
-    "guardadoLocal": "Saved on this device",
     "anverso": "Photo side",
+    "anversoTexto": "Memory side",
     "reverso": "Date side",
     "verAnverso": "Show the photo side",
     "verReverso": "Show the date side"
@@ -48,7 +48,9 @@
   },
   "pie": {
     "texto": "{marca} is a placeholder name. Prototype for print tests.",
-    "fuentes": "Typeface Bricolage Grotesque (SIL OFL 1.1)."
+    "fuentes": "Typeface Bricolage Grotesque (SIL OFL 1.1).",
+    "fotos": "Sample photos: {fuente}",
+    "fotosAutores": "see photographers"
   },
   "privacidadPagina": {
     "titulo": "Privacy",
@@ -63,6 +65,10 @@
       "4": "We don’t run third-party analytics on your images or send them to other services.",
       "5": "You can ask us at any time to delete your deck and your data."
     },
+    "fotosTitulo": "Sample photos",
+    "fotosTexto": "The photos on the sample cards and the table in “How to play” come from {fuente}. The people in them have nothing to do with {marca}: the memories, names and dates on the cards are made up.",
+    "fotosLicencia": "Licence: <enlace>{licencia}</enlace>.",
+    "fotosDe": "<enlace>{descripcion}</enlace>, by {fotografo}",
     "contacto": "Contact: {email}"
   }
 }

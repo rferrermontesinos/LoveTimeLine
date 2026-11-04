@@ -1,14 +1,17 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso } from "@/components/ui/Piezas";
 import { formatearImporte } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { useMazo } from "@/lib/mazo/contexto";
+import { ofertaPrincipal } from "@/lib/mazo/ofertas";
 import type { Paso } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
+import { IconoOferta, useTextoOferta } from "./Ofertas";
+import { DialogoPack } from "./SelectorPack";
 
 const PASOS: { n: Paso; clave: "fotos" | "cartas" | "estilo" | "pedido" }[] = [
   { n: 1, clave: "fotos" },
@@ -64,16 +67,20 @@ export function BarraPasos() {
 }
 
 /**
- * Barra inferior fija: cuántas fotos llevas frente al mínimo, total y siguiente paso. En el paso
- * de cartas, si falta alguna por completar, «Siguiente: estilo» se desactiva y la barra dice
- * cuántas faltan, con un botón para ir a la siguiente.
+ * Barra inferior fija: el pack (con su selector), cuántas cartas llevas frente al mínimo, una
+ * línea de oferta si la hay, el total y el siguiente paso. En el paso de cartas, si falta alguna
+ * por completar, «Siguiente: estilo» se desactiva y la barra dice cuántas faltan, con un botón
+ * para ir a la siguiente (y la oferta espera: primero, completar las cartas).
  */
 export function BarraAccion() {
   const t = useTranslations("crear");
+  const tc = useTranslations("comun");
   const locale = useLocale();
-  const { mazo } = useMazo();
+  const { mazo, despachar } = useMazo();
   const { cotizacion, irAPaso, pasoActual, pendientes, puedeAvanzar, cartaActiva, irASiguientePendiente } = useCrear();
+  const [dialogoPack, setDialogoPack] = useState(false);
   const idFaltan = useId();
+  const textoDe = useTextoOferta();
   if (!mazo || !cotizacion) return null;
   const siguiente: Record<number, { texto: string; paso: Paso } | null> = {
     1: { texto: t("barra.siguienteCartas"), paso: 2 },
@@ -85,6 +92,8 @@ export function BarraAccion() {
   const completo = cotizacion.faltan === 0;
   const bloqueado = pasoActual === 2 && mazo.cartas.length > 0 && !puedeAvanzar;
   const desactivado = s ? (s.paso === 2 ? mazo.cartas.length === 0 : s.paso >= 3 && !puedeAvanzar) : false;
+  // En Pedido la oferta va en su propio bloque, con más detalle.
+  const oferta = !bloqueado && pasoActual !== 4 ? ofertaPrincipal(cotizacion.ofertas) : null;
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 border-t border-linea bg-papel/97 shadow-[var(--shadow-flotante)] backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
@@ -103,29 +112,58 @@ export function BarraAccion() {
             </span>
           </Aviso>
         )}
-        <div className="flex items-center justify-between gap-3 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              <span className="hidden sm:inline">{t("pack", { pack: textoEn(cotizacion.pack.nombre, locale) })} · </span>
-              {t(mazo.cartas.length > cotizacion.minimo ? "contadorCompleto" : "contador", { actual: mazo.cartas.length, minimo: cotizacion.minimo })}
+        {oferta && (
+          <div className="flex items-center gap-x-3 gap-y-1 border-b border-linea py-2 text-sm max-sm:flex-wrap" data-testid="oferta-barra">
+            <p className="flex min-w-0 flex-1 items-start gap-2">
+              <IconoOferta tipo={oferta.tipo} />
+              <span>{textoDe(oferta, cotizacion.moneda)}</span>
             </p>
-            <p className={`text-sm ${completo ? "text-verde-texto" : "text-tinta-2"}`} aria-live="polite">
-              {completo ? `✓ ${t("barra.minimoCubierto")}` : t("barra.faltan", { n: cotizacion.faltan })}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <p className="hidden text-right sm:block">
-              <span className="tipo-micro block text-micro text-tinta-2">{t("barra.total")}</span>
-              <span className="tipo-titular text-xl leading-none">{formatearImporte(cotizacion.totalCents, cotizacion.moneda, locale)}</span>
-            </p>
-            {s && (
-              <Boton onClick={() => irAPaso(s.paso)} disabled={desactivado} aria-describedby={bloqueado ? idFaltan : undefined}>
-                {s.texto} →
+            {oferta.tipo === "bajar" && (
+              <Boton tamano="sm" variante="secundario" className="shrink-0 max-sm:min-h-11" onClick={() => despachar({ tipo: "cambiar", campo: "packId", valor: oferta.pack.id })}>
+                {t("ofertas.cambiarA", { pack: textoEn(oferta.pack.nombre, locale) })}
               </Boton>
             )}
           </div>
+        )}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2.5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:py-3">
+          <button
+            type="button"
+            onClick={() => setDialogoPack(true)}
+            aria-haspopup="dialog"
+            className="col-start-1 row-start-1 -mx-1.5 inline-flex min-h-9 items-center gap-1 justify-self-start rounded-[8px] px-1.5 text-left text-sm font-semibold hover:bg-papel-2 max-sm:min-h-11"
+          >
+            <span className="truncate">{t("pack", { pack: textoEn(cotizacion.pack.nombre, locale) })}</span>
+            <span className="sr-only"> · {t("packs.cambiar")}</span>
+            <svg aria-hidden="true" viewBox="0 0 12 12" className="h-3 w-3 shrink-0">
+              <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <p className={`col-start-1 row-start-2 truncate text-sm ${completo ? "text-verde-texto" : "text-tinta-2"}`} aria-live="polite">
+            {t(mazo.cartas.length > cotizacion.minimo ? "contadorCompleto" : "contador", { actual: mazo.cartas.length, minimo: cotizacion.minimo })}
+            <span className="max-sm:hidden"> · </span>
+            <span className="max-sm:sr-only">{completo ? `✓ ${t("barra.minimoCubierto")}` : t("barra.faltan", { n: cotizacion.faltan })}</span>
+          </p>
+          <p className="col-start-2 row-start-1 text-right sm:row-span-2 sm:row-start-1">
+            <span className="tipo-micro mr-1.5 text-micro text-tinta-2 sm:mr-0 sm:block">{t("barra.total")}</span>
+            <span className="tipo-titular text-lg leading-none sm:text-xl">{formatearImporte(cotizacion.totalCents, cotizacion.moneda, locale)}</span>
+          </p>
+          {s && (
+            <Boton
+              onClick={() => irAPaso(s.paso)}
+              disabled={desactivado}
+              aria-describedby={bloqueado ? idFaltan : undefined}
+              className="col-start-2 row-start-2 max-sm:min-h-11 max-sm:px-4 sm:col-start-3 sm:row-span-2 sm:row-start-1"
+            >
+              {/* En el móvil se ve solo «Siguiente»; el nombre accesible sigue siendo el completo. */}
+              <span aria-hidden="true" className="sm:hidden">
+                {tc("siguiente")}
+              </span>
+              <span className="max-sm:sr-only">{s.texto}</span> →
+            </Boton>
+          )}
         </div>
       </div>
+      <DialogoPack abierto={dialogoPack} alCerrar={() => setDialogoPack(false)} />
     </div>
   );
 }

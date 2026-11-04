@@ -22,8 +22,12 @@ export interface MecanicaMuestrario {
   nombre: string;
 }
 
-/** Fotos de ejemplo generadas para la web (public/muestras): nunca fotos de clientes. */
-const FOTOS = { mar: "/muestras/mar.jpg", luces: "/muestras/luces.jpg", montanas: "/muestras/montanas.jpg" } as const;
+/**
+ * Fotos de muestra de la web (public/muestras, de Pexels; créditos en public/muestras/creditos.json),
+ * nunca fotos de clientes. Las claves son las de las cartas de ejemplo: «mar» es el viaje, «luces»
+ * el recuerdo estrella y «montanas» la foto de la caja.
+ */
+const FOTOS = { mar: "/muestras/playa.jpg", luces: "/muestras/nochevieja.jpg", montanas: "/muestras/montana.jpg" } as const;
 type ClaveFoto = keyof typeof FOTOS;
 type Imagenes = Record<ClaveFoto, ImageBitmap | null>;
 

@@ -44,6 +44,8 @@ export function migrarMazo(guardado: unknown): Mazo | null {
     mecanicas: Array.isArray(m.mecanicas) ? m.mecanicas.filter((x): x is string => typeof x === "string") : [],
     extras: Array.isArray(m.extras) ? m.extras.filter((x): x is string => typeof x === "string") : [],
     paso,
+    // Opcional: los mazos guardados antes no la tienen y se abren sin carta abierta.
+    cartaAbierta: typeof m.cartaAbierta === "string" || m.cartaAbierta === null ? m.cartaAbierta : undefined,
     cartas,
   };
 }

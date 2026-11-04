@@ -2,6 +2,9 @@ import { getTranslations } from "next-intl/server";
 import { BRAND_NAME } from "@config/brand";
 import { Link } from "@/i18n/navigation";
 import { Marca } from "./Cabecera";
+import { CREDITOS_FOTOS } from "./creditosFotos";
+
+const ENLACE = "inline-flex min-h-11 items-center hover:underline";
 
 export async function Pie() {
   const t = await getTranslations("pie");
@@ -13,15 +16,21 @@ export async function Pie() {
           <Marca className="[&_span:last-child]:text-papel" />
           <p className="max-w-md text-sm text-papel/80">{t("texto", { marca: BRAND_NAME })}</p>
           <p className="text-sm text-papel/70">{t("fuentes")}</p>
+          <p className="text-sm text-papel/70" data-creditos-fotos>
+            {t("fotos", { fuente: CREDITOS_FOTOS.fuente })} ·{" "}
+            <Link className="underline underline-offset-2 hover:text-papel" href="/privacidad#fotos">
+              {t("fotosAutores")}
+            </Link>
+          </p>
         </div>
-        <nav aria-label={n("pie")} className="grid grid-cols-2 gap-2 text-sm">
-          <Link className="hover:underline" href="/crear">
+        <nav aria-label={n("pie")} className="grid grid-cols-2 content-start gap-x-2 text-sm">
+          <Link className={ENLACE} href="/crear">
             {n("crear")}
           </Link>
-          <Link className="hover:underline" href="/como-jugar">
+          <Link className={ENLACE} href="/como-jugar">
             {n("comoJugar")}
           </Link>
-          <Link className="hover:underline" href="/privacidad">
+          <Link className={ENLACE} href="/privacidad">
             {n("privacidad")}
           </Link>
         </nav>

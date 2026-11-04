@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { FechaCarta } from "@/domain/fechas/fecha";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { recorteCentrado, recorteReversoDesdeAnverso } from "@/domain/imagen/recorte";
 import { PROPORCION_ANVERSO, proporcionReverso } from "@/lib/carta/dibujar";
 import type { Cara, DatosCarta } from "@/lib/carta/tipos";
 import { obtenerEstilo, obtenerPlantilla } from "@/lib/estilos";
 import { CartaCanvas } from "./CartaCanvas";
+import { MUESTRAS, type CartaMuestra, type ClaveMuestra } from "@/components/inicio/muestras";
+
+export { MUESTRAS, type CartaMuestra, type ClaveMuestra } from "@/components/inicio/muestras";
 
 const cacheUrls = new Map<string, Promise<ImageBitmap | null>>();
 
@@ -35,24 +38,17 @@ export function useImagenUrl(url: string | null): ImageBitmap | null {
   return img && img.url === url ? img.bmp : null;
 }
 
-export interface CartaMuestra {
-  foto: string;
-  fecha: FechaCarta | null;
-  descripcion?: string;
-  descripcionEnAnverso?: boolean;
-  icono?: string | null;
-  /** Sin estilo ni paleta, los de por defecto. */
-  estiloId?: string;
-  paletaId?: string;
-}
-
-/** Carta de ejemplo con una foto de muestra generada (para la portada y las instrucciones). */
+/**
+ * Carta de ejemplo con una foto de muestra (portada, «Cómo se juega»). Con `ligera`, carga la
+ * versión pequeña de la foto: basta para cartas de hasta unos 200 px de ancho.
+ */
 export function CartaDeMuestra({
   muestra,
   cara,
   ancho,
   etiqueta,
   idiomaMazo = "es",
+  ligera = false,
   className,
 }: {
   muestra: CartaMuestra;
@@ -60,9 +56,10 @@ export function CartaDeMuestra({
   ancho?: number;
   etiqueta: string;
   idiomaMazo?: string;
+  ligera?: boolean;
   className?: string;
 }) {
-  const bmp = useImagenUrl(muestra.foto);
+  const bmp = useImagenUrl(ligera && muestra.mini ? muestra.mini : muestra.foto);
   const estilo = obtenerEstilo(muestra.estiloId);
   const plantilla = obtenerPlantilla(estilo.plantilla);
   const datos = useMemo<DatosCarta>(() => {
@@ -93,14 +90,8 @@ export function CartaDeMuestra({
   );
 }
 
-/**
- * Cartas de ejemplo de la web. Las paletas son las de los antiguos estilos «Pareja» (rosa) y
- * «Familia» (verde), para que la portada se siga viendo como se validó.
- */
-export const MUESTRAS: Record<string, CartaMuestra> = {
-  menorca: { foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: "Nuestro primer viaje juntos, Menorca", descripcionEnAnverso: true, paletaId: "rosa", icono: "estrella" },
-  aniversario: { foto: "/muestras/luces.jpg", fecha: { anio: 2021, mes: 12, dia: 12 }, descripcion: "Cena de aniversario", paletaId: "rosa" },
-  excursion: { foto: "/muestras/montanas.jpg", fecha: { anio: 2015, mes: 5 }, descripcion: "La primera excursión con los abuelos", paletaId: "verde" },
-  jardin: { foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: "El jardín de la casa del pueblo", paletaId: "verde" },
-  nieve: { foto: "/muestras/nieve.jpg", fecha: { anio: 2010, mes: 1 }, descripcion: "Primera vez en la nieve", paletaId: "cobalto" },
-};
+/** Devuelve una función que da cada muestra con su frase en el idioma de la página (y los cambios que se pidan). */
+export function useMuestra(): (clave: ClaveMuestra, cambios?: Partial<CartaMuestra>) => CartaMuestra {
+  const t = useTranslations("inicio.muestras");
+  return useCallback((clave, cambios) => ({ ...MUESTRAS[clave], descripcion: t(clave), ...cambios }), [t]);
+}

@@ -9,7 +9,7 @@ import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
 import { Interruptor, Micro } from "@/components/ui/Piezas";
 import { fechaLegible } from "@/domain/fechas/formato";
-import { pendientesDeCarta } from "@/domain/mazo/configuracion";
+import { pendientesDeCarta, rangoHueco } from "@/domain/mazo/configuracion";
 import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import { girarFoto } from "@/lib/importar/girar";
 import { useMazo } from "@/lib/mazo/contexto";
@@ -26,7 +26,7 @@ export function PasoCartas() {
   const t = useTranslations();
   const locale = useLocale();
   const { mazo, despachar, puedeDeshacer } = useMazo();
-  const { cartaActiva, setCartaActiva, irAPaso, irASiguientePendiente, avisoFecha, iconos, catalogo, versiones, tocarVersion, hoy, pendientes } = useCrear();
+  const { cartaActiva, setCartaActiva, irAPaso, irASiguientePendiente, avisoFecha, iconos, catalogo, versiones, tocarVersion, hoy, pendientes, abrirRecuerdo } = useCrear();
   const [cara, setCara] = useState<"anverso" | "reverso">("reverso");
   const [encuadre, setEncuadre] = useState(false);
   const [emojis, setEmojis] = useState(false);
@@ -35,6 +35,7 @@ export function PasoCartas() {
   const tira = useRef<HTMLDivElement>(null);
   const tiraColocada = useRef(false);
   const bloqueFecha = useRef<HTMLDivElement>(null);
+  const areaTexto = useRef<HTMLTextAreaElement>(null);
   const avisoVisto = useRef(avisoFecha);
 
   const cartas = mazo?.cartas ?? [];
@@ -94,7 +95,12 @@ export function PasoCartas() {
     return (
       <div className="space-y-4 py-10 text-center">
         <p className="text-md">{t("cartas.sinCartas")}</p>
-        <Boton onClick={() => irAPaso(1)}>{t("cartas.irAFotos")}</Boton>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Boton onClick={() => irAPaso(1)}>{t("cartas.irAFotos")}</Boton>
+          <Boton variante="secundario" onClick={() => abrirRecuerdo()}>
+            + {t("crear.recuerdo.boton")}
+          </Boton>
+        </div>
       </div>
     );
   }
@@ -107,6 +113,8 @@ export function PasoCartas() {
 
   const icono = iconos.get(carta.id) ?? null;
   const foto = carta.tipo === "foto" ? carta : null;
+  // Un recuerdo sin foto lleva delante su texto, no una foto.
+  const etiquetaAnverso = foto ? t("comun.anverso") : t("comun.anversoTexto");
   const ppp = foto ? pppDeCarta(foto) : null;
   const justa = ppp !== null && ppp < PRINT.pppMinimo;
   const estrellas = mazo.cartas.filter((c) => c.destacada).length;
@@ -119,6 +127,16 @@ export function PasoCartas() {
   const otraPendiente = pendientes.some((id) => id !== carta.id);
   const sinCompletar = new Set(pendientes);
   const listaDeMotivos = new Intl.ListFormat(locale, { style: "long", type: "conjunction" });
+  // Los textos de las cartas van en el idioma del mazo, que puede no ser el de la página.
+  const lang = mazo.idiomaMazo.split("-")[0] !== locale.split("-")[0] ? mazo.idiomaMazo : undefined;
+  // En un recuerdo sin foto, el primer hueco por rellenar («[nombre]»), si queda alguno.
+  const hueco = foto ? null : rangoHueco(carta.descripcion);
+  const irAlHueco = () => {
+    const el = areaTexto.current;
+    if (!el || !hueco) return;
+    el.focus();
+    el.setSelectionRange(hueco.inicio, hueco.fin);
+  };
 
   const girar = async () => {
     if (!foto) return;
@@ -162,14 +180,14 @@ export function PasoCartas() {
                 onClick={() => setCara(c)}
                 className={`tipo-boton min-h-10 rounded-[10px] px-3 text-sm ${cara === c ? "bg-tinta text-papel" : ""}`}
               >
-                {c === "anverso" ? t("comun.anverso") : t("comun.reverso")}
+                {c === "anverso" ? etiquetaAnverso : t("comun.reverso")}
               </button>
             ))}
           </div>
           <div className="mesa grid grid-cols-1 gap-4 rounded-[24px] p-5 sm:grid-cols-2 sm:p-6">
             <figure className={`${cara === "anverso" ? "" : "hidden"} space-y-2 sm:block`}>
               <VistaCarta carta={carta} mazo={mazo} cara="anverso" icono={icono} calidad="copia" version={version} className="mx-auto max-w-[260px]" />
-              <figcaption className="tipo-micro text-center text-micro text-tinta-2">{t("comun.anverso")}</figcaption>
+              <figcaption className="tipo-micro text-center text-micro text-tinta-2">{etiquetaAnverso}</figcaption>
             </figure>
             <figure className={`${cara === "reverso" ? "" : "hidden"} space-y-2 sm:block`}>
               <VistaCarta carta={carta} mazo={mazo} cara="reverso" icono={icono} calidad="copia" version={version} className="mx-auto max-w-[260px]" />
@@ -245,11 +263,13 @@ export function PasoCartas() {
 
           <section className="space-y-3 rounded-[var(--radius-carta)] bg-blanco p-5">
             <label htmlFor={`desc-${carta.id}`} className="tipo-subtitular block text-lg">
-              {t("cartas.descripcion")}
+              {foto ? t("cartas.descripcion") : t("cartas.textoRecuerdo")}
             </label>
             <textarea
+              ref={areaTexto}
               id={`desc-${carta.id}`}
               value={carta.descripcion}
+              lang={lang}
               maxLength={MAX_DESCRIPCION + 20}
               rows={2}
               onFocus={() => despachar({ tipo: "puntoDeshacer" })}
@@ -259,12 +279,21 @@ export function PasoCartas() {
             />
             <div className="flex justify-between gap-3 text-sm">
               <span id={`desc-ayuda-${carta.id}`} className="text-tinta-2">
-                {t("cartas.descripcionAyuda", { max: MAX_DESCRIPCION })}
+                {foto ? t("cartas.descripcionAyuda", { max: MAX_DESCRIPCION }) : t("cartas.textoRecuerdoAyuda", { max: MAX_DESCRIPCION })}
               </span>
               <span className={`shrink-0 whitespace-nowrap ${[...carta.descripcion].length > MAX_DESCRIPCION ? "font-bold text-rojo-texto" : "text-tinta-2"}`}>
                 {t("cartas.descripcionContador", { n: [...carta.descripcion].length, max: MAX_DESCRIPCION })}
               </span>
             </div>
+            {hueco && (
+              <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={irAlHueco}>
+                {/* Solo el hueco va en el idioma del mazo; el verbo, en el de la interfaz. */}
+                {t.rich("cartas.completarHueco", {
+                  hueco: carta.descripcion.slice(hueco.inicio, hueco.fin),
+                  h: (c) => <span lang={lang}>{c}</span>,
+                })}
+              </Boton>
+            )}
             {foto && (
               <Interruptor
                 id={`en-anverso-${carta.id}`}
@@ -318,6 +347,17 @@ export function PasoCartas() {
               locale={locale}
             />
           ))}
+          <li className="shrink-0">
+            <button
+              type="button"
+              onClick={() => abrirRecuerdo()}
+              aria-label={t("crear.recuerdo.boton")}
+              title={t("crear.recuerdo.boton")}
+              className="grid h-[74px] w-[53px] place-items-center rounded-[8px] border-2 border-dashed border-tinta/50 text-2xl leading-none text-tinta-2 transition-colors hover:border-tinta hover:text-tinta"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          </li>
         </ul>
       </div>
 

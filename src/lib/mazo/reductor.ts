@@ -22,7 +22,12 @@ export type Accion =
       titulo: string;
     }
   | { tipo: "consentir"; ahora: number }
-  | { tipo: "anadirCartas"; cartas: Carta[] }
+  /**
+   * Añade cartas al final. Las importadas (fotos) quedan fuera de «Deshacer»: también se suman a
+   * los estados anteriores, para que deshacer otro cambio no las quite. Con `deshacible` (un
+   * recuerdo sin foto escrito a mano) es un cambio más, que «Deshacer» quita.
+   */
+  | { tipo: "anadirCartas"; cartas: Carta[]; deshacible?: boolean }
   | { tipo: "actualizarCarta"; id: string; cambios: CambiosCarta; deshacible?: boolean }
   | { tipo: "actualizarCartas"; ids: string[]; cambios: CambiosCarta }
   | { tipo: "puntoDeshacer" }
@@ -38,12 +43,30 @@ export type Accion =
   | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
   /** Foto de la caja personalizada (null: la de la portada). */
   | { tipo: "ponerCaja"; caja: FotoCaja | null }
-  /** Ajusta pack, extras y mecánicas a lo que ofrece el catálogo (borradores antiguos). No se deshace. */
-  | { tipo: "normalizarSeleccion"; packId: string; extras: string[]; mecanicas: string[] }
+  /**
+   * Ajusta pack, extras y mecánicas a lo que ofrece el catálogo (borradores antiguos). No se deshace.
+   * `desde` es la selección de la que se calculó: si el mazo ya tiene otra (el arranque acaba de
+   * cambiarle el pack, por ejemplo), la acción llega tarde y se descarta; el configurador la vuelve a
+   * calcular con el mazo nuevo.
+   */
+  | { tipo: "normalizarSeleccion"; packId: string; extras: string[]; mecanicas: string[]; desde: SeleccionMazo }
   | { tipo: "registrarPedido"; pedido: Pedido }
   | { tipo: "pedidoPagado" }
+  /** Se ha vuelto de Stripe sin pagar: el pedido pendiente se quita (uno pagado no se toca). No se deshace. */
+  | { tipo: "cancelarPedido" }
+  /** Carta abierta en el paso 2, que se recuerda para volver otro día. No se deshace. */
+  | { tipo: "abrirCarta"; id: string | null }
   | { tipo: "deshacer" }
   | { tipo: "reiniciar" };
+
+/** Lo que el catálogo puede retirar: pack, extras y mecánicas del mazo. */
+export type SeleccionMazo = Pick<Mazo, "packId" | "extras" | "mecanicas">;
+
+const mismaLista = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+function mismaSeleccion(a: SeleccionMazo, b: SeleccionMazo): boolean {
+  return a.packId === b.packId && mismaLista(a.extras, b.extras) && mismaLista(a.mecanicas, b.mecanicas);
+}
 
 const MAX_HISTORIAL = 40;
 
@@ -58,8 +81,8 @@ export function aplicarCambios(c: Carta, cambios: CambiosCarta): Carta {
   return { ...c, ...comunes };
 }
 
-/** Lo que «Deshacer» no toca: el paso en que estás, el permiso de las fotos y el pedido. */
-const FUERA_DE_DESHACER = new Set<string>(["paso", "actualizadoEn", "consentimientoFotos", "pedido"]);
+/** Lo que «Deshacer» no toca: el paso y la carta en que estás, el permiso de las fotos y el pedido. */
+const FUERA_DE_DESHACER = new Set<string>(["paso", "cartaAbierta", "actualizadoEn", "consentimientoFotos", "pedido"]);
 
 /**
  * Dos versiones del mazo con lo mismo que recupera «Deshacer». Basta comparar referencias: el
@@ -115,8 +138,14 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
   switch (a.tipo) {
     case "consentir":
       return conHistorial(e, { ...m, consentimientoFotos: a.ahora }, false);
-    case "anadirCartas":
-      return conHistorial(e, { ...m, cartas: [...m.cartas, ...a.cartas] }, false);
+    case "anadirCartas": {
+      const cartas = [...m.cartas, ...a.cartas];
+      if (a.deshacible) return conHistorial(e, { ...m, cartas });
+      // Los estados que tenían las mismas cartas que ahora comparten la lista nueva: así
+      // «Deshacer» sigue reconociendo como iguales los puntos que no cambiaron nada.
+      const pasado = e.pasado.map((p) => ({ ...p, cartas: p.cartas === m.cartas ? cartas : [...p.cartas, ...a.cartas] }));
+      return { ...conHistorial(e, { ...m, cartas }, false), pasado };
+    }
     case "actualizarCarta":
       return conHistorial(
         e,
@@ -184,11 +213,16 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
     case "ponerCaja":
       return conHistorial(e, { ...m, caja: a.caja });
     case "normalizarSeleccion":
+      if (!mismaSeleccion(m, a.desde)) return e;
       return conHistorial(e, { ...m, packId: a.packId, extras: a.extras, mecanicas: a.mecanicas }, false);
     case "registrarPedido":
       return conHistorial(e, { ...m, pedido: a.pedido }, false);
     case "pedidoPagado":
       return m.pedido ? conHistorial(e, { ...m, pedido: { ...m.pedido, estado: "pagado" } }, false) : e;
+    case "cancelarPedido":
+      return m.pedido?.estado === "pendiente" ? conHistorial(e, { ...m, pedido: null }, false) : e;
+    case "abrirCarta":
+      return (m.cartaAbierta ?? null) === a.id ? e : conHistorial(e, { ...m, cartaAbierta: a.id }, false);
     case "deshacer": {
       // Los puntos que no cambiaron nada (entrar en un campo y salir sin tocarlo) se saltan:
       // cada «Deshacer» recupera algo que se ve.
@@ -197,7 +231,11 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       const anterior = e.pasado[i];
       if (!anterior) return e.pasado.length ? { ...e, pasado: [] } : e;
       // El paso actual no se deshace: solo los cambios del mazo.
-      return { ...e, mazo: { ...anterior, paso: m.paso, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido }, pasado: e.pasado.slice(0, i) };
+      return {
+        ...e,
+        mazo: { ...anterior, paso: m.paso, cartaAbierta: m.cartaAbierta, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido },
+        pasado: e.pasado.slice(0, i),
+      };
     }
   }
   return e;

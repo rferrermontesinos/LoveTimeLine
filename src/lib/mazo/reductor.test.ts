@@ -38,7 +38,7 @@ function nuevo(): EstadoMazo {
     packId: "pequeno",
     idiomaMazo: "es",
     mecanicas: ["estrella"],
-    titulo: "Nuestra historia",
+    titulo: "Nuestros recuerdos",
   });
 }
 
@@ -179,6 +179,36 @@ describe("reductor del mazo", () => {
   });
 });
 
+describe("añadir cartas y deshacer", () => {
+  it("las fotos importadas no se pierden al deshacer otro cambio anterior", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "cobalto" });
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("b", 2020)] });
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.paletaId).toBe("rosa");
+    expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a", "b"]);
+  });
+
+  it("quitar la caja personalizada no borra la foto elegida, por si se vuelve a poner", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    e = reductor(e, { tipo: "cambiar", campo: "extras", valor: ["caja-personalizada"] });
+    e = reductor(e, { tipo: "ponerCaja", caja: { origen: "carta", cartaId: "a" } });
+    e = reductor(e, { tipo: "cambiar", campo: "extras", valor: [] });
+    expect(e.mazo?.caja).toEqual({ origen: "carta", cartaId: "a" });
+  });
+
+  it("un recuerdo sin foto añadido a mano se puede deshacer", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    e = reductor(e, { tipo: "anadirCartas", cartas: [nuevaCartaTexto("t", "Nuestra boda", { anio: 2015 }, 0)], deshacible: true });
+    expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a", "t"]);
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a"]);
+  });
+});
+
 describe("cartas de texto", () => {
   it("se ordenan con las de foto y solo aceptan los campos comunes", () => {
     let e = nuevo();
@@ -206,10 +236,31 @@ describe("acciones de lote y pedido", () => {
   it("ajustar la selección al catálogo no se puede deshacer", () => {
     let e = nuevo();
     const antes = e.pasado.length;
-    e = reductor(e, { tipo: "normalizarSeleccion", packId: "mediano", extras: [], mecanicas: ["estrella", "comodin"] });
+    e = reductor(e, {
+      tipo: "normalizarSeleccion",
+      packId: "mediano",
+      extras: [],
+      mecanicas: ["estrella", "comodin"],
+      desde: { packId: "pequeno", extras: [], mecanicas: ["estrella"] },
+    });
     expect(e.mazo?.packId).toBe("mediano");
     expect(e.mazo?.mecanicas).toEqual(["estrella", "comodin"]);
     expect(e.pasado.length).toBe(antes);
+  });
+
+  it("descarta un ajuste al catálogo calculado sobre otra selección (llega tarde)", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "cambiar", campo: "extras", valor: ["retirado"] });
+    // Calculado con el pack pequeño; antes de aplicarse, el arranque cambia el pack.
+    e = reductor(e, { tipo: "cambiar", campo: "packId", valor: "mediano" });
+    const antes = e;
+    e = reductor(e, { tipo: "normalizarSeleccion", packId: "pequeno", extras: [], mecanicas: ["estrella"], desde: { packId: "pequeno", extras: ["retirado"], mecanicas: ["estrella"] } });
+    expect(e).toBe(antes);
+    expect(e.mazo?.packId).toBe("mediano");
+    // Con la selección de ahora sí se aplica (mismo contenido, aunque sean otras listas).
+    e = reductor(e, { tipo: "normalizarSeleccion", packId: "mediano", extras: [], mecanicas: ["estrella"], desde: { packId: "mediano", extras: ["retirado"], mecanicas: ["estrella"] } });
+    expect(e.mazo?.packId).toBe("mediano");
+    expect(e.mazo?.extras).toEqual([]);
   });
 
   it("el pedido no se pierde al deshacer y se marca como pagado", () => {
@@ -227,3 +278,48 @@ describe("acciones de lote y pedido", () => {
     expect(e.mazo?.pedido?.id).toBe("p1");
   });
 });
+
+describe("pago cancelado y carta abierta", () => {
+  const pedido = (estado: "pendiente" | "pagado") =>
+    ({ id: "p1", modo: "stripe", estado, totalCents: 4900, moneda: "EUR", cartasFisicas: 41, fecha: 0 }) as const;
+
+  it("al volver de Stripe sin pagar, el pedido pendiente se quita y no se puede deshacer", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    e = reductor(e, { tipo: "registrarPedido", pedido: pedido("pendiente") });
+    const antes = e.pasado.length;
+    e = reductor(e, { tipo: "cancelarPedido" });
+    expect(e.mazo?.pedido).toBeNull();
+    expect(e.pasado.length).toBe(antes);
+  });
+
+  it("un pedido pagado no se toca, y sin pedido no cambia nada", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "registrarPedido", pedido: pedido("pagado") });
+    expect(reductor(e, { tipo: "cancelarPedido" })).toBe(e);
+    const sinPedido = nuevo();
+    expect(reductor(sinPedido, { tipo: "cancelarPedido" })).toBe(sinPedido);
+  });
+
+  it("recuerda la carta abierta sin ocupar un paso de deshacer", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019), carta("b", 2020)] });
+    e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "cobalto" });
+    const antes = e.pasado.length;
+    e = reductor(e, { tipo: "abrirCarta", id: "b" });
+    expect(e.mazo?.cartaAbierta).toBe("b");
+    expect(e.pasado.length).toBe(antes);
+    // La misma carta otra vez: nada cambia (ni la hora del mazo, que haría guardar).
+    expect(reductor(e, { tipo: "abrirCarta", id: "b" })).toBe(e);
+    // Deshacer el cambio de paleta no cierra la carta en que estás.
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.paletaId).toBe("rosa");
+    expect(e.mazo?.cartaAbierta).toBe("b");
+  });
+
+  it("sin carta abierta, cerrar no cambia nada", () => {
+    const e = nuevo();
+    expect(reductor(e, { tipo: "abrirCarta", id: null })).toBe(e);
+  });
+});
+

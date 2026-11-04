@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { BRAND_CONTACT_EMAIL } from "@config/brand";
+import { BRAND_CONTACT_EMAIL, BRAND_NAME } from "@config/brand";
 import { Cabecera, CintaPrototipo } from "@/components/marco/Cabecera";
+import { CREDITOS_FOTOS } from "@/components/marco/creditosFotos";
 import { Pie } from "@/components/marco/Pie";
 import { Seccion } from "@/components/ui/Piezas";
+import { textoEn } from "@/domain/precios/tipos";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -37,6 +39,38 @@ export default async function Privacidad({ params }: { params: Promise<{ locale:
                 </li>
               ))}
             </ul>
+          </section>
+          {/* Créditos de las fotos de muestra (el pie enlaza aquí) */}
+          <section id="fotos" aria-labelledby="titulo-fotos" className="scroll-mt-24 space-y-3">
+            <h2 id="titulo-fotos" className="tipo-subtitular text-xl">
+              {t("fotosTitulo")}
+            </h2>
+            <p>{t("fotosTexto", { fuente: CREDITOS_FOTOS.fuente, marca: BRAND_NAME })}</p>
+            <ul className="divide-y divide-linea rounded-[14px] bg-blanco px-4 text-sm">
+              {CREDITOS_FOTOS.fotos.map((f) => (
+                <li key={f.id} className="py-2.5">
+                  {t.rich("fotosDe", {
+                    descripcion: textoEn(f.descripcion, locale),
+                    fotografo: f.fotografo,
+                    enlace: (texto) => (
+                      <a className="enlace" href={f.pagina}>
+                        {texto}
+                      </a>
+                    ),
+                  })}
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm text-tinta-2">
+              {t.rich("fotosLicencia", {
+                licencia: CREDITOS_FOTOS.licencia.nombre,
+                enlace: (texto) => (
+                  <a className="enlace" href={CREDITOS_FOTOS.licencia.url}>
+                    {texto}
+                  </a>
+                ),
+              })}
+            </p>
           </section>
           <p className="text-sm text-tinta-2">{t("contacto", { email: BRAND_CONTACT_EMAIL })}</p>
         </Seccion>

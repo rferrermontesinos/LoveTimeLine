@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { cartasPendientes, puedeIrAEstilo, siguientePendiente } from "@/domain/mazo/configuracion";
 import { cotizar, normalizarSeleccion, type Cotizacion } from "@/domain/precios/cotizar";
 import type { Catalogo } from "@/domain/precios/tipos";
+import { accionNormalizar } from "@/lib/mazo/arranque";
 import { useMazo } from "@/lib/mazo/contexto";
 import { iconosDelMazo } from "@/lib/mazo/derivados";
 import type { Paso } from "@/lib/mazo/tipos";
@@ -20,11 +21,16 @@ interface ValorCrear {
   puedeAvanzar: boolean;
   /** Paso que se muestra: el guardado, como mucho el permitido. */
   pasoActual: Paso;
-  /** Carta abierta en el paso 2. */
+  /** Carta abierta en el paso 2. Se guarda con el mazo: al volver otro día, sigue abierta. */
   cartaActiva: string | null;
   setCartaActiva: (id: string | null) => void;
-  /** Cambia de paso. A Estilo o Pedido con cartas pendientes, lleva a la primera pendiente. */
-  irAPaso: (p: Paso, cartaId?: string) => void;
+  /**
+   * Cambia de paso. A Estilo o Pedido con cartas pendientes, lleva a la primera pendiente. Con
+   * `ancla`, el paso nuevo lleva a ese bloque en vez de empezar arriba (por ejemplo, «caja»).
+   */
+  irAPaso: (p: Paso, cartaId?: string, ancla?: AnclaPaso) => void;
+  /** Bloque al que ha pedido ir el último cambio de paso, si alguno. */
+  ancla: AnclaPaso | null;
   /**
    * Abre en el paso 2 la siguiente carta pendiente después de la indicada (o la primera). Desde
    * otro paso, la página empieza arriba; dentro del paso 2, sube `avisoFecha`.
@@ -38,7 +44,25 @@ interface ValorCrear {
   /** Versión por foto, para refrescar vistas tras girarla. */
   versiones: Record<string, number>;
   tocarVersion: (id: string) => void;
+  /**
+   * Diálogo para añadir un recuerdo sin foto (con la idea elegida, si la hay). Sigue montado al
+   * cerrarse, para que el diálogo nativo se cierre y devuelva el foco a quien lo abrió.
+   */
+  recuerdo: { idea: string; clave: number; abierto: boolean } | null;
+  abrirRecuerdo: (idea?: string) => void;
+  /** Cierra el diálogo; con la carta que se acaba de añadir, la apunta para confirmarlo en pantalla. */
+  cerrarRecuerdo: (anadido?: RecuerdoAnadido) => void;
+  /** El último recuerdo sin foto añadido en esta visita. */
+  recuerdoAnadido: RecuerdoAnadido | null;
 }
+
+export interface RecuerdoAnadido {
+  id: string;
+  texto: string;
+}
+
+/** Bloques a los que se puede llevar desde otro paso. */
+export type AnclaPaso = "caja";
 
 const Ctx = createContext<ValorCrear | null>(null);
 
@@ -54,9 +78,13 @@ function subir() {
 
 export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; children: ReactNode }) {
   const { mazo, despachar } = useMazo();
-  const [cartaActiva, setCartaActiva] = useState<string | null>(null);
+  const cartaActiva = mazo?.cartaAbierta ?? null;
+  const setCartaActiva = useCallback((id: string | null) => despachar({ tipo: "abrirCarta", id }), [despachar]);
   const [versiones, setVersiones] = useState<Record<string, number>>({});
   const [avisoFecha, setAvisoFecha] = useState(0);
+  const [ancla, setAncla] = useState<AnclaPaso | null>(null);
+  const [recuerdo, setRecuerdo] = useState<{ idea: string; clave: number; abierto: boolean } | null>(null);
+  const [recuerdoAnadido, setRecuerdoAnadido] = useState<RecuerdoAnadido | null>(null);
   const [hoy] = useState(() => new Date());
 
   // Pack, extras o mecánicas retirados del catálogo (por ejemplo, en un mazo guardado con una
@@ -65,9 +93,12 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
     () => (mazo ? normalizarSeleccion({ packId: mazo.packId, extras: mazo.extras, mecanicas: mazo.mecanicas }, catalogo) : null),
     [mazo, catalogo],
   );
+  // La acción lleva la selección de la que parte: si el arranque cambia el pack en este mismo
+  // instante, el reductor la descarta y este efecto la vuelve a calcular con el mazo nuevo.
+  const normalizar = useMemo(() => (mazo && seleccion?.cambiado ? accionNormalizar(mazo, catalogo) : null), [mazo, seleccion, catalogo]);
   useEffect(() => {
-    if (seleccion?.cambiado) despachar({ tipo: "normalizarSeleccion", packId: seleccion.packId, extras: seleccion.extras, mecanicas: seleccion.mecanicas });
-  }, [seleccion, despachar]);
+    if (normalizar) despachar(normalizar);
+  }, [normalizar, despachar]);
 
   const cotizacion = useMemo(() => {
     if (!mazo || !seleccion) return null;
@@ -105,14 +136,18 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
       pasoActual,
       cartaActiva,
       setCartaActiva,
-      irAPaso: (p, cartaId) => {
+      irAPaso: (p, cartaId, anclaPedida) => {
         const bloqueado = p > pasoMax;
         const destino = bloqueado ? pasoMax : p;
         const carta = cartaId ?? (bloqueado ? pendientes[0] : undefined);
         if (carta) setCartaActiva(carta);
+        const conAncla = !bloqueado && anclaPedida ? anclaPedida : null;
+        setAncla(conAncla);
         despachar({ tipo: "cambiar", campo: "paso", valor: destino });
-        subir();
+        // Con ancla, el paso de destino se encarga de llevar a su bloque.
+        if (!conAncla) subir();
       },
+      ancla,
       irASiguientePendiente: (desdeId) => {
         if (!cartas) return;
         const desde = desdeId ? cartas.findIndex((c) => c.id === desdeId) : -1;
@@ -126,8 +161,16 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
       avisoFecha,
       versiones,
       tocarVersion: (id) => setVersiones((v) => ({ ...v, [id]: (v[id] ?? 0) + 1 })),
+      recuerdo,
+      // La clave cambia en cada apertura: el diálogo empieza de cero cada vez.
+      abrirRecuerdo: (idea) => setRecuerdo((r) => ({ idea: idea ?? "", clave: (r?.clave ?? 0) + 1, abierto: true })),
+      cerrarRecuerdo: (anadido) => {
+        setRecuerdo((r) => (r ? { ...r, abierto: false } : r));
+        if (anadido) setRecuerdoAnadido(anadido);
+      },
+      recuerdoAnadido,
     }),
-    [catalogo, cotizacion, iconos, hoy, pendientes, puedeAvanzar, pasoActual, pasoMax, pasoGuardado, cartas, cartaActiva, despachar, avisoFecha, versiones],
+    [catalogo, cotizacion, iconos, hoy, pendientes, puedeAvanzar, pasoActual, pasoMax, pasoGuardado, cartas, cartaActiva, setCartaActiva, despachar, avisoFecha, versiones, ancla, recuerdo, recuerdoAnadido],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

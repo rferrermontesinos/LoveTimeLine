@@ -1,7 +1,7 @@
 {
   "fotos": {
     "titulo": "Sube tus fotos",
-    "texto": "Cuantas más, mejor: necesitas al menos {minimo} para tu pack. JPG, PNG, HEIC o WEBP.",
+    "texto": "Necesitas al menos {minimo} cartas para tu pack: fotos o recuerdos sin foto. Fotos en JPG, PNG, HEIC o WEBP.",
     "consentimiento": "Tengo permiso de las personas que salen en las fotos, y de sus padres si son menores, para usarlas en este mazo.",
     "consentimientoFalta": "Marca la casilla de permiso para poder añadir fotos.",
     "soltar": "Arrastra aquí fotos o una carpeta entera",
@@ -13,11 +13,21 @@
     "procesadas": "{n, plural, one {# foto añadida} other {# fotos añadidas}}",
     "repetidas": "{n, plural, one {# foto repetida no se ha añadido} other {# fotos repetidas no se han añadido}}",
     "errores": "{n, plural, one {# archivo no se ha podido leer} other {# archivos no se han podido leer}}",
+    "sinEspacio": "{n, plural, one {# foto no cabe en este dispositivo: libera espacio y vuelve a subirla} other {# fotos no caben en este dispositivo: libera espacio y vuelve a subirlas}}",
     "noImagen": "{nombre} no es una imagen compatible.",
-    "vacio": "Aún no hay fotos. Empieza por una carpeta de un viaje o de un año.",
+    "vacio": "Aún no hay fotos ni recuerdos. Empieza por una carpeta de un viaje o de un año.",
+    "sinFoto": {
+      "titulo": "¿Algún recuerdo sin foto?",
+      "texto": "El día que os conocisteis, el nacimiento del abuelo… Escribe el recuerdo y su fecha. Cuesta lo mismo que una carta con foto.",
+      "pregunta": "¿Os falta algún recuerdo sin foto?",
+      "preguntaAyuda": "Toca una idea para añadirla o escribe la tuya.",
+      "otro": "Escribir otro"
+    },
+    "recuerdoSinFoto": "Recuerdo sin foto: {texto}",
+    "tusCartas": "Tus cartas",
     "ordenar": "Ordenar por fecha",
     "irAPendientes": "Ir a las pendientes",
-    "resumenFechas": "Fechas de las fotos",
+    "resumenFechas": "Fechas de tus cartas",
     "conFechaCuenta": "{n, plural, one {# con fecha} other {# con fecha}}",
     "sugeridasCuenta": "{n, plural, one {# con fecha sugerida} other {# con fecha sugerida}}",
     "sinFechaCuenta": "{n, plural, one {# sin fecha} other {# sin fecha}}",

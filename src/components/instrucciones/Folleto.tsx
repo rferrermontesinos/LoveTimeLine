@@ -17,6 +17,8 @@
  * (src/domain/juego/reglas.ts).
  */
 import type { CSSProperties, ReactNode } from "react";
+import { createTranslator } from "next-intl";
+import { textoContenidoCaja } from "@/components/juego/contenidoCaja";
 import { IconoMecanica } from "@/components/ui/IconoMecanica";
 import { jugadoresPorMazo, vidas, vidasHistoriaCompleta } from "@/domain/juego/reglas";
 import type { TextosFolleto } from "@/lib/carta/textos";
@@ -46,6 +48,8 @@ export interface Personalizacion {
 export interface MecanicaFolleto {
   id: string;
   icono: string | null;
+  /** Cartas que añade a la caja (comodines, cartas en blanco), del catálogo. */
+  cartasFisicas?: number;
 }
 
 /** Colores de los dos tipos de juego, como en «Cómo se juega». */
@@ -216,6 +220,13 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
   const visibles = mecanicas.filter((x) => CLAVE_MECANICA[x.id] && (!p || p.mecanicas.includes(x.id)));
   // Un mazo sin iconos deja libre el panel 4: las fechas pasan allí y el panel 1 respira.
   const fechasEnPanel4 = visibles.length === 0;
+  // «Qué trae la caja»: las cartas especiales del catálogo (y, con un mazo, solo las que eligió).
+  const tcaja = createTranslator({ locale: t.idioma, messages: { juego: { contenidoCaja: j.contenidoCaja } }, namespace: "juego.contenidoCaja" });
+  const contenido = textoContenidoCaja(
+    mecanicas.filter((x) => !p || p.mecanicas.includes(x.id)).map((x) => ({ id: x.id, activo: true, cartasFisicas: x.cartasFisicas })),
+    t.idioma,
+    (clave, valores) => tcaja(clave, valores),
+  );
 
   return (
     <div className="flex h-[176mm] w-[252mm] flex-col">
@@ -223,7 +234,7 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
       <div className="flex rotate-180">
         <Regla n={1} c={c}>
           <Titulo>{j.componentes}</Titulo>
-          <p className={CUERPO}>{j.componentesTexto}</p>
+          <p className={CUERPO}>{contenido}</p>
           <Titulo className="pt-[0.6mm]">{j.jugadores.titulo}</Titulo>
           {jugadores && p ? (
             <p className={`${CUERPO} font-semibold`}>

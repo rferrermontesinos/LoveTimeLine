@@ -1,7 +1,7 @@
 {
   "fotos": {
     "titulo": "Upload your photos",
-    "texto": "The more the better: you need at least {minimo} for your pack. JPG, PNG, HEIC or WEBP.",
+    "texto": "You need at least {minimo} cards for your pack: photos or memories without a photo. Photos in JPG, PNG, HEIC or WEBP.",
     "consentimiento": "I have permission from the people in the photos, and from their parents if they are minors, to use them in this deck.",
     "consentimientoFalta": "Tick the permission box to add photos.",
     "soltar": "Drop photos or a whole folder here",
@@ -13,11 +13,21 @@
     "procesadas": "{n, plural, one {# photo added} other {# photos added}}",
     "repetidas": "{n, plural, one {# repeated photo was skipped} other {# repeated photos were skipped}}",
     "errores": "{n, plural, one {# file couldn’t be read} other {# files couldn’t be read}}",
+    "sinEspacio": "{n, plural, one {# photo didn’t fit on this device: free up some space and add it again} other {# photos didn’t fit on this device: free up some space and add them again}}",
     "noImagen": "{nombre} isn’t a supported image.",
-    "vacio": "No photos yet. Start with the folder of a trip or a year.",
+    "vacio": "No photos or memories yet. Start with a folder from a trip or a year.",
+    "sinFoto": {
+      "titulo": "Any memories without a photo?",
+      "texto": "The day you met, Grandpa’s birth… Write the memory and its date. It costs the same as a photo card.",
+      "pregunta": "Missing any memories without a photo?",
+      "preguntaAyuda": "Tap an idea to add it, or write your own.",
+      "otro": "Write another"
+    },
+    "recuerdoSinFoto": "Memory without a photo: {texto}",
+    "tusCartas": "Your cards",
     "ordenar": "Sort by date",
     "irAPendientes": "Go to unfinished cards",
-    "resumenFechas": "Photo dates",
+    "resumenFechas": "Dates of your cards",
     "conFechaCuenta": "{n, plural, one {# with a date} other {# with a date}}",
     "sugeridasCuenta": "{n, plural, one {# with a suggested date} other {# with a suggested date}}",
     "sinFechaCuenta": "{n, plural, one {# without a date} other {# without a date}}",

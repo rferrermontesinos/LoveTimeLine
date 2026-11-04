@@ -35,8 +35,8 @@
     "incluido": "Incluido",
     "desde": "desde {precio}",
     "cargando": "Cargando…",
-    "guardadoLocal": "Guardado en este dispositivo",
     "anverso": "Cara de la foto",
+    "anversoTexto": "Cara del recuerdo",
     "reverso": "Cara de la fecha",
     "verAnverso": "Ver la cara de la foto",
     "verReverso": "Ver la cara de la fecha"
@@ -48,7 +48,9 @@
   },
   "pie": {
     "texto": "{marca} es un nombre provisional. Prototipo para pruebas de impresión.",
-    "fuentes": "Tipografía Bricolage Grotesque (SIL OFL 1.1)."
+    "fuentes": "Tipografía Bricolage Grotesque (SIL OFL 1.1).",
+    "fotos": "Fotos de muestra: {fuente}",
+    "fotosAutores": "ver autores"
   },
   "privacidadPagina": {
     "titulo": "Privacidad",
@@ -63,6 +65,10 @@
       "4": "No usamos analítica de terceros sobre tus imágenes ni las enviamos a otros servicios.",
       "5": "Puedes pedirnos en cualquier momento que borremos tu mazo y tus datos."
     },
+    "fotosTitulo": "Fotos de muestra",
+    "fotosTexto": "Las fotos de las cartas de ejemplo y la mesa de «Cómo se juega» son de {fuente}. Las personas que salen en ellas no tienen ninguna relación con {marca}: los recuerdos, los nombres y las fechas de las cartas son inventados.",
+    "fotosLicencia": "Licencia: <enlace>{licencia}</enlace>.",
+    "fotosDe": "<enlace>{descripcion}</enlace>, de {fotografo}",
     "contacto": "Contacto: {email}"
   }
 }

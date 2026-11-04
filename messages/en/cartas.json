@@ -26,6 +26,9 @@
     "descripcionAyuda": "Shown on the date side. Up to {max} characters.",
     "descripcionContador": "{n} / {max}",
     "descripcionEnAnverso": "Also show it on the photo side, as a clue",
+    "textoRecuerdo": "Memory text",
+    "textoRecuerdoAyuda": "Shown on both sides of the card. Up to {max} characters.",
+    "completarHueco": "Fill in <h>{hueco}</h>",
     "estrella": "Star memory",
     "estrellaAyuda": "Whoever places it correctly plays again. Up to {max} per deck.",
     "estrellaMax": "You already have {max} star memories.",
@@ -39,8 +42,24 @@
     "calidadJusta": "Fair ({ppp} ppi): it may look a bit blurry",
     "calidadConfirmar": "Print it anyway",
     "calidadConfirmada": "Confirmed: it will print like this",
-    "sinCartas": "Add photos in step 1 first.",
+    "sinCartas": "No cards yet. Add photos in step 1 or write a memory without a photo.",
     "irAFotos": "Go to photos",
-    "atajos": "Shortcuts: ← and → to move between cards."
+    "atajos": "Shortcuts: ← and → to move between cards.",
+    "ideas": {
+      "conocimos": "The day we met",
+      "primeraCita": "Our first date",
+      "primerBeso": "Our first kiss",
+      "primerViaje": "Our first trip together",
+      "vivirJuntos": "We moved in together",
+      "llaves": "We got the keys to our home",
+      "prometimos": "We got engaged",
+      "boda": "Our wedding",
+      "nacio": "[name] was born",
+      "abuelo": "Grandpa [name] was born",
+      "bodaAbuelos": "Our grandparents’ wedding",
+      "cole": "[name]’s first day of school",
+      "mascota": "[pet] came home",
+      "bodasPlata": "Silver wedding anniversary"
+    }
   }
 }

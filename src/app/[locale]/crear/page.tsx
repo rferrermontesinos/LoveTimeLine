@@ -10,23 +10,23 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("titulo") };
 }
 
-export default async function PaginaCrear({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+// El catálogo (packs y precios) se lee en cada petición, no al compilar.
+export const dynamic = "force-dynamic";
+
+/**
+ * `?pack=` (desde la portada) y `?pago=cancelado` (vuelta de Stripe) los lee el configurador en el
+ * navegador: los quita de la URL en cuanto los usa, y como props del servidor volverían con
+ * «Atrás» y se aplicarían otra vez.
+ */
+export default async function PaginaCrear({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const consulta = await searchParams;
   const catalogo = await obtenerCatalogo();
-  const pack = typeof consulta.pack === "string" ? consulta.pack : null;
   return (
     <>
       <CintaPrototipo />
       <Cabecera ocultarCta />
-      <Configurador catalogo={catalogo} packInicial={pack} pagoCancelado={consulta.pago === "cancelado"} />
+      <Configurador catalogo={catalogo} />
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import catalogoJson from "../../../supabase/catalogo.json";
 import type { Catalogo, Extra } from "@/domain/precios/tipos";
-import { datosCaja, datosPortada, esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, nuevaCartaTexto, varianteCaja } from "./derivados";
+import { cajaPropia, datosCaja, datosPortada, esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, nuevaCartaTexto, pppFotoCaja, proporcionCaja, varianteCaja } from "./derivados";
 import type { CartaFoto, FotoCaja, Mazo } from "./tipos";
 
 const catalogo = catalogoJson as unknown as Catalogo;
@@ -127,5 +127,37 @@ describe("datosCaja", () => {
   it("la portada es solo portada, con la dedicatoria", () => {
     expect(datosPortada(mazo(), "reverso")).toMatchObject({ tipo: "portada", dedicatoria: "Para Ana y Leo", subtitulo: "2010–2024" });
     expect(datosPortada(mazo(), "anverso").variante).toBeUndefined();
+  });
+});
+
+describe("foto propia de la caja", () => {
+  // La cara de la caja es la de la portada: 63 + 2 × 3 mm de ancho por 88 − 30 (banda) + 3 mm de alto.
+  const PROPORCION = 69 / 61;
+
+  it("la proporción de la foto en la cara de la caja sale de la plantilla", () => {
+    expect(proporcionCaja(mazo())).toBeCloseTo(PROPORCION, 10);
+  });
+
+  it("se guarda con un recorte centrado a esa proporción y sin crear carta", () => {
+    const f = { id: "nueva", nombreArchivo: "caja.jpg", tipoArchivo: "image/jpeg", hash: "h", ancho: 3200, alto: 2400, anchoOriginal: 4000, altoOriginal: 3000 };
+    const caja = cajaPropia(f, PROPORCION);
+    expect(caja).toMatchObject({ origen: "propia", id: "nueva", ancho: 3200, alto: 2400, anchoOriginal: 4000, altoOriginal: 3000 });
+    expect(caja.recorte.alto).toBe(2400);
+    expect(caja.recorte.ancho / caja.recorte.alto).toBeCloseTo(PROPORCION, 6);
+    expect(caja.recorte.x).toBeCloseTo((3200 - caja.recorte.ancho) / 2, 6);
+    expect(caja.recorte.y).toBe(0);
+    // Al ponerla, la caja la usa tal cual.
+    expect(fotoCaja(mazo({ caja }))).toEqual({ id: "nueva", ancho: 3200, recorte: caja.recorte });
+  });
+
+  it("la resolución cuenta solo lo que se imprime: el recorte ajustado a la cara, a 69 mm de ancho", () => {
+    // 1630 px en 69 mm (2,72 pulgadas): 600 ppp.
+    const alto = 1630 / PROPORCION;
+    expect(pppFotoCaja({ recorte: { x: 0, y: 0, ancho: 1630, alto } }, PROPORCION)).toBe(600);
+    // Un recorte más ancho que la cara pierde los lados: cuenta el ancho que queda.
+    expect(pppFotoCaja({ recorte: { x: 0, y: 0, ancho: 3000, alto } }, PROPORCION)).toBe(600);
+    // Una foto pequeña (640 × 480) no llega a los 300 ppp.
+    const pequena = cajaPropia({ id: "p", nombreArchivo: "p.jpg", tipoArchivo: "image/jpeg", hash: "p", ancho: 640, alto: 480, anchoOriginal: 640, altoOriginal: 480 }, PROPORCION);
+    expect(pppFotoCaja(pequena, PROPORCION)).toBe(200);
   });
 });

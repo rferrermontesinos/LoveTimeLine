@@ -2,11 +2,20 @@
   "inicio": {
     "heroAntetitulo": "A card game made with your photos",
     "heroTitulo": "Your story, in a deck of cards.",
-    "heroTexto": "Upload your photos, we read the dates and send you a game where you put memories in order. Was the trip to Menorca before or after your first dinner at home?",
+    "heroTexto": "Upload your photos, we read the dates and send you a game where you put memories in order. What came first, the train trip or your first dinner at home?",
     "heroCta": "Make my deck",
     "heroSecundario": "How to play",
-    "heroPrecio": "From {precio} · free shipping in Spain",
-    "abanicoAlt": "Three sample cards fanned out: one with the photo and the question, another with the date 14 August 2019.",
+    "abanicoAlt": "Three sample cards fanned out: one date side up, {fecha}, and two photo side up.",
+    "packs": {
+      "titulo": "Choose your pack",
+      "unidad": "{n, plural, one {card} other {cards}}",
+      "extra": "Each extra card, {precio}",
+      "empezar": "Start",
+      "empezarCon": "Start with the {pack} pack",
+      "sinFoto": "Cards can also be memories with no photo, just text, for the same price.",
+      "caja": "The box is included. If you’d like it with your photo, it’s {precio} more.",
+      "envio": "Free shipping to {paises}."
+    },
     "comoTitulo": "Three steps, then play",
     "como": {
       "1": {
@@ -15,7 +24,7 @@
       },
       "2": {
         "titulo": "Make it yours",
-        "texto": "Frame each photo, add a line if you like, and choose the style, the colour and a dedication for the cover."
+        "texto": "Frame each photo, add a line if you like, and choose the colours and a dedication for the cover."
       },
       "3": {
         "titulo": "Get it and play",
@@ -23,19 +32,23 @@
       }
     },
     "cartasTitulo": "Two sides, one question",
-    "cartasTexto": "On the front, the photo and the question: when was it? On the back, the answer: the year in big type and a 12-month strip that marks the month. If you only know the year of a photo, that works too.",
+    "cartasTexto": "On the front, the photo and the question: when was it? On the back, the answer: the year in big type and, if you know them, the day and the month.",
     "cartasPrecision": "Day, month or just the year: each card carries the date you know.",
     "voltear": "Flip the card",
-    "modosTitulo": "Ways to play",
-    "modosTexto": "One deck, two ways to play: everyone with their own cards, or all together against the deck.",
+    "ejemplosPrecision": "Three cards, three precisions: exact day, month and year, year only.",
+    "tipos": {
+      "titulo": "Ways to play",
+      "texto": "One deck, two ways to play: everyone with their own cards, or all together against the deck. In both, each player starts with {n} cards.",
+      "reglas": {
+        "clasico": "Classic rules",
+        "historia": "Our story rules"
+      }
+    },
     "mecanicasTitulo": "Free game extras",
     "mecanicasTexto": "They’re printed in the corner slot or as special cards. Turn them on or off with one tap.",
-    "preciosTitulo": "Clear prices",
-    "preciosTexto": "Pick a pack, which is the minimum to play. If you have more photos, add them 10 at a time.",
-    "packCartas": "{n} photo cards",
-    "packIncluye": "Box, cover card with dedication, instructions and shipping in Spain",
-    "ampliacion": "Extra card: {precio}",
     "extrasTitulo": "Optional extras",
+    "extrasTexto": "To give it as a gift, to get it in time or to have two. You choose them when your deck is ready.",
+    "extraPorcentaje": "{porcentaje} of the deck price",
     "privacidadTitulo": "Your photos are yours",
     "privacidad": {
       "1": "In this prototype, photos never leave your device: dates are read right here.",
@@ -54,12 +67,12 @@
         "r": "Set just the month or just the year. In the game, a year-only card fits anywhere in that year."
       },
       "3": {
-        "p": "What if the deck maker already knows every date?",
-        "r": "They can play as the Memory Keeper, play as a team with everyone else, or play with a handicap. See “How to play”."
+        "p": "What if I have no photo of a memory?",
+        "r": "Make it a text card: it carries the memory in words, like “The day we met”, with its date on the back and the same design as the rest. It counts and costs the same as a photo card."
       },
       "4": {
         "p": "How big are the cards?",
-        "r": "Standard poker size, 63 × 88 mm, with rounded corners."
+        "r": "Standard poker size, {ancho} × {alto} mm, with rounded corners."
       },
       "5": {
         "p": "Which languages?",
@@ -68,13 +81,30 @@
     },
     "ctaTitulo": "Shall we start with a few photos?",
     "ctaTexto": "Your deck is saved only on this device while you make it. You can leave and come back another day.",
-    "muestras": {
-      "menorca": "Our first trip together, Menorca",
-      "aniversario": "Anniversary dinner",
-      "excursion": "First hike with the grandparents",
-      "jardin": "The garden at the village house",
-      "nieve": "First time in the snow"
+    "borrador": {
+      "etiqueta": "Your saved deck",
+      "aMedias": "You have a deck in progress",
+      "pedido": "Deck already ordered",
+      "sinTitulo": "Your deck",
+      "guardado": "saved {cuando}",
+      "momento": "just now",
+      "continuar": "Continue my deck",
+      "continuarCorto": "Continue",
+      "ver": "See my deck",
+      "cerrar": "Dismiss"
     },
-    "ejemplosPrecision": "Three cards, three precisions: exact day, month and year, year only."
+    "muestras": {
+      "cita": "Our first date",
+      "tren": "That summer’s interrail trip",
+      "picnic": "Picnic in the park",
+      "playa": "Sunset on the beach",
+      "montana": "Our first mountain hike",
+      "furgoneta": "A week in a camper van",
+      "acampada": "Camping with the gang",
+      "cumple": "Ana’s 30th",
+      "boda": "Our wedding day",
+      "nochevieja": "New Year’s Eve, confetti everywhere",
+      "casa": "The keys to our home"
+    }
   }
 }

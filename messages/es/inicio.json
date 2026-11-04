@@ -2,11 +2,20 @@
   "inicio": {
     "heroAntetitulo": "Un juego de cartas con vuestras fotos",
     "heroTitulo": "Vuestra historia, en una baraja.",
-    "heroTexto": "Sube vuestras fotos, nosotros leemos las fechas y te mandamos a casa un juego para ordenar recuerdos. ¿Fue antes el viaje a Menorca o la primera cena en casa?",
+    "heroTexto": "Sube vuestras fotos, nosotros leemos las fechas y te mandamos a casa un juego para ordenar recuerdos. ¿Qué fue antes, el viaje en tren o la primera cena en casa?",
     "heroCta": "Crear mi mazo",
     "heroSecundario": "Cómo se juega",
-    "heroPrecio": "Desde {precio} · envío incluido en España",
-    "abanicoAlt": "Tres cartas de ejemplo en abanico: una con la foto y la pregunta, otra con la fecha 14 de agosto de 2019.",
+    "abanicoAlt": "Tres cartas de ejemplo en abanico: una por la cara de la fecha, {fecha}, y dos por la cara de la foto.",
+    "packs": {
+      "titulo": "Elige tu pack",
+      "unidad": "{n, plural, one {carta} other {cartas}}",
+      "extra": "Cada carta de más, {precio}",
+      "empezar": "Empezar",
+      "empezarCon": "Empezar con el pack {pack}",
+      "sinFoto": "Las cartas también pueden ser recuerdos sin foto, solo con texto, al mismo precio.",
+      "caja": "La caja va incluida. Si la quieres con vuestra foto, son {precio} más.",
+      "envio": "Envío incluido a {paises}."
+    },
     "comoTitulo": "Tres pasos y a jugar",
     "como": {
       "1": {
@@ -15,7 +24,7 @@
       },
       "2": {
         "titulo": "Dale tu toque",
-        "texto": "Encuadra, añade una frase si quieres y elige el estilo, el color y una dedicatoria para la portada."
+        "texto": "Encuadra, añade una frase si quieres y elige los colores y una dedicatoria para la portada."
       },
       "3": {
         "titulo": "Recíbelo y jugad",
@@ -23,19 +32,23 @@
       }
     },
     "cartasTitulo": "Dos caras, una pregunta",
-    "cartasTexto": "Delante, la foto y la pregunta: ¿cuándo fue? Detrás, la respuesta: el año en grande y una franja de 12 meses que marca el mes. Si de una foto solo sabes el año, también vale.",
+    "cartasTexto": "Delante, la foto y la pregunta: ¿cuándo fue? Detrás, la respuesta: el año en grande y, si los sabes, el día y el mes.",
     "cartasPrecision": "Día, mes o solo año: cada carta lleva la fecha que conozcas.",
     "voltear": "Dar la vuelta a la carta",
-    "modosTitulo": "Tipos de juego",
-    "modosTexto": "El mismo mazo, dos formas de jugar: cada uno con sus cartas o todos juntos contra el mazo.",
+    "ejemplosPrecision": "Tres cartas, tres precisiones: día exacto, mes y año, solo el año.",
+    "tipos": {
+      "titulo": "Tipos de juego",
+      "texto": "El mismo mazo, dos formas de jugar: cada uno con sus cartas o todos juntos contra el mazo. En las dos, cada persona empieza con {n} cartas.",
+      "reglas": {
+        "clasico": "Reglas del Clásico",
+        "historia": "Reglas de Nuestra historia"
+      }
+    },
     "mecanicasTitulo": "Extras de juego, sin coste",
     "mecanicasTexto": "Se imprimen en el hueco de la esquina o como cartas especiales. Los activas o los quitas con un toque.",
-    "preciosTitulo": "Precios claros",
-    "preciosTexto": "Eliges un pack, que es el mínimo para jugar. Si te sobran fotos, las añades de 10 en 10.",
-    "packCartas": "{n} cartas con foto",
-    "packIncluye": "Caja, portada con dedicatoria, instrucciones y envío en España",
-    "ampliacion": "Carta extra: {precio}",
     "extrasTitulo": "Extras opcionales",
+    "extrasTexto": "Para regalar, para que llegue a tiempo o para tenerlo por partida doble. Se eligen al terminar el mazo.",
+    "extraPorcentaje": "{porcentaje} del precio del mazo",
     "privacidadTitulo": "Tus fotos son tuyas",
     "privacidad": {
       "1": "En este prototipo, las fotos no salen de tu dispositivo: las fechas se leen aquí mismo.",
@@ -54,12 +67,12 @@
         "r": "Pon solo el mes o solo el año. En el juego, una carta con solo el año vale en cualquier punto de ese año."
       },
       "3": {
-        "p": "¿Qué pasa si quien hace el mazo ya sabe todas las fechas?",
-        "r": "Puede jugar de Guardián de la memoria, jugar en equipo con los demás o jugar con desventaja. Lo explicamos en «Cómo se juega»."
+        "p": "¿Y si de un recuerdo no tengo foto?",
+        "r": "Hazle una carta de texto: lleva el recuerdo escrito, como «El día que nos conocimos», con su fecha detrás y el mismo diseño que las demás. Cuenta y cuesta igual que una carta con foto."
       },
       "4": {
         "p": "¿Qué tamaño tienen las cartas?",
-        "r": "El de una baraja de póker, 63 × 88 mm, con esquinas redondeadas."
+        "r": "El de una baraja de póker, {ancho} × {alto} mm, con las esquinas redondeadas."
       },
       "5": {
         "p": "¿En qué idiomas?",
@@ -68,13 +81,30 @@
     },
     "ctaTitulo": "¿Empezamos con unas fotos?",
     "ctaTexto": "Tu mazo se guarda solo en este dispositivo mientras lo haces. Puedes dejarlo y seguir otro día.",
-    "muestras": {
-      "menorca": "Nuestro primer viaje juntos, Menorca",
-      "aniversario": "Cena de aniversario",
-      "excursion": "La primera excursión con los abuelos",
-      "jardin": "El jardín de la casa del pueblo",
-      "nieve": "Primera vez en la nieve"
+    "borrador": {
+      "etiqueta": "Tu mazo guardado",
+      "aMedias": "Tienes un mazo a medias",
+      "pedido": "Mazo ya pedido",
+      "sinTitulo": "Tu mazo",
+      "guardado": "guardado {cuando}",
+      "momento": "hace un momento",
+      "continuar": "Continuar mi mazo",
+      "continuarCorto": "Continuar",
+      "ver": "Ver mi mazo",
+      "cerrar": "Cerrar el aviso"
     },
-    "ejemplosPrecision": "Tres cartas, tres precisiones: día exacto, mes y año, solo el año."
+    "muestras": {
+      "cita": "Nuestra primera cita",
+      "tren": "El interrail de aquel verano",
+      "picnic": "Pícnic en el parque",
+      "playa": "Atardecer en la playa",
+      "montana": "Primera ruta por la montaña",
+      "furgoneta": "Una semana en furgoneta",
+      "acampada": "Acampada con la pandilla",
+      "cumple": "Los 30 de Ana",
+      "boda": "El día de la boda",
+      "nochevieja": "Nochevieja con confeti",
+      "casa": "Las llaves de casa"
+    }
   }
 }

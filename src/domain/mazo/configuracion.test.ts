@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { desdeIso, type FechaCarta } from "../fechas/fecha";
-import { cartaConfigurada, cartasPendientes, pasoMaximo, pendientesDeCarta, puedeIrAEstilo, siguientePendiente, tieneHueco, type CartaParaConfigurar } from "./configuracion";
+import { cartaConfigurada, cartasPendientes, pasoMaximo, pendientesDeCarta, puedeIrAEstilo, rangoHueco, siguientePendiente, tieneHueco, type CartaParaConfigurar } from "./configuracion";
 import { siguienteQue } from "./ordenar";
 
 const hoy = new Date("2026-11-04T10:00:00");
@@ -50,6 +50,14 @@ describe("cartaConfigurada", () => {
     expect(tieneHueco("Nació [nombre]")).toBe(true);
     expect(tieneHueco("Boda de [] y []")).toBe(true);
     expect(tieneHueco("Sin huecos")).toBe(false);
+  });
+
+  it("da la posición del primer hueco, con sus corchetes, para dejarlo seleccionado", () => {
+    expect(rangoHueco("Nació [nombre]")).toEqual({ inicio: 6, fin: 14 });
+    expect(rangoHueco("Boda de [] y []")).toEqual({ inicio: 8, fin: 10 });
+    expect(rangoHueco("Sin huecos")).toBeNull();
+    // En unidades de JavaScript, como setSelectionRange: un emoji ocupa dos.
+    expect(rangoHueco("🎂 Nació [nombre]")).toEqual({ inicio: 9, fin: 17 });
   });
 });
 

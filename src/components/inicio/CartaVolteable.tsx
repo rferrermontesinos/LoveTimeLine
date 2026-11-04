@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CartaDeMuestra, MUESTRAS } from "@/components/carta/Muestra";
+import { CartaDeMuestra, useMuestra } from "@/components/carta/Muestra";
+import { fechaLegible } from "@/domain/fechas/formato";
 
 /** Carta de ejemplo que se da la vuelta al pulsarla. */
 export function CartaVolteable({ idioma }: { idioma: string }) {
   const t = useTranslations();
+  const muestra = useMuestra()("cita");
   const [dorso, setDorso] = useState(false);
-  const muestra = { ...MUESTRAS.menorca!, descripcion: t("inicio.muestras.menorca") };
   return (
     <div className="flex flex-col items-center gap-4">
       <button
@@ -37,19 +38,14 @@ export function CartaVolteable({ idioma }: { idioma: string }) {
   );
 }
 
-/** Tres reversos que enseñan las tres precisiones de fecha. */
+/** Tres reversos que enseñan las tres precisiones de fecha: día, mes y solo año. */
 export function EjemplosPrecision({ idioma }: { idioma: string }) {
-  const t = useTranslations("inicio");
-  const base = MUESTRAS.excursion!;
-  const ejemplos = [
-    { ...base, foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: t("muestras.menorca"), paletaId: "rosa" },
-    { ...base, fecha: { anio: 2015, mes: 5 }, descripcion: t("muestras.excursion") },
-    { ...base, foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: t("muestras.jardin"), paletaId: "amarillo" },
-  ];
+  const muestra = useMuestra();
+  const ejemplos = [muestra("boda"), muestra("montana"), muestra("picnic")];
   return (
     <div className="grid grid-cols-3 gap-3 sm:gap-5">
       {ejemplos.map((e, i) => (
-        <CartaDeMuestra key={i} muestra={e} cara="reverso" etiqueta={e.descripcion ?? ""} idiomaMazo={idioma} />
+        <CartaDeMuestra key={i} muestra={e} cara="reverso" etiqueta={`${e.descripcion ?? ""}: ${e.fecha ? fechaLegible(e.fecha, idioma) : ""}`} idiomaMazo={idioma} ligera />
       ))}
     </div>
   );

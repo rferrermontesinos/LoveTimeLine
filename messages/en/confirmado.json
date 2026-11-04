@@ -3,10 +3,11 @@
     "titulo": "Order placed!",
     "tituloSimulado": "Test order placed",
     "texto": "In the real version you’d get an email and the deck in {min}–{max} working days.",
-    "textoPrototipo": "For the print tests, download the file and send it to Ricard.",
+    "archivo": "Print file",
+    "textoPrototipo": "For the print tests: download the file and send it to print as it is.",
     "descargarPdf": "Download the print file (PDF)",
+    "descargaPendiente": "You’ll be able to download it as soon as the payment is confirmed.",
     "generando": "Generating side {hecha} of {total}…",
-    "descargarInstrucciones": "Download the folding instructions",
     "volver": "Back to my deck",
     "sinMazo": "We can’t find the deck on this device.",
     "referencia": "Reference: {id}",
@@ -16,9 +17,9 @@
     "pdfError": "We couldn’t generate the PDF. Please try again.",
     "resumen": "{cartas} printed cards · {total}",
     "siguientes": "What’s next",
-    "paso1": "Download the print file: every side has 3 mm of bleed and crop marks.",
-    "paso2": "Print the instructions double-sided and fold them to card size.",
-    "paso3": "For your first game, try Guardian mode: whoever made the deck presents and tells the stories.",
+    "paso1": "Download the print file: every side has {sangrado} mm of bleed{marcas, select, si { and crop marks} other {}}.",
+    "paso1SinDescarga": "We check every card and send your deck to print.",
+    "aJugar": "Once the deck is in your hands, shuffle and play: the game modes and rules are in “How to play”.",
     "comoJugar": "See how to play"
   }
 }

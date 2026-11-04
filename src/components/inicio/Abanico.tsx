@@ -1,19 +1,20 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CartaDeMuestra, MUESTRAS } from "@/components/carta/Muestra";
+import { CartaDeMuestra, MUESTRAS, useMuestra } from "@/components/carta/Muestra";
+import { fechaLegible } from "@/domain/fechas/formato";
 
-/** Tres cartas en abanico sobre la mesa, repartidas con una animación corta. */
+/** Tres cartas en abanico sobre la mesa, repartidas con una animación corta: una por la cara de la fecha y dos por la de la foto. */
 export function Abanico({ idioma }: { idioma: string }) {
   const t = useTranslations("inicio");
-  const m = (clave: "menorca" | "excursion") => ({ ...MUESTRAS[clave]!, descripcion: t(`muestras.${clave}`) });
+  const muestra = useMuestra();
   const cartas = [
-    { muestra: m("menorca"), cara: "reverso" as const, giro: -11, x: "-58%", y: "6%", retraso: 0 },
-    { muestra: m("excursion"), cara: "anverso" as const, giro: 1, x: "0%", y: "-4%", retraso: 120 },
-    { muestra: m("menorca"), cara: "anverso" as const, giro: 11, x: "58%", y: "8%", retraso: 240 },
+    { muestra: muestra("tren"), cara: "reverso" as const, giro: -11, x: "-58%", y: "6%", retraso: 0 },
+    { muestra: muestra("playa"), cara: "anverso" as const, giro: 1, x: "0%", y: "-4%", retraso: 120 },
+    { muestra: muestra("casa"), cara: "anverso" as const, giro: 11, x: "58%", y: "8%", retraso: 240 },
   ];
   return (
-    <div role="img" aria-label={t("abanicoAlt")} className="relative mx-auto aspect-[1.15/1] w-full max-w-[560px]">
+    <div role="img" aria-label={t("abanicoAlt", { fecha: fechaLegible(MUESTRAS.tren.fecha, idioma) })} className="relative mx-auto aspect-[1.15/1] w-full max-w-[520px]">
       {cartas.map((c, i) => (
         <div
           key={i}
@@ -25,7 +26,7 @@ export function Abanico({ idioma }: { idioma: string }) {
             zIndex: i === 1 ? 2 : 1,
           }}
         >
-          <CartaDeMuestra muestra={c.muestra} cara={c.cara} etiqueta="" idiomaMazo={idioma} />
+          <CartaDeMuestra muestra={c.muestra} cara={c.cara} etiqueta="" idiomaMazo={idioma} ligera />
         </div>
       ))}
     </div>
