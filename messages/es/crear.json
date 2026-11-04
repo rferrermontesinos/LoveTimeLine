@@ -81,6 +81,8 @@
       "subirIgual": "Con {n, plural, one {# carta más} other {# cartas más}} pasas al pack {pack} y pagas lo mismo que ahora.",
       "packAplicado": "Ya te aplicamos el pack {pack}: te ahorras {ahorro}.",
       "packAplicadoDetalle": "Con tantas cartas te sale mejor el pack {pack}, así que te lo aplicamos: te ahorras {ahorro}.",
+      "packAplicadoHuecos": "Ya te aplicamos el pack {pack}: te ahorras {ahorro} y {huecos, plural, one {te cabe # carta más} other {te caben # cartas más}} sin pagar nada.",
+      "packAplicadoHuecosDetalle": "El pack {pack} te sale más barato que sumar cartas sueltas, así que te lo aplicamos: te ahorras {ahorro} y {huecos, plural, one {aún te cabe # carta más} other {aún te caben # cartas más}} sin pagar nada.",
       "bajar": "Con el pack {pack} ya podrías pagar ({total}).",
       "cambiarA": "Cambiar al pack {pack}"
     },

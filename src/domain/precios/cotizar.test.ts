@@ -57,14 +57,25 @@ describe("cotizar: ofertas", () => {
     expect(c.ofertas).toEqual([]);
   });
 
-  it("si con unas cartas más se paga menos, lo dice", () => {
-    // 55 cartas en el pequeño: 61 €. Con 5 más, el mediano: 59 €.
+  it("nunca se paga más que el pack siguiente: se cobra ese y dice cuántas cartas caben aún", () => {
+    // 55 cartas en el pequeño serían 61 €; el mediano (60 cartas) cuesta 59 €: se cobra ese.
     const c = cotizar({ catalogo, packId: "pequeno", cartas: 55 });
-    expect(c.totalCents).toBe(6100);
-    expect(oferta(c.ofertas, "subir")).toMatchObject({ pack: { id: "mediano" }, cartasMas: 5, diferenciaCents: -200, ahorroCents: 600 });
-    // Mediano con 89 cartas: 79,30 €; con 11 más, el grande cuesta 79 €. Se avisa aunque falten más de 10.
+    expect(c.pack.id).toBe("pequeno");
+    expect(c.packAplicado.id).toBe("mediano");
+    expect(c.totalCents).toBe(5900);
+    expect(c.cartasExtra).toBe(0);
+    expect(c.minimo).toBe(40);
+    expect(c.sePuedePagar).toBe(true);
+    // Se imprimen las 55 y la portada: los 5 huecos no salen en blanco.
+    expect(c.cartasFisicas).toBe(56);
+    expect(c.ofertas).toEqual([expect.objectContaining({ tipo: "pack-aplicado", pack: expect.objectContaining({ id: "mediano" }), ahorroCents: 200, huecos: 5 })]);
+    // Desde 53 cartas (59,40 € sueltas) ya compensa.
+    expect(cotizar({ catalogo, packId: "pequeno", cartas: 52 }).packAplicado.id).toBe("pequeno");
+    expect(oferta(cotizar({ catalogo, packId: "pequeno", cartas: 53 }).ofertas, "pack-aplicado")).toMatchObject({ ahorroCents: 40, huecos: 7 });
+    // Mediano con 89 cartas serían 79,30 €; el grande cuesta 79 €.
     const m = cotizar({ catalogo, packId: "mediano", cartas: 89 });
-    expect(oferta(m.ofertas, "subir")).toMatchObject({ pack: { id: "grande" }, cartasMas: 11, diferenciaCents: -30 });
+    expect(m.totalCents).toBe(7900);
+    expect(oferta(m.ofertas, "pack-aplicado")).toMatchObject({ pack: { id: "grande" }, ahorroCents: 30, huecos: 11 });
   });
 
   it("cobra solo el pack mayor cuando ya está cubierto y sale más barato", () => {
@@ -74,7 +85,7 @@ describe("cotizar: ofertas", () => {
     expect(c.packAplicado.id).toBe("mediano");
     expect(c.totalCents).toBe(6040);
     expect(c.minimo).toBe(40);
-    expect(oferta(c.ofertas, "pack-aplicado")).toMatchObject({ pack: { id: "mediano" }, ahorroCents: 620 });
+    expect(oferta(c.ofertas, "pack-aplicado")).toMatchObject({ pack: { id: "mediano" }, ahorroCents: 620, huecos: 0 });
     // 100 cartas en el pequeño: el grande (79 €) es lo más barato.
     expect(cotizar({ catalogo, packId: "pequeno", cartas: 100 }).packAplicado.id).toBe("grande");
   });
@@ -86,16 +97,27 @@ describe("cotizar: ofertas", () => {
     expect(oferta(c.ofertas, "bajar")).toMatchObject({ pack: { id: "pequeno" }, totalCents: 6100 });
   });
 
-  it("nunca cobra más que con el pack elegido, y el pack aplicado siempre está cubierto", () => {
-    for (const p of packsActivos(catalogo)) {
-      for (let n = p.cartas; n <= catalogo.ampliacion.maxCartas; n++) {
-        const c = cotizar({ catalogo, packId: p.id, cartas: n });
-        const cajasExtra = Math.ceil((n + 1) / catalogo.caja.capacidadCartas) - 1;
-        const sinCambio = p.precioCents + (n - p.cartas) * p.precioCartaExtraCents + cajasExtra * catalogo.caja.precioCajaExtraCents;
-        expect(c.totalCents).toBeLessThanOrEqual(sinCambio);
-        expect(c.packAplicado.cartas).toBeLessThanOrEqual(n);
-        const s = oferta(c.ofertas, "subir");
-        if (s && s.tipo === "subir") expect(s.ahorroCents).toBeGreaterThan(0);
+  it("nunca cobra más que con el pack elegido, ni más que un pack mayor, y el precio no baja al sumar cartas", () => {
+    const mecanicas = catalogo.mecanicas.filter((m) => m.activo && m.porDefecto).map((m) => m.id);
+    for (const conMecanicas of [[], mecanicas]) {
+      for (const p of packsActivos(catalogo)) {
+        let anterior = 0;
+        for (let n = p.cartas; n <= catalogo.ampliacion.maxCartas; n++) {
+          const c = cotizar({ catalogo, packId: p.id, cartas: n, mecanicas: conMecanicas });
+          if (conMecanicas.length === 0) {
+            const cajasExtra = Math.ceil((n + 1) / catalogo.caja.capacidadCartas) - 1;
+            const sinCambio = p.precioCents + (n - p.cartas) * p.precioCartaExtraCents + cajasExtra * catalogo.caja.precioCajaExtraCents;
+            expect(c.totalCents).toBeLessThanOrEqual(sinCambio);
+            expect(c.cartasFisicas).toBe(n + 1);
+          }
+          for (const q of packsActivos(catalogo).filter((q) => q.cartas >= n && q.cartas > p.cartas)) {
+            expect(c.totalCents).toBeLessThanOrEqual(cotizar({ catalogo, packId: q.id, cartas: q.cartas, mecanicas: conMecanicas }).totalCents);
+          }
+          expect(c.totalCents).toBeGreaterThanOrEqual(anterior);
+          anterior = c.totalCents;
+          const s = oferta(c.ofertas, "subir");
+          if (s && s.tipo === "subir") expect(s.ahorroCents).toBeGreaterThan(0);
+        }
       }
     }
   });

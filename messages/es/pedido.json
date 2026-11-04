@@ -35,7 +35,8 @@
       "baja-resolucion": "{n, plural, one {# foto puede verse borrosa} other {# fotos pueden verse borrosas}} al imprimir.",
       "revisar-fechas": "{n, plural, one {# fecha conviene revisarla} other {# fechas conviene revisarlas}}.",
       "fechas-duplicadas": "{n, plural, one {Hay # fecha repetida} other {Hay # fechas repetidas}}: en el juego valdrá cualquier orden entre esas cartas.",
-      "fotos-duplicadas": "{n, plural, one {Hay # foto repetida} other {Hay # fotos repetidas}}."
+      "fotos-duplicadas": "{n, plural, one {Hay # foto repetida} other {Hay # fotos repetidas}}.",
+      "caja-sin-foto": "La caja personalizada aún no tiene foto: elige una o quita ese extra."
     },
     "confirmarBaja": "Imprimir igualmente",
     "anadirFotos": "Añadir fotos",

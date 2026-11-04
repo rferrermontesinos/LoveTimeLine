@@ -60,7 +60,7 @@ export function OfertasPedido() {
             <IconoOferta tipo={o.tipo} />
             <span>{texto(o, cotizacion.moneda, true)}</span>
           </p>
-          {o.tipo === "subir" && (
+          {(o.tipo === "subir" || (o.tipo === "pack-aplicado" && o.huecos > 0)) && (
             <span className="flex flex-wrap gap-2">
               <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={() => irAPaso(1)}>
                 {tp("anadirFotos")}

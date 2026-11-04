@@ -7,7 +7,7 @@ import { Dialogo } from "@/components/ui/Dialogo";
 import { Aviso, Chip, Franja, Micro, Pestana } from "@/components/ui/Piezas";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 import { fechaCorta, fechaLegible } from "@/domain/fechas/formato";
-import { sesionDeEscaneo } from "@/domain/fechas/sesion";
+import { aceptableEnLote, sesionDeEscaneo } from "@/domain/fechas/sesion";
 import { esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo } from "@/lib/importar/procesar";
@@ -117,8 +117,10 @@ export function PasoFotos() {
   const ideas = resumen && resumen.anadidas > 0 ? ideasParaProponer(mazo.idiomaMazo, cartas) : [];
   const anadido = recuerdoAnadido && recuerdoAnadido !== anadidoAlEntrar && cartas.some((c) => c.id === recuerdoAnadido.id) ? recuerdoAnadido : null;
   const sesion = sesionDeEscaneo(mazo.cartas);
-  const idsSugeridas = mazo.cartas.filter(conSugerencia).map((c) => c.id);
-  const seleccionSugeridas = mazo.cartas.filter((c) => seleccion.has(c.id) && conSugerencia(c)).map((c) => c.id);
+  // De una vez solo las que no son recientes: esas pueden ser la fecha de una copia, un escaneo o un reenvío.
+  const idsSugeridas = mazo.cartas.filter((c) => aceptableEnLote(c, hoy)).map((c) => c.id);
+  const recientes = sugeridas - idsSugeridas.length;
+  const seleccionSugeridas = mazo.cartas.filter((c) => seleccion.has(c.id) && aceptableEnLote(c, hoy)).map((c) => c.id);
   const loteVigente = loteSugeridas && loteSugeridas.despues === mazo ? loteSugeridas : null;
 
   /** Acepta la primera sugerencia de cada carta, en un solo paso de deshacer. */
@@ -323,16 +325,19 @@ export function PasoFotos() {
               <span className="font-semibold">{t("fotos.sugeridasUsadas", { n: loteVigente.n })}</span>
             </Aviso>
           ) : (
-            idsSugeridas.length > 0 && (
+            sugeridas > 0 && (
               <Aviso
                 tono="info"
                 accion={
-                  <Boton tamano="sm" className="max-sm:min-h-11 max-sm:w-full" onClick={() => usarSugeridas(idsSugeridas)}>
-                    {t("fotos.usarSugeridas", { n: idsSugeridas.length })}
-                  </Boton>
+                  idsSugeridas.length > 0 ? (
+                    <Boton tamano="sm" className="max-sm:min-h-11 max-sm:w-full" onClick={() => usarSugeridas(idsSugeridas)}>
+                      {t("fotos.usarSugeridas", { n: idsSugeridas.length })}
+                    </Boton>
+                  ) : undefined
                 }
               >
-                {t("fotos.sugeridasAyuda")}
+                {idsSugeridas.length > 0 ? t("fotos.sugeridasAyuda") : t("fotos.soloSeguras")}
+                {recientes > 0 && <> {t("fotos.recientesAparte", { n: recientes })}</>}
               </Aviso>
             )
           )}
@@ -493,6 +498,7 @@ function Miniatura({
   alPulsar: () => void;
 }) {
   const t = useTranslations("fotos");
+  const tf = useTranslations("fechas");
   const url = useUrlFoto(carta.id, "mini", version);
   const sugerencia = !carta.fecha ? (carta.sugerencias?.[0] ?? null) : null;
   const confianza = carta.fecha ? (carta.revisar ? "baja" : carta.confianza === "alta" ? "alta" : "media") : sugerencia ? "sugerida" : null;
@@ -536,7 +542,8 @@ function Miniatura({
       </button>
       {confianza && (
         <Micro as="span" className="sr-only">
-          {t(`confianza.${confianza}`)}
+          {/* Con fecha, de dónde sale (una sugerida aceptada dice la suya, no «de la foto»). */}
+          {carta.fecha && !carta.revisar && carta.fuente ? tf(`fuente.${carta.fuente}`) : t(`confianza.${confianza}`)}
         </Micro>
       )}
     </li>

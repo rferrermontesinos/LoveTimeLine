@@ -7,6 +7,9 @@
   }
 
   html {
+    /* Las barras fijas de abajo (configurador, «Continuar mi mazo») dicen aquí cuánto ocupan,
+       para que el foco no quede tapado (src/components/ui/reservaAbajo.ts). */
+    scroll-padding-bottom: var(--reserva-abajo, 0px);
     background: var(--color-papel);
     color: var(--color-tinta);
     -webkit-text-size-adjust: 100%;

@@ -35,12 +35,13 @@ describe("textoOferta", () => {
   });
 
   it("subir de pack pagando menos que ahora o lo mismo", () => {
-    // 55 cartas en el pequeño: 61 €. Con 5 más, el mediano cuesta 59 €.
-    const menos = oferta("pequeno", 55, "subir");
+    // Con el catálogo de ahora no pasa (el pack mayor ya se cobra en cuanto sale más barato),
+    // pero la frase existe por si otro catálogo lo hace posible.
+    const mediano = catalogo.packs.find((p) => p.id === "mediano")!;
+    const menos: Oferta = { tipo: "subir", pack: mediano, cartasMas: 5, diferenciaCents: -200, ahorroCents: 600 };
     expect(frase(menos, "es")).toBe("Con 5 cartas más pasas al pack Mediano y pagas 2 € menos que ahora.");
     expect(frase(menos, "es", true)).toBe(frase(menos, "es"));
     expect(frase(menos, "en")).toBe("With 5 more cards you move up to the Medium pack and pay €2 less than now.");
-    const mediano = catalogo.packs.find((p) => p.id === "mediano")!;
     const igual: Oferta = { tipo: "subir", pack: mediano, cartasMas: 1, diferenciaCents: 0, ahorroCents: 80 };
     expect(frase(igual, "es")).toBe("Con 1 carta más pasas al pack Mediano y pagas lo mismo que ahora.");
     expect(frase(igual, "en")).toBe("With 1 more card you move up to the Medium pack and pay the same as now.");
@@ -52,6 +53,18 @@ describe("textoOferta", () => {
     expect(frase(o, "es")).toBe("Ya te aplicamos el pack Mediano: te ahorras 6,20 €.");
     expect(frase(o, "es", true)).toBe("Con tantas cartas te sale mejor el pack Mediano, así que te lo aplicamos: te ahorras 6,20 €.");
     expect(frase(o, "en")).toBe("We’ve applied the Medium pack: you save €6.20.");
+  });
+
+  it("pack mayor aplicado antes de tener sus cartas: lo que se ahorra y cuántas caben aún gratis", () => {
+    // 55 cartas en el pequeño serían 61 €; el mediano cuesta 59 € y le caben 60.
+    const o = oferta("pequeno", 55, "pack-aplicado");
+    expect(frase(o, "es")).toBe("Ya te aplicamos el pack Mediano: te ahorras 2 € y te caben 5 cartas más sin pagar nada.");
+    expect(frase(o, "es", true)).toBe(
+      "El pack Mediano te sale más barato que sumar cartas sueltas, así que te lo aplicamos: te ahorras 2 € y aún te caben 5 cartas más sin pagar nada.",
+    );
+    expect(frase(o, "en")).toBe("We’ve applied the Medium pack: you save €2 and 5 more cards fit at no extra cost.");
+    const una = frase({ ...o, huecos: 1 } as Oferta, "es");
+    expect(una).toBe("Ya te aplicamos el pack Mediano: te ahorras 2 € y te cabe 1 carta más sin pagar nada.");
   });
 
   it("bajar de pack cuando faltan cartas: con qué pack ya se podría pagar y cuánto", () => {

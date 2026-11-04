@@ -33,6 +33,8 @@
     "sinFechaCuenta": "{n, plural, one {# without a date} other {# without a date}}",
     "revisarCuenta": "{n, plural, one {# to check} other {# to check}}",
     "sugeridasAyuda": "We only fill in a date when we’re sure. Check the suggested ones, or use them all at once.",
+    "soloSeguras": "We only fill in a date when we’re sure.",
+    "recientesAparte": "{n, plural, one {One has a recent date, which may be when a copy or scan was made: check it on its card.} other {# have a recent date, which may be when a copy or scan was made: check them one by one on their cards.}}",
     "usarSugeridas": "{n, plural, one {Use the suggested date} other {Use the # suggested dates}}",
     "sugeridasUsadas": "{n, plural, one {# suggested date set.} other {# suggested dates set.}}",
     "sesionEscaneo": "{n} photos share the same recent suggested date, {fecha}. If they’re old photos you scanned or photographed that day, that’s the date of the copy: add the date of the memory instead.",

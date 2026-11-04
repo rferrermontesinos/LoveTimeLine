@@ -7,7 +7,8 @@
     "siguientePendiente": "Siguiente pendiente",
     "estado": {
       "lista": "Carta lista",
-      "pendiente": "Pendiente: {motivos}"
+      "pendiente": "Pendiente: {motivos}",
+      "pendienteOtraVez": "Pendiente: {motivos}. Complétala o pulsa otra vez «Siguiente» para dejarla para luego."
     },
     "pendiente": {
       "sin-fecha": "falta la fecha",

@@ -33,6 +33,8 @@
     "sinFechaCuenta": "{n, plural, one {# sin fecha} other {# sin fecha}}",
     "revisarCuenta": "{n, plural, one {# por revisar} other {# por revisar}}",
     "sugeridasAyuda": "Solo ponemos la fecha cuando estamos seguros. Las sugeridas, revísalas o úsalas todas de una vez.",
+    "soloSeguras": "Solo ponemos la fecha cuando estamos seguros.",
+    "recientesAparte": "{n, plural, one {Una tiene una fecha reciente, que puede ser la de una copia o un escaneo: revísala en su carta.} other {# tienen una fecha reciente, que puede ser la de una copia o un escaneo: revísalas una a una en sus cartas.}}",
     "usarSugeridas": "{n, plural, one {Usar la fecha sugerida} other {Usar las # fechas sugeridas}}",
     "sugeridasUsadas": "{n, plural, one {# fecha sugerida puesta.} other {# fechas sugeridas puestas.}}",
     "sesionEscaneo": "{n} fotos tienen como fecha sugerida el mismo día reciente, el {fecha}. Si son fotos antiguas que escaneaste o fotografiaste ese día, esa es la fecha de la copia: pon la del recuerdo.",

@@ -32,6 +32,15 @@ describe("validarMazo", () => {
     expect(r.puedePagar).toBe(false);
   });
 
+  it("bloquea la caja personalizada sin foto", () => {
+    const cartas = mazo(40).map((c, i) => ({ ...c, fecha: { anio: 1980 + i } }));
+    const sin = validarMazo({ cartas, minimo: 40, maximo: 300, hoy, pppMinimo: 300, cajaSinFoto: true });
+    expect(sin.avisos).toEqual([{ tipo: "caja-sin-foto" }]);
+    expect(GRAVEDAD["caja-sin-foto"]).toBe("bloquea");
+    expect(sin.puedePagar).toBe(false);
+    expect(validarMazo({ cartas, minimo: 40, maximo: 300, hoy, pppMinimo: 300, cajaSinFoto: false }).puedePagar).toBe(true);
+  });
+
   it("la baja resolución pide confirmación pero no bloquea una vez confirmada", () => {
     const base = Array.from({ length: 40 }, (_, i) => carta(String(1980 + i)));
     const conBaja = [...base.slice(1), { ...base[0]!, ppp: 180 }];

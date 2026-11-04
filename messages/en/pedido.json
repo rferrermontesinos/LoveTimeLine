@@ -35,7 +35,8 @@
       "baja-resolucion": "{n, plural, one {# photo may look blurry} other {# photos may look blurry}} when printed.",
       "revisar-fechas": "{n, plural, one {# date is worth checking} other {# dates are worth checking}}.",
       "fechas-duplicadas": "{n, plural, one {There is # repeated date} other {There are # repeated dates}}: in the game, any order between those cards counts.",
-      "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}."
+      "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}.",
+      "caja-sin-foto": "The personalised box has no photo yet: choose one or remove that extra."
     },
     "confirmarBaja": "Print anyway",
     "anadirFotos": "Add photos",

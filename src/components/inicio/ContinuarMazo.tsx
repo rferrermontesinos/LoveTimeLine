@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { BotonEnlace } from "@/components/ui/Boton";
+import { reservarAbajo } from "@/components/ui/reservaAbajo";
 import { cargarMazo } from "@/lib/almacen/idb";
 import { marcaCierre, resumenBorrador, tiempoRelativo, type ResumenBorrador } from "./borrador";
 
@@ -62,6 +63,7 @@ export function ContinuarMazo() {
       {/* Hueco al final de la página, del alto del aviso: con él abierto, el pie se puede ver entero. */}
       <div aria-hidden="true" className="h-16 bg-tinta sm:h-52" />
       <aside
+        ref={reservarAbajo}
         aria-label={t("etiqueta")}
         data-aviso-borrador
         className="fixed inset-x-0 bottom-0 z-40 [animation:aparecer_260ms_var(--ease-salida)_both] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[24rem]"

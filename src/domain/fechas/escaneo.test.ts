@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { esDispositivoEscaner, esNombreDeEscaneo, senalesDeEscaneo, sinDiacriticos } from "./escaneo";
-import { sesionDeEscaneo } from "./sesion";
+import type { FechaCarta } from "./fecha";
+import { aceptableEnLote, sesionDeEscaneo } from "./sesion";
 
 describe("senalesDeEscaneo: metadatos", () => {
   it.each([
@@ -130,5 +131,34 @@ describe("sesionDeEscaneo", () => {
     const envio = { fecha: null, sugerencias: [{ fecha: { anio: 2026, mes: 10, dia: 30 }, motivo: "fecha-de-envio" as const }] };
     expect(sesionDeEscaneo(Array.from({ length: 8 }, () => envio))).toBeNull();
     expect(sesionDeEscaneo(Array.from({ length: 8 }, () => ({ ...reciente(30), fecha: { anio: 2026, mes: 10, dia: 30 } })))).toBeNull();
+  });
+});
+
+describe("aceptableEnLote", () => {
+  const hoy = new Date(2026, 10, 4, 12);
+  const con = (motivo?: "fecha-reciente" | "fecha-de-envio" | "fecha-anotada", fecha: FechaCarta = { anio: 2019, mes: 8, dia: 14 }) => ({
+    fecha: null,
+    sugerencias: [{ fecha, ...(motivo ? { motivo } : {}) }],
+  });
+
+  it("deja fuera las fechas recientes, que pueden ser de una copia, un escaneo o un reenvío", () => {
+    expect(aceptableEnLote(con("fecha-reciente", { anio: 2026, mes: 11, dia: 2 }), hoy)).toBe(false);
+    // Una foto antigua reenviada este año por WhatsApp: la fecha es la del envío.
+    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2026, mes: 10, dia: 20 }), hoy)).toBe(false);
+    expect(aceptableEnLote(con("fecha-anotada", { anio: 2026 }), hoy)).toBe(false);
+    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2025, mes: 11, dia: 6 }), hoy)).toBe(false);
+  });
+
+  it("acepta las otras pistas, si no son recientes", () => {
+    expect(aceptableEnLote(con("fecha-de-envio"), hoy)).toBe(true);
+    expect(aceptableEnLote(con("fecha-anotada"), hoy)).toBe(true);
+    expect(aceptableEnLote(con(), hoy)).toBe(true);
+    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2025, mes: 10, dia: 1 }), hoy)).toBe(true);
+  });
+
+  it("no toca cartas con fecha ni cartas sin pistas", () => {
+    expect(aceptableEnLote({ ...con("fecha-de-envio"), fecha: { anio: 2019 } }, hoy)).toBe(false);
+    expect(aceptableEnLote({ fecha: null }, hoy)).toBe(false);
+    expect(aceptableEnLote({ fecha: null, sugerencias: [] }, hoy)).toBe(false);
   });
 });

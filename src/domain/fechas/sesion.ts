@@ -1,5 +1,5 @@
 import { aIso, desdeIso, type FechaCarta } from "./fecha";
-import type { MotivoRevision } from "./proponer";
+import { DIAS_FECHA_RECIENTE, puedeSerReciente, type MotivoRevision } from "./proponer";
 
 /** Lo que hace falta de una carta para detectar una sesión de escaneo. */
 export interface CartaConSugerencias {
@@ -33,4 +33,15 @@ export function sesionDeEscaneo(cartas: readonly CartaConSugerencias[], minimo =
     if (fotos >= minimo && (!mejor || fotos > mejor.fotos)) mejor = { dia: desdeIso(iso)!, fotos };
   }
   return mejor;
+}
+
+/**
+ * Si la mejor sugerencia de una carta sin fecha se puede aceptar junto con otras, de una vez.
+ * Las recientes no, sea cual sea su pista: pueden ser el día en que se escaneó o se fotografió una
+ * copia, o en que se reenvió por WhatsApp una foto antigua, justo lo que no se debe poner sin
+ * mirar. Esas se aceptan una a una, desde su carta.
+ */
+export function aceptableEnLote(c: CartaConSugerencias, hoy: Date, dias = DIAS_FECHA_RECIENTE): boolean {
+  const s = c.sugerencias?.[0];
+  return !c.fecha && s !== undefined && s.motivo !== "fecha-reciente" && !puedeSerReciente(s.fecha, hoy, dias);
 }

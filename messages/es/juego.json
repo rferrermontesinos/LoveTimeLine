@@ -2,13 +2,13 @@
   "juego": {
     "titulo": "Cómo se juega",
     "intro": "Un juego para ordenar vuestros recuerdos. Cada carta tiene la foto delante y la fecha detrás: colócala en la línea del tiempo donde creas que va, dale la vuelta y descubre si acertaste.",
-    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea de recuerdos con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista, el mazo de robo, un comodín y una carta en blanco.",
+    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea del tiempo con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista, el mazo de robo, un comodín y una carta en blanco.",
     "mesa": {
       "titulo": "Así se ve una partida",
       "texto": "La foto de cada carta da la pista; la fecha de detrás, la respuesta.",
       "textoCarta": "El día que nos conocimos",
       "leyenda": {
-        "linea": "La línea de recuerdos: las cartas ya colocadas, por la cara de la fecha y en orden. Alguna es un recuerdo sin foto, solo con texto.",
+        "linea": "La línea del tiempo: las cartas ya colocadas, por la cara de la fecha y en orden. Alguna es un recuerdo sin foto, solo con texto.",
         "candidata": "En tu turno, eliges una de tus cartas y la pones donde crees que va. Después, vuelta: ¿encaja la fecha?",
         "manos": "Las cartas de cada persona, con la foto a la vista y la fecha escondida.",
         "robo": "El mazo de robo, para cuando se falla en el Clásico.",

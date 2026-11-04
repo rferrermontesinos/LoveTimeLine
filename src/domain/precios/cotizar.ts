@@ -32,13 +32,14 @@ export interface LineaCotizacion {
 
 /**
  * Avisos de oferta, calculados con el mismo catálogo que el precio:
- * · «pack-aplicado»: con estas cartas ya se cobra un pack mayor, porque sale más barato.
+ * · «pack-aplicado»: se cobra un pack mayor, porque sale más barato. Si el mazo aún no tiene sus
+ *   cartas, `huecos` dice cuántas caben todavía sin pagar nada más.
  * · «subir»: con unas pocas cartas más se pasa a un pack mayor y sale a cuenta
  *   (diferenciaCents ≤ 0 es pagar lo mismo o menos y tener más cartas).
  * · «bajar»: faltan cartas para el pack elegido, pero un pack menor ya está cubierto.
  */
 export type Oferta =
-  | { tipo: "pack-aplicado"; pack: Pack; ahorroCents: number }
+  | { tipo: "pack-aplicado"; pack: Pack; ahorroCents: number; huecos: number }
   | { tipo: "subir"; pack: Pack; cartasMas: number; diferenciaCents: number; ahorroCents: number }
   | { tipo: "bajar"; pack: Pack; totalCents: number };
 
@@ -46,7 +47,7 @@ export interface Cotizacion {
   moneda: string;
   /** Pack elegido por el cliente. */
   pack: Pack;
-  /** Pack que se cobra: el elegido o uno mayor si con estas cartas sale más barato. */
+  /** Pack que se cobra: el elegido o uno mayor si sale más barato (aunque aún no tenga sus cartas). */
   packAplicado: Pack;
   /** Cartas de recuerdo (con foto y de texto). */
   cartas: number;
@@ -56,7 +57,7 @@ export interface Cotizacion {
   /** Cartas que pasan de las incluidas en el pack aplicado. */
   cartasExtra: number;
   precioCartaExtraCents: number;
-  /** Cartas impresas: recuerdos + portada + cartas de mecánicas y extras. */
+  /** Cartas impresas: recuerdos (o el mínimo, mientras falten) + portada + mecánicas y extras. */
   cartasFisicas: number;
   cajas: number;
   lineas: LineaCotizacion[];
@@ -91,7 +92,9 @@ function cotizarCon(catalogo: Catalogo, elegido: Pack, aplicado: Pack, n: number
 
   const cartasMecanicas = sel.mecanicas.reduce((s, m) => s + (m.tipo === "cartas" ? (m.cartasFisicas ?? 0) : 0), 0);
   const cartasExtras = sel.extras.reduce((s, x) => s + (x.cartasFisicas ?? 0), 0);
-  const cartasFisicas = Math.max(n, aplicado.cartas) + CARTAS_PORTADA + cartasMecanicas + cartasExtras;
+  // Se imprimen las cartas que hay: los huecos de un pack mayor cobrado por ser más barato no
+  // salen en blanco. Mientras falten para el mínimo, se cuenta el mínimo (es el mazo que se pagará).
+  const cartasFisicas = Math.max(n, elegido.cartas) + CARTAS_PORTADA + cartasMecanicas + cartasExtras;
   const cajas = Math.max(1, Math.ceil(cartasFisicas / catalogo.caja.capacidadCartas));
 
   const lineas: LineaCotizacion[] = [{ tipo: "pack", id: aplicado.id, cantidad: 1, importeCents: aplicado.precioCents }];
@@ -154,9 +157,10 @@ function seleccion(e: EntradaCotizacion): Seleccion {
 /**
  * Calcula el precio de un mazo con los datos del catálogo. Todo en céntimos.
  * · El pack elegido marca el mínimo de cartas para pagar.
- * · Si con las cartas que hay ya se cubre un pack mayor y sale más barato, se cobra ese
- *   (el cliente nunca paga más por tener más cartas incluidas).
  * · Las cartas que pasan de las incluidas se cobran una a una al precio del pack aplicado.
+ * · Si un pack mayor sale más barato, se cobra ese, tenga o no ya sus cartas: el precio nunca
+ *   pasa del de un pack mayor ni baja al sumar cartas (con 53 cartas en el Pequeño se pagan los
+ *   59 € del Mediano, no 59,40 €, y aún caben 7 más sin pagar nada).
  */
 export function cotizar(e: EntradaCotizacion): Cotizacion {
   const { catalogo } = e;
@@ -166,8 +170,8 @@ export function cotizar(e: EntradaCotizacion): Cotizacion {
   const sel = seleccion(e);
   const n = e.cartas;
 
-  // Packs que se pueden cobrar: el elegido y los mayores que ya están cubiertos.
-  const candidatos = packsActivos(catalogo).filter((p) => p.id === elegido.id || (p.cartas > elegido.cartas && p.cartas <= n));
+  // Packs que se pueden cobrar: el elegido y los mayores.
+  const candidatos = packsActivos(catalogo).filter((p) => p.id === elegido.id || p.cartas > elegido.cartas);
   let mejor = cotizarCon(catalogo, elegido, elegido, n, sel);
   for (const p of candidatos) {
     if (p.id === elegido.id) continue;
@@ -184,7 +188,12 @@ function ofertas(catalogo: Catalogo, elegido: Pack, actual: Omit<Cotizacion, "of
 
   if (actual.packAplicado.id !== elegido.id) {
     const conElegido = cotizarCon(catalogo, elegido, elegido, n, sel);
-    lista.push({ tipo: "pack-aplicado", pack: actual.packAplicado, ahorroCents: conElegido.totalCents - actual.totalCents });
+    lista.push({
+      tipo: "pack-aplicado",
+      pack: actual.packAplicado,
+      ahorroCents: conElegido.totalCents - actual.totalCents,
+      huecos: Math.max(0, actual.packAplicado.cartas - n),
+    });
   }
 
   if (actual.faltan > 0) {

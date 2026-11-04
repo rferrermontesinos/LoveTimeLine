@@ -45,9 +45,10 @@
   background: rgba(245, 240, 230, 0.14);
 }
 
-/* La carta que se va a colocar flota un poco sobre su hueco. */
+/* La carta que se va a colocar flota un poco sobre su hueco: sube y baja una vez (menos de 5 s)
+   y se queda quieta, para que nada se mueva sin fin en la página. */
 .flota {
-  animation: flotar 2.4s ease-in-out infinite alternate;
+  animation: flotar 2.4s ease-in-out 2 alternate;
 }
 
 .flota > * {

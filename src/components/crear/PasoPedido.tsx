@@ -14,7 +14,7 @@ import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from 
 import { textoEn } from "@/domain/precios/tipos";
 import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
-import { extraCajaPersonalizada, fotoCaja, paraValidar } from "@/lib/mazo/derivados";
+import { esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, paraValidar } from "@/lib/mazo/derivados";
 import { esFoto, esTexto } from "@/lib/mazo/tipos";
 import type { Carta, Pedido } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
@@ -52,7 +52,14 @@ export function PasoPedido() {
   const validacion = useMemo(
     () =>
       mazo && cotizacion
-        ? validarMazo({ cartas: mazo.cartas.map(paraValidar), minimo: cotizacion.minimo, maximo: catalogo.ampliacion.maxCartas, hoy, pppMinimo: PRINT.pppMinimo })
+        ? validarMazo({
+            cartas: mazo.cartas.map(paraValidar),
+            minimo: cotizacion.minimo,
+            maximo: catalogo.ampliacion.maxCartas,
+            hoy,
+            pppMinimo: PRINT.pppMinimo,
+            cajaSinFoto: esCajaPersonalizada(mazo, catalogo) && !fotoCaja(mazo),
+          })
         : null,
     [mazo, cotizacion, catalogo, hoy],
   );
@@ -101,6 +108,8 @@ export function PasoPedido() {
         return t("avisos.fechas-duplicadas", { n: a.grupos.length });
       case "fotos-duplicadas":
         return t("avisos.fotos-duplicadas", { n: a.grupos.reduce((s, g) => s + g.length - 1, 0) });
+      case "caja-sin-foto":
+        return t("avisos.caja-sin-foto");
       default:
         return t(`avisos.${a.tipo}`, { n: a.cartas.length });
     }
@@ -124,6 +133,12 @@ export function PasoPedido() {
             {tr("boton")}
           </Boton>
         </div>
+      );
+    if (a.tipo === "caja-sin-foto")
+      return (
+        <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" onClick={() => irAPaso(3, undefined, "caja")}>
+          {t("elegirFotoCaja")}
+        </Boton>
       );
     const carta = primeraCarta(a);
     return (

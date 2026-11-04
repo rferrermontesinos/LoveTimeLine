@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso } from "@/components/ui/Piezas";
+import { reservarAbajo } from "@/components/ui/reservaAbajo";
 import { formatearImporte } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { useMazo } from "@/lib/mazo/contexto";
@@ -95,7 +96,10 @@ export function BarraAccion() {
   // En Pedido la oferta va en su propio bloque, con más detalle.
   const oferta = !bloqueado && pasoActual !== 4 ? ofertaPrincipal(cotizacion.ofertas) : null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-linea bg-papel/97 shadow-[var(--shadow-flotante)] backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    <div
+      ref={reservarAbajo}
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-linea bg-papel/97 shadow-[var(--shadow-flotante)] backdrop-blur pb-[env(safe-area-inset-bottom)]"
+    >
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
         {bloqueado && (
           <Aviso
@@ -112,9 +116,14 @@ export function BarraAccion() {
             </span>
           </Aviso>
         )}
+        {/* La oferta se anuncia al aparecer o cambiar (con el total, que cambia con ella): la región
+            viva está siempre montada y solo lleva el texto; la línea que se ve no se lee dos veces. */}
+        <p role="status" className="sr-only">
+          {oferta ? `${textoDe(oferta, cotizacion.moneda)} ${t("barra.total")}: ${formatearImporte(cotizacion.totalCents, cotizacion.moneda, locale)}.` : ""}
+        </p>
         {oferta && (
           <div className="flex items-center gap-x-3 gap-y-1 border-b border-linea py-2 text-sm max-sm:flex-wrap" data-testid="oferta-barra">
-            <p className="flex min-w-0 flex-1 items-start gap-2">
+            <p aria-hidden="true" className="flex min-w-0 flex-1 items-start gap-2">
               <IconoOferta tipo={oferta.tipo} />
               <span>{textoDe(oferta, cotizacion.moneda)}</span>
             </p>

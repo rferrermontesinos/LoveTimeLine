@@ -81,6 +81,8 @@
       "subirIgual": "With {n, plural, one {# more card} other {# more cards}} you move up to the {pack} pack and pay the same as now.",
       "packAplicado": "We’ve applied the {pack} pack: you save {ahorro}.",
       "packAplicadoDetalle": "With this many cards the {pack} pack works out cheaper, so we’ve applied it: you save {ahorro}.",
+      "packAplicadoHuecos": "We’ve applied the {pack} pack: you save {ahorro} and {huecos, plural, one {# more card fits} other {# more cards fit}} at no extra cost.",
+      "packAplicadoHuecosDetalle": "The {pack} pack works out cheaper than adding cards one by one, so we’ve applied it: you save {ahorro} and {huecos, plural, one {# more card still fits} other {# more cards still fit}} at no extra cost.",
       "bajar": "With the {pack} pack you could already check out ({total}).",
       "cambiarA": "Switch to the {pack} pack"
     },

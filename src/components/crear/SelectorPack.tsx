@@ -48,6 +48,8 @@ export function OpcionesPack({ columnas = true }: { columnas?: boolean }) {
         const c = precios.get(p.id);
         const faltan = Math.max(0, p.cartas - n);
         const idDetalle = `${nombre}-${p.id}`;
+        // El precio va primero en la descripción: es el dato con el que se decide.
+        const idPrecio = `${idDetalle}-precio`;
         return (
           <label
             key={p.id}
@@ -59,7 +61,7 @@ export function OpcionesPack({ columnas = true }: { columnas?: boolean }) {
               checked={activo}
               onChange={() => despachar({ tipo: "cambiar", campo: "packId", valor: p.id })}
               aria-label={textoEn(p.nombre, locale)}
-              aria-describedby={idDetalle}
+              aria-describedby={`${idPrecio} ${idDetalle}`}
               className="sr-only"
             />
             <span
@@ -67,7 +69,9 @@ export function OpcionesPack({ columnas = true }: { columnas?: boolean }) {
             >
               <span className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span className="tipo-subtitular text-lg">{textoEn(p.nombre, locale)}</span>
-                <span className="tipo-titular text-xl leading-none">{formatearImporte(p.precioCents, p.moneda, locale)}</span>
+                <span id={idPrecio} className="tipo-titular text-xl leading-none">
+                  {formatearImporte(p.precioCents, p.moneda, locale)}
+                </span>
               </span>
               <span id={idDetalle} className="flex flex-col gap-1">
                 <span className="text-sm text-tinta-2">{textoEn(p.claim, locale)}</span>

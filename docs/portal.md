@@ -9,8 +9,8 @@ Versión del 4 de noviembre de 2026, con los cambios que pidió Ricard ese mismo
 | 1 | **Las fotos no salen del dispositivo.** Se guardan en el navegador (IndexedDB) y el PDF de impresión se genera también en el navegador. Es una desviación del stack (`sharp` + `pdf-lib` en el servidor). | Para la prueba de los 4 socios no hace falta subir fotos de menores a ningún servidor, cuesta 0 € y funciona sin cuentas. El renderizador es el mismo en pantalla y en el PDF, así que lo que se ve es lo que se imprime. | Para clientes reales: subir originales a Supabase Storage (TUS, ya está `tus-js-client`) y generar el PDF en el servidor al confirmarse el pago. |
 | 2 | **Sin registro.** El borrador vive en el dispositivo, se guarda solo, se recupera al volver otro día y se puede seguir sin conexión. | Menos fricción para la prueba y nada que perder si se corta la conexión. | Pedir el email en el paso 4, antes de pagar, y sincronizar el borrador con Supabase. |
 | 3 | **Extras de juego gratis, extras opcionales de pago.** Recuerdos estrella, 2 comodines y 4 cartas en blanco van incluidos; segunda copia, envoltorio de regalo, envío urgente y caja personalizada se pagan. | Las mecánicas hacen el juego mejor sin pedir decisiones de compra; los extras suben el ticket medio. | Cualquiera se mueve entre las dos listas cambiando `supabase/catalogo.json`. |
-| 4 | **Precios propuestos** (pendientes de Pau): ver tabla de abajo. | Tres packs por tamaño con su claim; cada carta de más se cobra suelta y, cuando sale a cuenta, se aplica solo el pack mayor. | Los precios viven en la base de datos (`packs`, `ajustes_catalogo`, `extras`), nunca en el código. |
-| 5 | **Fechas: solo se rellenan cuando son seguras.** Una fecha con día de hace menos de 365 días no se rellena sola (`DIAS_FECHA_RECIENTE`); 5 fotos o más con el mismo día reciente avisan de una posible sesión de escaneo (`MINIMO_SESION_ESCANEO`); si la fecha escrita en el nombre no coincide con la de la cámara, aunque solo sea en el año o el mes, la carta queda en blanco con las dos como sugerencia; los contadores de cámara (`IMGP2015.JPG`) no cuentan como año, a cambio de que «Roma2014.jpg» se quede sin año. | Es lo que pidió Ricard: mejor en blanco que con la fecha en que se digitalizó la foto. | Cada umbral es una constante en `src/domain/fechas/`; el choque nombre/cámara puede limitarse a cuando el nombre trae el día. |
+| 4 | **Precios propuestos** (pendientes de Pau): ver tabla de abajo. | Tres packs por tamaño con su claim; cada carta de más se cobra suelta, los avisos de oferta dicen cuándo sale a cuenta pasar al pack mayor y, en cuanto sale más barato, se aplica solo. | Los precios viven en la base de datos (`packs`, `ajustes_catalogo`, `extras`), nunca en el código. |
+| 5 | **Fechas: solo se rellenan cuando son seguras.** Una fecha con día de hace menos de 365 días no se rellena sola (`DIAS_FECHA_RECIENTE`); 5 fotos o más con el mismo día reciente avisan de una posible sesión de escaneo (`MINIMO_SESION_ESCANEO`); si la fecha escrita en el nombre no coincide con la de la cámara, aunque solo sea en el año o el mes, la carta queda en blanco con las dos como sugerencia; los contadores de cámara (`IMGP2015.JPG`) no cuentan como año, a cambio de que «Roma2014.jpg» se quede sin año. Las sugerencias recientes (de una copia, un escaneo o un reenvío por WhatsApp) no entran en «Usar las N fechas sugeridas»: se aceptan una a una, desde su carta (`aceptableEnLote`). En Cartas, «Siguiente» con la fecha en blanco lleva primero a ponerla; pulsándolo otra vez, se deja para luego. | Es lo que pidió Ricard: mejor en blanco que con la fecha en que se digitalizó la foto. | Cada umbral es una constante en `src/domain/fechas/`; el choque nombre/cámara puede limitarse a cuando el nombre trae el día. |
 | 6 | **Descarga del PDF en la confirmación solo durante el prototipo.** La controla `NEXT_PUBLIC_DESCARGA_PDF` en `config/prototipo.ts` (activa salvo que valga `0`), y solo con el pedido pagado. | Los 4 socios necesitan el PDF para las pruebas de imprenta; para clientes no se podrá descargar. | Con Supabase, el PDF se genera en el servidor y solo lo ve la administración. |
 
 ## Precios del prototipo
@@ -20,7 +20,7 @@ Versión del 4 de noviembre de 2026, con los cambios que pidió Ricard ese mismo
 | Pack Pequeño · ideal para parejas | 49 € | 40 cartas de recuerdo, con foto o sin foto, que son también el mínimo para pagar. Cada carta de más: 0,80 € |
 | Pack Mediano · ideal para familias o amigos | 59 € | 60 cartas. Cada carta de más: 0,70 € |
 | Pack Grande · ideal para bodas, aniversarios y grandes celebraciones | 79 € | 100 cartas. Cada carta de más: 0,60 € |
-| Cambio de pack | — | Si con las cartas del mazo sale más barato un pack mayor, se aplica solo (por ejemplo, con 53 cartas se cobra el Mediano). Los avisos de oferta lo anuncian antes: «Con 3 cartas más pasas al pack Mediano…» |
+| Cambio de pack | — | El precio nunca pasa del de un pack mayor ni baja al sumar cartas: en cuanto un pack mayor sale más barato, se cobra ese, aunque el mazo aún no tenga sus cartas. Con 53 cartas en el Pequeño (59,40 € sueltas) se pagan los 59 € del Mediano y el aviso dice «Ya te aplicamos el pack Mediano: te ahorras 0,40 € y te caben 7 cartas más sin pagar nada». Se imprimen las cartas que hay, sin huecos en blanco. Un poco antes, el aviso propone sumar cartas («Con 10 cartas más pasas al pack Mediano por solo 2 € más»). |
 | Caja adicional | 5 € | Una caja cada 120 cartas |
 | Segunda copia | 60 % del mazo | Mismo mazo otra vez |
 | Envoltorio de regalo | 4 € | |
@@ -77,8 +77,8 @@ service worker: reabrir /crear sin conexión
 
 ## Guardado y sin conexión
 
-- El borrador se guarda solo en IndexedDB mientras se trabaja, también al ocultar la página, y el navegador lo marca como persistente tras el consentimiento o la primera foto. Al volver otro día, el configurador sigue donde se dejó y la portada ofrece «Continuar mi mazo».
-- Sin conexión se puede seguir trabajando: un aviso lo explica y el botón de pagar se desactiva hasta que vuelva la red. Un service worker escrito a mano (`public/sw.js`, solo en producción) guarda una copia de las páginas del configurador y de los archivos estáticos, nunca de `/api` ni de nada personal: las fotos siguen solo en IndexedDB.
+- El borrador se guarda solo en IndexedDB mientras se trabaja (las fotos recién importadas, al momento; los cambios, con una pequeña espera), también al ocultar la página, y el navegador lo marca como persistente tras el consentimiento o la primera foto. Al volver otro día, el configurador sigue donde se dejó y la portada ofrece «Continuar mi mazo». Si una importación se corta, no quedan cartas a medias ni fotos sueltas.
+- Sin conexión se puede seguir trabajando: un aviso lo explica y el botón de pagar se desactiva hasta que vuelva la red. Un service worker escrito a mano (`public/sw.js`, solo en producción) guarda una copia de las páginas del configurador (primero la red) y de los archivos estáticos y las fuentes de las cartas (primero la copia), nunca de `/api`, de las peticiones internas de Next ni de direcciones con parámetros: las fotos siguen solo en IndexedDB. Cada despliegue tiene su versión (`VERCEL_DEPLOYMENT_ID`, o la hora de compilación en local) y el service worker nuevo borra las copias del anterior.
 - Dos pestañas con el mismo borrador no se pisan: la segunda avisa.
 
 ## Folleto y muestrario (herramientas internas)
@@ -126,7 +126,7 @@ Migraciones en `supabase/migrations/` (esquema inicial y catálogo del 4 de novi
 - `STRIPE_SECRET_KEY` con una clave `sk_test_…` o `rk_test_…`; el servidor rechaza cualquier otra.
 - Webhook a `/api/stripe/webhook` con `checkout.session.completed` y `checkout.session.async_payment_succeeded`, y su `STRIPE_WEBHOOK_SECRET`. En local: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 - Envío limitado a los países activos del catálogo. Tarjeta de prueba: 4242 4242 4242 4242.
-- Sin clave, el pago se simula y el pedido nace pagado. Si se cancela en Stripe, el borrador vuelve tal cual y lo dice.
+- Sin clave, el pago se simula y el pedido nace pagado. Si se cancela en Stripe, se vuelve al paso Pedido con el borrador tal cual y un aviso de que no se ha cobrado nada; se puede volver a pagar.
 
 ## Correo (Brevo)
 
@@ -140,11 +140,13 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 
 | Qué | Cómo | Estado |
 | --- | --- | --- |
-| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, semilla) | `pnpm test` (Vitest) | PENDIENTE_TESTS |
-| Configurador de principio a fin (empezar en Fotos con un pack, fechas sugeridas, recuerdo sin foto, paleta, caja personalizada, oferta, pago simulado y PDF), en escritorio y móvil | `pnpm test:e2e` (Playwright) | PENDIENTE_E2E |
-| Volver sin conexión | `tests/e2e/sin-conexion.spec.ts` | PENDIENTE_E2E |
-| Portada, «Cómo se juega» y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | PENDIENTE_E2E |
+| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla) | `pnpm test` (Vitest) | 627 pruebas en 44 archivos |
+| Configurador de principio a fin (empezar en Fotos con un pack, fechas sugeridas y recientes, «Siguiente» con la fecha en blanco, recuerdo sin foto, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 18 |
+| Volver sin conexión y service worker tras un despliegue | `tests/e2e/sin-conexion.spec.ts` | 4 |
+| Portada, «Cómo se juega», créditos de las fotos y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | 32 |
 | Migración, semilla y RLS | `pnpm db:test` | 19 comprobaciones |
+
+Las pruebas de Playwright (`pnpm test:e2e`, 56 en total entre escritorio y móvil; 4 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera un PDF de impresión con datos ficticios: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
 
 ## Siguientes pasos
 

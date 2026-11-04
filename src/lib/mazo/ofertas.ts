@@ -7,7 +7,16 @@
 import { formatearImporte, type Oferta } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 
-export type ClaveOferta = "subir" | "subirDetalle" | "subirMenos" | "subirIgual" | "packAplicado" | "packAplicadoDetalle" | "bajar";
+export type ClaveOferta =
+  | "subir"
+  | "subirDetalle"
+  | "subirMenos"
+  | "subirIgual"
+  | "packAplicado"
+  | "packAplicadoDetalle"
+  | "packAplicadoHuecos"
+  | "packAplicadoHuecosDetalle"
+  | "bajar";
 
 export interface TextoOferta {
   clave: ClaveOferta;
@@ -38,6 +47,9 @@ export function textoOferta(o: Oferta, moneda: string, idioma: string, detalle =
       return { clave: detalle ? "subirDetalle" : "subir", valores: { n, pack, diferencia: dinero(o.diferenciaCents), ahorro: dinero(o.ahorroCents) } };
     }
     case "pack-aplicado":
+      if (o.huecos > 0) {
+        return { clave: detalle ? "packAplicadoHuecosDetalle" : "packAplicadoHuecos", valores: { pack, ahorro: dinero(o.ahorroCents), huecos: o.huecos } };
+      }
       return { clave: detalle ? "packAplicadoDetalle" : "packAplicado", valores: { pack, ahorro: dinero(o.ahorroCents) } };
     case "bajar":
       return { clave: "bajar", valores: { pack, total: dinero(o.totalCents) } };

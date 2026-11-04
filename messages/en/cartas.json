@@ -7,7 +7,8 @@
     "siguientePendiente": "Next unfinished",
     "estado": {
       "lista": "Card ready",
-      "pendiente": "Unfinished: {motivos}"
+      "pendiente": "Unfinished: {motivos}",
+      "pendienteOtraVez": "Unfinished: {motivos}. Finish it, or press “Next” again to leave it for later."
     },
     "pendiente": {
       "sin-fecha": "date missing",

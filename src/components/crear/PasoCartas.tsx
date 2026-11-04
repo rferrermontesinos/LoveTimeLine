@@ -37,6 +37,8 @@ export function PasoCartas() {
   const bloqueFecha = useRef<HTMLDivElement>(null);
   const areaTexto = useRef<HTMLTextAreaElement>(null);
   const avisoVisto = useRef(avisoFecha);
+  // Carta en la que «Siguiente» ya se ha frenado una vez por estar a medias.
+  const [frenada, setFrenada] = useState<string | null>(null);
 
   const cartas = mazo?.cartas ?? [];
   // Sin carta abierta (al llegar desde el paso 1), se empieza por la primera pendiente.
@@ -78,12 +80,15 @@ export function PasoCartas() {
     if (tapado) bloque.scrollIntoView({ block: "start", behavior: desplazamiento() });
   }, [avisoFecha]);
 
-  // ← y → para moverse entre cartas, salvo mientras se escribe.
+  // ← y → para moverse entre cartas, salvo mientras se escribe, en un control que ya usa las
+  // flechas (grupos de opciones, pestañas) o con un diálogo abierto encima.
   useEffect(() => {
     const alTeclear = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       if (["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) || el.isContentEditable || encuadre || emojis) return;
-      if (e.key === "ArrowRight") ir(indice + 1);
+      if (document.querySelector("dialog[open]") || el.closest('[role="radiogroup"], [role="tablist"], [role="slider"], [role="listbox"], [role="menu"]')) return;
+      if (e.key === "ArrowRight") siguiente(false);
       if (e.key === "ArrowLeft") ir(indice - 1);
     };
     window.addEventListener("keydown", alTeclear);
@@ -108,7 +113,27 @@ export function PasoCartas() {
   function ir(i: number) {
     if (cartas.length === 0) return;
     const n = (i + cartas.length) % cartas.length;
+    setFrenada(null);
     setCartaActiva(cartas[n]!.id);
+  }
+
+  /**
+   * «Siguiente» con la carta a medias: la primera vez no pasa, lleva a lo que falta (la fecha en
+   * blanco, sobre todo) y pide rellenarlo; la segunda, pasa: se puede dejar para luego, porque
+   * Estilo no se abre hasta que estén todas. Con el teclado no se mueve el foco, para que → siga
+   * funcionando.
+   */
+  function siguiente(enfocar = true) {
+    const pendiente = carta ? pendientesDeCarta(carta, hoy) : [];
+    if (!carta || pendiente.length === 0 || frenada === carta.id) return ir(indice + 1);
+    setFrenada(carta.id);
+    const bloque = bloqueFecha.current;
+    const deFecha = pendiente.some((m) => m === "sin-fecha" || m.startsWith("fecha-"));
+    bloque?.scrollIntoView({ block: "start", behavior: desplazamiento() });
+    if (!enfocar) return;
+    if (deFecha) bloque?.querySelector<HTMLElement>("fieldset input, fieldset select")?.focus({ preventScroll: true });
+    else if (rangoHueco(carta.descripcion)) irAlHueco();
+    else areaTexto.current?.focus({ preventScroll: true });
   }
 
   const icono = iconos.get(carta.id) ?? null;
@@ -254,7 +279,9 @@ export function PasoCartas() {
               <span>
                 {faltan.length === 0
                   ? t("cartas.estado.lista")
-                  : t("cartas.estado.pendiente", { motivos: listaDeMotivos.format(faltan.map((m) => t(`cartas.pendiente.${m}`, { max: MAX_DESCRIPCION }))) })}
+                  : t(frenada === carta.id ? "cartas.estado.pendienteOtraVez" : "cartas.estado.pendiente", {
+                      motivos: listaDeMotivos.format(faltan.map((m) => t(`cartas.pendiente.${m}`, { max: MAX_DESCRIPCION }))),
+                    })}
               </span>
             </p>
 
@@ -319,7 +346,7 @@ export function PasoCartas() {
             <Boton variante="secundario" onClick={() => ir(indice - 1)}>
               ← {t("comun.anterior")}
             </Boton>
-            <Boton onClick={() => ir(indice + 1)}>
+            <Boton onClick={() => siguiente()}>
               {t("comun.siguiente")} →
             </Boton>
             <Boton variante="fantasma" disabled={!otraPendiente} onClick={() => irASiguientePendiente(carta.id)}>

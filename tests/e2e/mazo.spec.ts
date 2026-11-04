@@ -1,4 +1,6 @@
+import { readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
 import { PRINT } from "../../config/print";
@@ -72,6 +74,16 @@ test.describe("mazo de principio a fin", () => {
     await expect(page.getByRole("button", { name: "Siguiente: estilo" })).toBeDisabled();
 
     await tira.getByRole("button", { name: /^Llegó \[mascota\] a casa/ }).click();
+    // «Siguiente» con la carta a medias: la primera vez lleva a la fecha y lo pide; la segunda, pasa.
+    const actual = tira.locator('[aria-current="true"]');
+    await page.getByRole("button", { name: "Siguiente →", exact: true }).click();
+    await expect(page.getByText(/falta la fecha.*pulsa otra vez «Siguiente» para dejarla para luego/)).toBeVisible();
+    await expect(actual).toHaveAccessibleName(/^Llegó \[mascota\] a casa/);
+    expect(await page.evaluate(() => !!document.activeElement?.closest("fieldset"))).toBe(true);
+    await page.getByRole("button", { name: "Siguiente →", exact: true }).click();
+    await expect(actual).not.toHaveAccessibleName(/^Llegó \[mascota\] a casa/);
+    await tira.getByRole("button", { name: /^Llegó \[mascota\] a casa/ }).click();
+    await expect(page.getByText(/pulsa otra vez/)).toBeHidden();
     await page.getByRole("button", { name: "Completar [mascota]" }).click();
     await page.keyboard.type("Rufo");
     await page.getByRole("radio", { name: "Solo el año" }).first().click();
@@ -123,6 +135,58 @@ test.describe("mazo de principio a fin", () => {
     const mm = 72 / 25.4;
     expect(Math.round(primera.getTrimBox().width / mm)).toBe(PRINT.carta.anchoMm);
     expect(Math.round(primera.getBleedBox().height / mm)).toBe(PRINT.carta.altoMm + 2 * PRINT.sangradoMm);
+  });
+});
+
+test.describe("fechas de copias y escaneos", () => {
+  test("las fechas recientes no se ponen de una vez: se avisa y se revisan carta a carta", async ({ page }, info) => {
+    test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
+    test.setTimeout(120_000);
+    // scripts/fixtures.ts: 5 fotos de fotos del mismo día reciente, una escaneada con su fecha
+    // original (1987) y otras sin pista o ya con fecha.
+    const carpeta = path.join(process.cwd(), "tests", "fixtures", "generadas", "escaner");
+    const archivos = readdirSync(carpeta).map((n) => path.join(carpeta, n));
+    const recientes = archivos.filter((a) => /^IMG_\d{8}_\d{6}\.jpg$/.test(path.basename(a))).length;
+    expect(recientes).toBe(5);
+
+    await empezar(page);
+    await subir(page, archivos);
+    await expect(page.getByText(`${recientes} fotos tienen como fecha sugerida el mismo día reciente`)).toBeVisible();
+    await expect(page.getByText(`${recientes} tienen una fecha reciente, que puede ser la de una copia o un escaneo`)).toBeVisible();
+
+    // El botón solo pone la que no es reciente (la original de 1987 de la foto escaneada).
+    await page.getByRole("button", { name: "Usar la fecha sugerida", exact: true }).click();
+    await expect(page.getByText("1 fecha sugerida puesta.")).toBeVisible();
+    await expect(guardado(page)).toContainText("Guardado");
+    const cartas = ((await leerMazo(page))?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown }[];
+    expect(cartas.filter((c) => /^IMG_\d{8}_/.test(c.nombreArchivo ?? "") && !c.fecha)).toHaveLength(recientes);
+    expect(cartas.filter((c) => c.fecha)).toHaveLength(2);
+  });
+});
+
+test.describe("caja personalizada", () => {
+  test("sin ninguna foto para ella no deja pagar y el aviso lleva a elegirla", async ({ page }, info) => {
+    test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
+    // Un mazo solo con un recuerdo sin foto: la caja no tiene de dónde sacar la suya.
+    await empezar(page);
+    await page.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).first().click();
+    const dialogo = page.getByRole("dialog");
+    await dialogo.getByRole("button", { name: "El día que nos conocimos" }).click();
+    await dialogo.getByRole("button", { name: "Añadir la carta" }).click();
+    await expect(dialogo).toBeHidden();
+    await page.getByRole("button", { name: "Siguiente: cartas" }).click();
+    await page.getByRole("radio", { name: "Solo el año" }).first().click();
+    await page.getByLabel("Año").first().fill("2012");
+    await expect(page.getByText("Carta lista")).toBeVisible();
+
+    await page.getByRole("button", { name: "Siguiente: estilo" }).click();
+    await page.getByTestId("bloque-caja").getByRole("switch", { name: /Caja personalizada/ }).click();
+    await page.getByRole("button", { name: "Siguiente: pedido" }).click();
+    await expect(page.getByRole("heading", { name: "Revisa y haz el pedido" })).toBeVisible();
+    const aviso = page.getByRole("listitem").filter({ hasText: "La caja personalizada aún no tiene foto" });
+    await expect(aviso).toBeVisible();
+    await aviso.getByRole("button", { name: "Elegir foto" }).click();
+    await expect(page.getByRole("heading", { name: "Elige el estilo" })).toBeVisible();
   });
 });
 
