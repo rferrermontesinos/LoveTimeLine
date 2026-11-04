@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { almacenDisponible, borrarTodo, cargarMazo, guardarMazo, limpiarHuerfanas } from "@/lib/almacen/idb";
 import { ESTADO_INICIAL, reductor, type Accion, type EstadoMazo } from "./reductor";
+import type { Mazo } from "./tipos";
 
 interface ValorContexto extends EstadoMazo {
   despachar: (a: Accion) => void;
@@ -10,7 +11,7 @@ interface ValorContexto extends EstadoMazo {
   almacenOk: boolean;
   reiniciarTodo: () => Promise<void>;
   /** Guarda ya, sin esperar al guardado automático (antes de salir hacia el pago). */
-  guardarAhora: () => Promise<void>;
+  guardarAhora: (mazo?: Mazo | null) => Promise<void>;
 }
 
 const Contexto = createContext<ValorContexto | null>(null);
@@ -62,10 +63,19 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     despachar({ tipo: "reiniciar" });
   }, []);
 
-  const guardarAhora = useCallback(async () => {
+  const guardarAhora = useCallback(async (mazo?: Mazo | null) => {
     if (temporizador.current) clearTimeout(temporizador.current);
-    if (cargado.current) await guardarMazo(ultimo.current);
+    if (cargado.current) await guardarMazo(mazo === undefined ? ultimo.current : mazo);
   }, []);
+
+  // Al salir de la página sin recargar (navegación interna), guarda lo último sin esperar.
+  useEffect(
+    () => () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+      if (cargado.current) void guardarMazo(ultimo.current);
+    },
+    [],
+  );
 
   const valor = useMemo<ValorContexto>(
     () => ({ ...estado, despachar, puedeDeshacer: estado.pasado.length > 0, almacenOk, reiniciarTodo, guardarAhora }),

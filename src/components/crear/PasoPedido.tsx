@@ -156,7 +156,7 @@ export function PasoPedido() {
         stripeSessionId: r.sessionId,
       };
       despachar({ tipo: "registrarPedido", pedido });
-      await guardarAhora();
+      await guardarAhora({ ...mazo, pedido, actualizadoEn: Date.now() });
       if (r.modo === "stripe" && r.url) {
         window.location.assign(r.url);
         return;
