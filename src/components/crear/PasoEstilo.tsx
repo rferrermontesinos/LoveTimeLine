@@ -44,9 +44,9 @@ export function PasoEstilo() {
         <p className="mt-2 max-w-2xl text-md text-tinta-2">{t("texto")}</p>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
         {/* Vista previa: en el móvil va arriba, en escritorio a la derecha y fija. */}
-        <aside aria-label={t("vistaPrevia")} className="order-first lg:order-last lg:sticky lg:top-36 lg:self-start">
+        <aside aria-label={t("vistaPrevia")} className="order-first min-w-0 lg:order-last lg:sticky lg:top-36 lg:self-start">
           <Micro className="mb-3 text-tinta-2">{t("vistaPrevia")}</Micro>
           <div className="mesa -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-5 sm:mx-0 sm:rounded-[24px] sm:px-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:p-6">
             <Figura etiqueta={t("caja")}>
@@ -68,7 +68,7 @@ export function PasoEstilo() {
           </div>
         </aside>
 
-        <div className="space-y-9">
+        <div className="min-w-0 space-y-9">
           <Bloque titulo={t("estilo")}>
             <div role="radiogroup" aria-label={t("estilo")} className="grid gap-3 sm:grid-cols-2">
               {ESTILOS.map((e) => {

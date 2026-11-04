@@ -84,8 +84,7 @@ export function CartaCanvas({ cara, datos, estiloId, tintaId, tono, idiomaMazo, 
     <div ref={contenedor} className={`relative ${ancho ? "" : "w-full"} ${className}`} style={ancho ? { width: ancho } : undefined}>
       <canvas
         ref={ref}
-        role="img"
-        aria-label={etiqueta}
+        {...(etiqueta ? { role: "img", "aria-label": etiqueta } : { "aria-hidden": true })}
         className={`block w-full rounded-[calc(var(--radius-carta)*var(--escala-radio,1))] transition-opacity duration-200 ${listo ? "opacity-100" : "opacity-0"} ${sombra ? "shadow-[var(--shadow-carta)]" : ""}`}
         style={{ aspectRatio: `${PRINT.carta.anchoMm} / ${PRINT.carta.altoMm}`, ["--escala-radio" as string]: anchoFinal ? String(Math.min(1, anchoFinal / 378)) : "1" }}
       />

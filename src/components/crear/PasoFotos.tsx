@@ -132,11 +132,11 @@ export function PasoFotos() {
           void importar(await archivosDeArrastre(e.dataTransfer));
         }}
         className={`relative overflow-hidden rounded-[var(--radius-carta)] border-[2.5px] border-dashed p-6 pl-16 pt-8 transition-colors sm:p-10 sm:pl-20 ${
-          arrastrando ? "border-cobalto bg-[#E8EDFD]" : "border-tinta/60 bg-blanco"
-        } ${consentido ? "" : "opacity-60"}`}
+          arrastrando ? "border-cobalto bg-[#E8EDFD]" : consentido ? "border-tinta/60 bg-blanco" : "border-tinta/30 bg-blanco"
+        }`}
       >
-        <Pestana color="var(--color-rosa)">1</Pestana>
-        <p className="tipo-subtitular text-lg">{arrastrando ? t("fotos.soltarActivo") : t("fotos.soltar")}</p>
+        <Pestana color={consentido ? "var(--color-rosa)" : "var(--color-papel-3)"}>1</Pestana>
+        <p className={`tipo-subtitular text-lg ${consentido ? "" : "text-tinta-2"}`}>{arrastrando ? t("fotos.soltarActivo") : t("fotos.soltar")}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Boton onClick={() => inputFotos.current?.click()} disabled={!consentido || !!progreso}>
             {t("fotos.elegirFotos")}
@@ -172,7 +172,7 @@ export function PasoFotos() {
             e.target.value = "";
           }}
         />
-        <p className="mt-4 text-sm text-tinta-2">{consentido ? t("fotos.privacidad") : t("fotos.consentimientoFalta")}</p>
+        <p className={`mt-4 text-sm ${consentido ? "text-tinta-2" : "font-semibold text-tinta"}`}>{consentido ? t("fotos.privacidad") : t("fotos.consentimientoFalta")}</p>
       </div>
 
       {progreso && (

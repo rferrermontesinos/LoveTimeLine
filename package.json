@@ -20,6 +20,7 @@
     "print:sample": "tsx scripts/print-sample.ts",
     "instrucciones:pdf": "tsx scripts/instrucciones-pdf.ts",
     "db:seed": "tsx scripts/seed-sql.ts",
+    "db:test": "bash scripts/probar-bd.sh",
     "fixtures": "tsx scripts/fixtures.ts"
   },
   "dependencies": {

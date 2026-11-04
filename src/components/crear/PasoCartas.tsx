@@ -100,7 +100,7 @@ export function PasoCartas() {
         </p>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,560px)_1fr]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,560px)_1fr]">
         {/* Vista previa */}
         <div className="space-y-3">
           <div role="tablist" aria-label={t("encuadre.titulo")} className="inline-flex gap-1 rounded-[14px] bg-papel-2 p-1 sm:hidden">

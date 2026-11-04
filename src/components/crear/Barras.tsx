@@ -70,7 +70,8 @@ export function BarraAccion() {
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">
-            {t("pack", { pack: textoEn(cotizacion.pack.nombre, locale) })} · {t(mazo.cartas.length > cotizacion.minimo ? "contadorCompleto" : "contador", { actual: mazo.cartas.length, minimo: cotizacion.minimo })}
+            <span className="hidden sm:inline">{t("pack", { pack: textoEn(cotizacion.pack.nombre, locale) })} · </span>
+            {t(mazo.cartas.length > cotizacion.minimo ? "contadorCompleto" : "contador", { actual: mazo.cartas.length, minimo: cotizacion.minimo })}
           </p>
           <p className={`text-sm ${completo ? "text-verde-texto" : "text-tinta-2"}`} aria-live="polite">
             {completo ? (cotizacion.huecosLibres > 0 ? t("huecos", { n: cotizacion.huecosLibres }) : `✓ ${t("barra.minimoCubierto")}`) : t("barra.faltan", { n: cotizacion.faltan })}

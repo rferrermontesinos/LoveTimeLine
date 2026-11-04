@@ -70,6 +70,24 @@ test.describe("mazo de principio a fin", () => {
   });
 });
 
+test.describe("móvil", () => {
+  test("ningún paso se sale de la pantalla a lo ancho", async ({ page }, info) => {
+    test.skip(info.project.name !== "movil", "Solo en el móvil.");
+    const desborda = () => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    await page.goto("/es/crear");
+    await page.getByRole("button", { name: /Empezar con Pareja/ }).click();
+    await page.getByRole("checkbox", { name: /Tengo permiso/ }).check();
+    await page.getByTestId("entrada-fotos").setInputFiles(fotos().slice(0, 6));
+    await expect(page.getByText(/6 fotos añadidas/)).toBeVisible({ timeout: 60_000 });
+    expect(await desborda()).toBe(false);
+    for (const siguiente of [/Siguiente: cartas/, /Siguiente: estilo/, /Siguiente: pedido/]) {
+      await page.getByRole("button", { name: siguiente }).click();
+      await page.waitForTimeout(500);
+      expect(await desborda()).toBe(false);
+    }
+  });
+});
+
 test.describe("páginas", () => {
   test("portada, cómo se juega e instrucciones se cargan sin errores", async ({ page }) => {
     const errores: string[] = [];
@@ -78,8 +96,13 @@ test.describe("páginas", () => {
       await page.goto(ruta);
       await expect(page.locator("h1").first()).toBeVisible();
     }
-    // Las dos caras del folleto plegable.
+    // Las dos caras del folleto plegable, y su PDF para descargar en cada idioma.
     await expect(page.locator(".hoja-folleto")).toHaveCount(2);
+    for (const idioma of ["es", "en"]) {
+      const r = await page.request.get(`/instrucciones/${idioma}.pdf`);
+      expect(r.status()).toBe(200);
+      expect(r.headers()["content-type"]).toContain("pdf");
+    }
     expect(errores).toEqual([]);
   });
 
