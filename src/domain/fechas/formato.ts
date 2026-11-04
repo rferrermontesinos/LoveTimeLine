@@ -36,6 +36,16 @@ export function fechaLegible(f: FechaCarta, idioma: string): string {
   return new Intl.DateTimeFormat(idioma, opciones).format(d);
 }
 
+/** Versión compacta para miniaturas y listas («22 dic 2009», «dic 2009», «2009»). */
+export function fechaCorta(f: FechaCarta, idioma: string): string {
+  const p = precisionDe(f);
+  if (p === "anio") return String(f.anio);
+  const d = new Date(Date.UTC(f.anio, (f.mes ?? 1) - 1, f.dia ?? 1));
+  const opciones: Intl.DateTimeFormatOptions =
+    p === "mes" ? { month: "short", year: "numeric", timeZone: "UTC" } : { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" };
+  return new Intl.DateTimeFormat(idioma, opciones).format(d).replace(/\.(?=\s|$)/g, "");
+}
+
 /** Nombres de los 12 meses en el idioma del usuario, para los selectores. */
 export function nombresMeses(idioma: string): string[] {
   const fmt = new Intl.DateTimeFormat(idioma, { month: "long", timeZone: "UTC" });

@@ -13,18 +13,27 @@ export async function obtenerCatalogo(): Promise<Catalogo> {
   if (!supabaseConfigurado()) return CATALOGO_SEMILLA;
   try {
     const sb = clienteSupabaseServidor();
-    const [packs, extras, mecanicas, ajustes] = await Promise.all([
+    const [packs, extras, mecanicas, ajustes, paises] = await Promise.all([
       sb.from("packs").select("*").eq("activo", true).order("orden"),
       sb.from("extras").select("*").eq("activo", true).order("orden"),
       sb.from("mecanicas").select("*").eq("activo", true).order("orden"),
       sb.from("ajustes_catalogo").select("*").eq("id", 1).maybeSingle(),
+      sb.from("paises").select("*").order("codigo"),
     ]);
-    if (packs.error || extras.error || mecanicas.error || ajustes.error || !ajustes.data) throw new Error("catálogo incompleto");
+    if (packs.error || extras.error || mecanicas.error || ajustes.error || paises.error || !ajustes.data) throw new Error("catálogo incompleto");
     const a = ajustes.data as Record<string, number | string>;
     return {
       version: Number(a.version ?? 1),
       moneda: String(a.moneda ?? "EUR"),
-      paises: CATALOGO_SEMILLA.paises,
+      paises: paises.data.length
+        ? paises.data.map((p) => ({
+            codigo: p.codigo,
+            activo: p.activo,
+            moneda: p.moneda,
+            envioIncluido: p.envio_incluido,
+            diasEntrega: { min: p.dias_min, max: p.dias_max },
+          }))
+        : CATALOGO_SEMILLA.paises,
       packs: packs.data.map((p) => ({
         id: p.id,
         orden: p.orden,

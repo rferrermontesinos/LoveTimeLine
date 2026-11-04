@@ -173,6 +173,7 @@
     },
     "pack": "{pack} pack",
     "contador": "{actual} of {minimo} photos",
+    "contadorCompleto": "{actual} photos · minimum {minimo}",
     "huecos": "{n, plural, one {# free card left in your last add-on} other {# free cards left in your last add-on}}",
     "abriendo": "Opening your deck…"
   },
@@ -443,6 +444,8 @@
     "posterTexto": "A deck to put your memories in order.",
     "dedicatoriaPara": "To",
     "dedicatoriaDe": "From",
+    "mazoDe": "This deck belongs to",
+    "mazoAnios": "Years",
     "lineas": "Write your “Our story” record here",
     "impresion": "Print on landscape A4, double-sided flipping on the short edge, at 100%. Cut along the corner marks; the side marks show the folds.",
     "personalizado": "With your deck’s title and dedication.",

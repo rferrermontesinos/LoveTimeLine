@@ -69,18 +69,36 @@ function MiniReverso({ anio, mes, c, girada = 0 }: { anio: string; mes: number |
 
 /* ───────────────────────── Cara A ───────────────────────── */
 
+/** Años para el abanico de la portada: los extremos del mazo si los hay, si no unos de ejemplo. */
+function aniosAbanico(p: Personalizacion | null): [string, string, string] {
+  const extremos = p?.anios.match(/\d{4}/g) ?? [];
+  const desde = extremos[0];
+  const hasta = extremos[extremos.length - 1];
+  if (desde && hasta && desde !== hasta) return [desde, "?", hasta];
+  return ["1998", "?", "2024"];
+}
+
 function Portada({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Personalizacion | null }) {
   return (
     <div className={PANEL} style={{ background: c.tinta, color: c.papel }}>
       <Pestana color={c.fondo} texto={c.texto}>
         ?
       </Pestana>
-      <div className="absolute inset-x-[4mm] top-[24mm]">
+      <div className="absolute inset-x-[4mm] top-[19mm]">
         <p className="tipo-micro text-[5.5pt] tracking-[0.14em]" style={{ color: c.fondo }}>
           {t.instrucciones.portadaSub}
         </p>
         <h2 className="tipo-titular mt-[2mm] text-[25pt] leading-[0.9]">{t.instrucciones.portadaTitulo}</h2>
         {p?.titulo && <p className="mt-[3mm] text-[8pt] font-semibold leading-tight opacity-90">{p.titulo}</p>}
+        {p?.anios && <p className="tipo-micro mt-[1mm] text-[5pt] tracking-[0.12em] opacity-70">{p.anios}</p>}
+      </div>
+      {/* Tres cartas en abanico: anticipan el gesto del juego sin tapar el título. */}
+      <div aria-hidden="true" className="absolute bottom-[14.5mm] left-1/2 flex -translate-x-1/2 items-end">
+        {aniosAbanico(p).map((anio, i) => (
+          <span key={i} className={i === 1 ? "relative z-10 mx-[0.8mm] -translate-y-[1.2mm]" : ""}>
+            <MiniReverso anio={anio} mes={i === 1 ? null : i === 0 ? 4 : 9} c={c} girada={(i - 1) * 8} />
+          </span>
+        ))}
       </div>
       <div className="absolute inset-x-[4mm] bottom-[4mm] space-y-[2mm]">
         <Franja color={c.franja} celda="rgba(245,240,230,.7)" activas={() => true} />
@@ -258,7 +276,12 @@ export function CaraB({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
             {p.anios && <p className="tipo-titular mt-[2mm] text-[16pt] leading-none opacity-90">{p.anios}</p>}
           </>
         ) : (
-          <span className="block h-[22mm] border-b-[0.3mm] border-dashed" style={{ borderColor: c.texto }} />
+          <div className="space-y-[3mm]">
+            <p className="tipo-micro text-[6pt] tracking-[0.16em] opacity-80">{ti.mazoDe}</p>
+            <span className="block h-[12mm] border-b-[0.3mm] border-dashed" style={{ borderColor: c.texto }} />
+            <p className="tipo-micro pt-[3mm] text-[6pt] tracking-[0.16em] opacity-80">{ti.mazoAnios}</p>
+            <span className="block h-[8mm] w-[46mm] border-b-[0.3mm] border-dashed" style={{ borderColor: c.texto }} />
+          </div>
         )}
       </div>
 

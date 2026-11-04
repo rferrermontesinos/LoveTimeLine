@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { etiquetaMesCarta, fechaLegible, nombresMeses, textoFechaCarta } from "./formato";
+import { etiquetaMesCarta, fechaCorta, fechaLegible, nombresMeses, textoFechaCarta } from "./formato";
 
 describe("formato de fechas", () => {
   it("abrevia el mes en 3 letras según el idioma del mazo", () => {
@@ -24,5 +24,12 @@ describe("formato de fechas", () => {
     expect(fechaLegible({ anio: 2019 }, "es")).toBe("2019");
     expect(fechaLegible({ anio: 2019, mes: 8, dia: 14 }, "en")).toBe("August 14, 2019");
     expect(nombresMeses("es")[0]).toBe("enero");
+  });
+
+  it("tiene una forma corta para miniaturas, sin puntos de abreviatura", () => {
+    expect(fechaCorta({ anio: 2009, mes: 12, dia: 22 }, "es")).toBe("22 dic 2009");
+    expect(fechaCorta({ anio: 2009, mes: 12 }, "es")).toBe("dic 2009");
+    expect(fechaCorta({ anio: 2009 }, "es")).toBe("2009");
+    expect(fechaCorta({ anio: 2009, mes: 12, dia: 22 }, "en")).toBe("Dec 22, 2009");
   });
 });

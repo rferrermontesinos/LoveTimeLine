@@ -173,6 +173,7 @@
     },
     "pack": "Pack {pack}",
     "contador": "{actual} de {minimo} fotos",
+    "contadorCompleto": "{actual} fotos · mínimo {minimo}",
     "huecos": "{n, plural, one {Te queda # carta libre en tu última ampliación} other {Te quedan # cartas libres en tu última ampliación}}",
     "abriendo": "Abriendo tu mazo…"
   },
@@ -443,6 +444,8 @@
     "posterTexto": "Una baraja para ordenar vuestros recuerdos.",
     "dedicatoriaPara": "Para",
     "dedicatoriaDe": "De",
+    "mazoDe": "Este mazo es de",
+    "mazoAnios": "Años",
     "lineas": "Escribid aquí vuestro récord en «Nuestra historia»",
     "impresion": "Imprime en A4 apaisado, a doble cara volteando por el borde corto y al 100 %. Recorta por las marcas de las esquinas; las marcas de los lados indican los pliegues.",
     "personalizado": "Con el título y la dedicatoria de tu mazo.",

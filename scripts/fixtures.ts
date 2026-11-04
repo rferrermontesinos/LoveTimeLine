@@ -3,14 +3,15 @@
  * Los nombres siguen los patrones que el portal reconoce, para probar la lectura de fechas.
  * Nunca uses fotos reales en los tests.
  *
- *   pnpm fixtures        → 42 fotos (lo justo para el pack Pareja y un poco más)
- *   pnpm fixtures 60     → otra cantidad
+ *   pnpm fixtures                 → 42 fotos (lo justo para el pack Pareja y un poco más)
+ *   pnpm fixtures 60              → otra cantidad
+ *   pnpm fixtures 62 salidas/fotos → en otra carpeta (los tests usan la de por defecto)
  */
 import { mkdir, rm, utimes } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const SALIDA = path.join(process.cwd(), "tests", "fixtures", "generadas");
+const SALIDA = path.resolve(process.argv[3] ?? path.join("tests", "fixtures", "generadas"));
 const COLORES = ["#F7739E", "#22A861", "#E8402F", "#FFC93C", "#2E56E6", "#141414", "#EDE6D8", "#B8205F", "#11733F"];
 
 /** Pseudoaleatorio determinista: mismas fotos en cada ejecución. */

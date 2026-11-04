@@ -1,0 +1,19 @@
+# Configuración local de Supabase CLI (solo lo que cambia respecto a los valores por defecto).
+# El proyecto real va en región UE (Frankfurt o Irlanda).
+project_id = "cartas-portal"
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**"]
+
+[auth.email]
+# Acceso con enlace mágico, sin contraseñas.
+enable_signup = true
+
+# La llama pg_cron con un secreto propio, no con el JWT de un usuario.
+[functions.purgar-fotos]
+verify_jwt = false

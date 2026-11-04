@@ -184,10 +184,12 @@ export function PasoPedido() {
               </h2>
               <p className="mt-1 text-sm text-tinta-2">{t("lineaTemporalAyuda")}</p>
             </div>
-            <ol className="mesa space-y-5 rounded-[24px] p-4 sm:p-6">
+            <ol className="mesa flex flex-wrap items-start gap-x-4 gap-y-6 rounded-[24px] p-4 sm:p-6">
               {grupos.map((g) => (
-                <li key={g.anio ?? "sin-fecha"} className="grid gap-2 [content-visibility:auto] sm:grid-cols-[5.5rem_minmax(0,1fr)] sm:gap-4">
-                  <h3 className={`tipo-titular text-2xl leading-none sm:pt-1 ${g.anio === null ? "text-rojo-texto" : ""}`}>{g.anio ?? t("sinFecha")}</h3>
+                <li key={g.anio ?? "sin-fecha"} className="min-w-0 max-w-full space-y-2">
+                  <h3 className={`tipo-titular border-t-2 pt-1.5 text-lg leading-none ${g.anio === null ? "border-rojo text-rojo-texto" : "border-tinta"}`}>
+                    {g.anio ?? t("sinFecha")}
+                  </h3>
                   <ul className="flex flex-wrap gap-2">
                     {g.cartas.map((c) => (
                       <CartaLinea key={c.id} carta={c} alPulsar={() => irAPaso(2, c.id)} locale={locale}>

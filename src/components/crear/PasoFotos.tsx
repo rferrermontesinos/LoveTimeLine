@@ -6,7 +6,7 @@ import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
 import { Aviso, Chip, Franja, Micro, Pestana } from "@/components/ui/Piezas";
 import type { FechaCarta } from "@/domain/fechas/fecha";
-import { fechaLegible } from "@/domain/fechas/formato";
+import { fechaCorta, fechaLegible } from "@/domain/fechas/formato";
 import { siguienteSinFecha } from "@/domain/mazo/ordenar";
 import { guardarFoto } from "@/lib/almacen/idb";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
@@ -337,7 +337,7 @@ function Miniatura({
         )}
         <span className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-tinta/85 to-transparent px-2 pb-1.5 pt-5 text-[0.75rem] font-semibold text-papel">
           <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: confianza ? color : "var(--color-papel)", boxShadow: "0 0 0 1.5px rgba(20,20,20,.6)" }} />
-          <span className="truncate">{carta.fecha ? fechaLegible(carta.fecha, locale) : t("sinFecha")}</span>
+          <span className="truncate">{carta.fecha ? fechaCorta(carta.fecha, locale) : t("sinFecha")}</span>
         </span>
       </button>
       {confianza && (

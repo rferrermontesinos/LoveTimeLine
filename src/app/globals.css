@@ -120,10 +120,12 @@
     justify-content: center;
     width: 297mm;
     height: 210mm;
-    break-after: page;
     overflow: hidden;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  .hoja-folleto + .hoja-folleto {
+    break-before: page;
   }
   .hoja-folleto .escala-pantalla.relative {
     width: 252mm;
