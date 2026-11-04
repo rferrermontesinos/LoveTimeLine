@@ -287,7 +287,7 @@
     "estilo": "Estilo",
     "tinta": "Color",
     "tituloMazo": "Título del mazo",
-    "tituloMazoAyuda": "Sale en la portada y en la caja. Por ejemplo: Laura y Marc.",
+    "tituloMazoAyuda": "Sale en la portada y en la caja. Por ejemplo: Ana y Leo.",
     "tituloPorDefecto": "Nuestra historia",
     "dedicatoria": "Dedicatoria (opcional)",
     "dedicatoriaAyuda": "Va detrás de la portada. Hasta {max} caracteres.",

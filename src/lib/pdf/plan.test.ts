@@ -39,7 +39,7 @@ const mazo = (n: number, cambios: Partial<Mazo> = {}): Mazo => ({
   packId: "pareja",
   estiloId: "pareja",
   tintaId: "rosa",
-  titulo: "Laura y Marc",
+  titulo: "Ana y Leo",
   dedicatoria: "",
   portadaId: null,
   tono: "original",

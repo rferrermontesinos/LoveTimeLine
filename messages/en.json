@@ -287,7 +287,7 @@
     "estilo": "Style",
     "tinta": "Colour",
     "tituloMazo": "Deck title",
-    "tituloMazoAyuda": "Shown on the cover and the box. For example: Laura and Marc.",
+    "tituloMazoAyuda": "Shown on the cover and the box. For example: Ana and Leo.",
     "tituloPorDefecto": "Our story",
     "dedicatoria": "Dedication (optional)",
     "dedicatoriaAyuda": "Printed on the back of the cover. Up to {max} characters.",
