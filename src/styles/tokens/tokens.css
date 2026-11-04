@@ -1,0 +1,126 @@
+/*
+ * Tokens del portal. Salen de la dirección visual D «Naipe» (v3):
+ * fotográfica, a tinta plana y de baraja. Único sitio con colores, tipos y espacios.
+ * Contrastes WCAG medidos sobre papel #F5F0E6 (ver docs/diseno/portal.md).
+ */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+  src: url("/fonts/ui/bricolage-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+  src: url("/fonts/ui/bricolage-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@theme {
+  /* Neutros: papel y tinta */
+  --color-papel: #f5f0e6;
+  --color-papel-2: #ede6d8;
+  --color-papel-3: #e4dccb;
+  --color-blanco: #ffffff;
+  --color-linea: #d9d1c3;
+  --color-tinta: #141414;
+  --color-tinta-2: #5e584f; /* texto secundario: 6.2:1 sobre papel */
+  --color-tinta-hover: #2b2b2b;
+
+  /* Tintas riso, para fondos con texto en tinta (rosa 6.9, verde 6.0, rojo 4.6, amarillo 12.0) */
+  --color-rosa: #f7739e;
+  --color-verde: #22a861;
+  --color-rojo: #e8402f;
+  --color-amarillo: #ffc93c;
+  --color-cobalto: #2e56e6; /* también foco y enlaces: 5.2:1 sobre papel */
+
+  /* Variantes para texto sobre papel (≥ 5:1) */
+  --color-rosa-texto: #b8205f;
+  --color-verde-texto: #11733f;
+  --color-rojo-texto: #b42318;
+
+  /* Semánticos */
+  --color-exito: #11733f;
+  --color-aviso: #ffc93c;
+  --color-error: #b42318;
+  --color-foco: #2e56e6;
+
+  /* Tipografía: una sola familia variable, tres registros */
+  --font-sans: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.2;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55;
+  --text-md: 1.25rem;
+  --text-md--line-height: 1.4;
+  --text-lg: 1.5625rem;
+  --text-lg--line-height: 1.15;
+  --text-xl: 1.9375rem;
+  --text-xl--line-height: 1.05;
+  --text-2xl: 2.4375rem;
+  --text-2xl--line-height: 1;
+  --text-3xl: 3.0625rem;
+  --text-3xl--line-height: 0.95;
+
+  /* Radios: la carta (18 px ≈ 3 mm a escala), controles y la pestaña de esquina */
+  --radius-carta: 18px;
+  --radius-control: 14px;
+  --radius-chip: 999px;
+  --radius-pestana: 0 0 18px 0;
+
+  /* Sombras: solo para cartas, como si estuvieran sobre la mesa */
+  --shadow-carta: 0 14px 30px rgba(20, 20, 20, 0.18), 0 2px 6px rgba(20, 20, 20, 0.12);
+  --shadow-flotante: 0 -8px 24px rgba(20, 20, 20, 0.08);
+
+  /* Movimiento sutil */
+  --ease-salida: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duracion-corta: 150ms;
+  --duracion-media: 260ms;
+
+  /* Puntos de corte, móvil primero */
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+}
+
+/* Registros tipográficos de la dirección D */
+@utility tipo-titular {
+  font-weight: 800;
+  font-variation-settings: "opsz" 96, "wdth" 75;
+  letter-spacing: -0.01em;
+}
+
+@utility tipo-subtitular {
+  font-weight: 800;
+  font-variation-settings: "opsz" 36, "wdth" 85;
+}
+
+@utility tipo-texto {
+  font-variation-settings: "opsz" 14, "wdth" 100;
+}
+
+@utility tipo-micro {
+  font-weight: 700;
+  font-variation-settings: "opsz" 12, "wdth" 75;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@utility tipo-boton {
+  font-weight: 700;
+  font-variation-settings: "opsz" 18, "wdth" 90;
+  letter-spacing: 0.005em;
+}

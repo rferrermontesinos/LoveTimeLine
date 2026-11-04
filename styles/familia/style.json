@@ -1,0 +1,22 @@
+{
+  "id": "familia",
+  "version": 1,
+  "plantilla": "naipe",
+  "nombre": { "es": "Familia", "en": "Family" },
+  "descripcion": {
+    "es": "Verde riso con la franja de meses en amarillo. Para varias generaciones.",
+    "en": "Riso green with a yellow month strip. For several generations."
+  },
+  "tintaPorDefecto": "verde",
+  "tintas": [
+    { "id": "verde", "nombre": { "es": "Verde", "en": "Green" }, "fondo": "#22A861", "franja": "#FFC93C", "texto": "#141414" },
+    { "id": "amarillo", "nombre": { "es": "Amarillo", "en": "Yellow" }, "fondo": "#FFC93C", "franja": "#22A861", "texto": "#141414" },
+    { "id": "cobalto", "nombre": { "es": "Cobalto", "en": "Cobalt" }, "fondo": "#2E56E6", "franja": "#FFC93C", "texto": "#F5F0E6" }
+  ],
+  "colores": {
+    "tinta": "#141414",
+    "papel": "#F5F0E6",
+    "celdaInactiva": "rgba(245, 240, 230, 0.7)",
+    "velo": "20, 20, 20"
+  }
+}

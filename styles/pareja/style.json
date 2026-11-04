@@ -1,0 +1,22 @@
+{
+  "id": "pareja",
+  "version": 1,
+  "plantilla": "naipe",
+  "nombre": { "es": "Pareja", "en": "Couple" },
+  "descripcion": {
+    "es": "Rosa riso con la franja de meses en rojo. Para vuestra historia.",
+    "en": "Riso pink with a red month strip. For your story."
+  },
+  "tintaPorDefecto": "rosa",
+  "tintas": [
+    { "id": "rosa", "nombre": { "es": "Rosa", "en": "Pink" }, "fondo": "#F7739E", "franja": "#E8402F", "texto": "#141414" },
+    { "id": "rojo", "nombre": { "es": "Rojo", "en": "Red" }, "fondo": "#E8402F", "franja": "#FFC93C", "texto": "#141414" },
+    { "id": "cobalto", "nombre": { "es": "Cobalto", "en": "Cobalt" }, "fondo": "#2E56E6", "franja": "#F7739E", "texto": "#F5F0E6" }
+  ],
+  "colores": {
+    "tinta": "#141414",
+    "papel": "#F5F0E6",
+    "celdaInactiva": "rgba(245, 240, 230, 0.7)",
+    "velo": "20, 20, 20"
+  }
+}
