@@ -7,10 +7,9 @@ import { cartaPortada, datosPortada } from "@/lib/mazo/derivados";
 import type { Mazo } from "@/lib/mazo/tipos";
 import { CartaCanvas } from "./CartaCanvas";
 
-/** La portada del mazo o la caja, con la foto elegida como portada. */
+/** La carta de portada del mazo, con la foto elegida como portada. La caja va aparte (VistaCaja). */
 export function CartaPortada({
   mazo,
-  tipo,
   cara,
   etiqueta,
   version = 0,
@@ -18,7 +17,6 @@ export function CartaPortada({
   className,
 }: {
   mazo: Mazo;
-  tipo: "portada" | "caja";
   cara: Cara;
   etiqueta: string;
   version?: number;
@@ -27,7 +25,7 @@ export function CartaPortada({
 }) {
   const portada = cartaPortada(mazo);
   const img = useFoto(portada?.id ?? null, "copia", version);
-  const base = datosPortada(mazo, tipo, cara);
+  const base = datosPortada(mazo, cara);
   const firma = JSON.stringify(base);
   const datos = useMemo<DatosCarta>(
     () => ({

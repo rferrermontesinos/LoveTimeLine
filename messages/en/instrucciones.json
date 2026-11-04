@@ -1,13 +1,5 @@
 {
   "instrucciones": {
-    "titulo": "Folding instructions",
-    "texto": "A 252 × 176 mm sheet that folds into 8 card-sized panels and fits in the box.",
-    "caraA": "Side A (outside)",
-    "caraB": "Side B (inside)",
-    "descargar": "Download PDF",
-    "imprimir": "Print this page",
-    "plegado": "How to fold it",
-    "plegadoTexto": "Fold in half lengthwise (side A outside), then accordion-fold along the three vertical lines. The cover panel ends up on top.",
     "portadaTitulo": "How to play",
     "portadaSub": "Unfold to start",
     "posterTitulo": "When was it?",
@@ -17,15 +9,18 @@
     "mazoDe": "This deck belongs to",
     "mazoAnios": "Years",
     "lineas": "Write your “Our story” record here",
-    "impresion": "Print on landscape A4, double-sided flipping on the short edge, at 100%. Cut along the corner marks; the side marks show the folds.",
-    "personalizado": "With your deck’s title and dedication.",
-    "generico": "Generic version: make a deck to see your title and dedication.",
-    "record": "Record",
     "fecha": "Date",
     "cartas": "Cards",
     "quienes": "Who",
-    "antes": "Earlier?",
-    "despues": "Later?",
-    "panel": "Panel {n}"
+    "vuestroMazo": "With your {n}-card deck",
+    "personas": "{n} players",
+    "vidasTitulo": "Lives with your deck",
+    "vidasPersonas": "Players with cards → lives:",
+    "vidasCompleta": "In the whole story: {n} lives.",
+    "comodin": {
+      "uso": "Before placing a card, ask the deck maker for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. If they aren’t there, only the swap works.",
+      "clasico": "When you miss and end up with more cards than anyone else, take one if there’s one left (one each). Once used, it goes back in the box.",
+      "historia": "They belong to the team and each one can be used once. The memory keeper gives the hint."
+    }
   }
 }

@@ -14,22 +14,22 @@ export function Pestana({ children, color = "var(--color-rosa)", tamano = "md", 
   );
 }
 
-/** Franja de 12 casillas: la regla de meses de las cartas, usada como barra de progreso. */
-export function Franja({ valor, total = 12, color = "var(--color-rojo)", etiqueta, className = "" }: { valor: number; total?: number; color?: string; etiqueta?: string; className?: string }) {
-  const llenas = Math.round(Math.min(1, Math.max(0, valor)) * total);
+/**
+ * Barra de progreso: una pista de papel que se llena de tinta. Se llama Franja por historia
+ * (antes imitaba la franja de meses de las cartas, que ya no existe).
+ */
+export function Franja({ valor, color = "var(--color-tinta)", etiqueta, className = "" }: { valor: number; color?: string; etiqueta?: string; className?: string }) {
+  const parte = Math.min(1, Math.max(0, valor));
   return (
     <div
       role="progressbar"
       aria-label={etiqueta}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={Math.round(valor * 100)}
-      className={`flex h-4 items-center gap-[3px] rounded-[4px] px-1.5 ${className}`}
-      style={{ background: color }}
+      aria-valuenow={Math.round(parte * 100)}
+      className={`h-2.5 overflow-hidden rounded-full bg-papel-3 ${className}`}
     >
-      {Array.from({ length: total }, (_, i) => (
-        <span key={i} className="h-2 flex-1 rounded-[2px] transition-colors duration-200" style={{ background: i < llenas ? "var(--color-tinta)" : "rgba(245,240,230,.7)" }} />
-      ))}
+      <div className="h-full rounded-full transition-[width] duration-200 ease-out" style={{ width: `${parte * 100}%`, background: color }} />
     </div>
   );
 }

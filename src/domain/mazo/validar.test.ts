@@ -63,6 +63,18 @@ describe("validarMazo", () => {
     expect(r.puedePagar).toBe(false);
   });
 
+  it("bloquea las cartas sin foto con el texto vacío o con un hueco por rellenar", () => {
+    const base = Array.from({ length: 38 }, (_, i) => carta(String(1980 + i)));
+    const vacia = carta("1950", { tipo: "texto", descripcion: " ", hash: null, ppp: null });
+    const hueco = carta("1951", { tipo: "texto", descripcion: "Nació [nombre]", hash: null, ppp: null });
+    const r = validarMazo({ cartas: [...base, vacia, hueco], minimo: 40, maximo: 300, hoy, pppMinimo: 300 });
+    expect(r.avisos).toContainEqual({ tipo: "texto-pendiente", cartas: [vacia.id, hueco.id] });
+    expect(GRAVEDAD["texto-pendiente"]).toBe("bloquea");
+    expect(r.puedePagar).toBe(false);
+    const bien = carta("1952", { tipo: "texto", descripcion: "Nació el abuelo", hash: null, ppp: null });
+    expect(validarMazo({ cartas: [...base, bien, carta("1953")], minimo: 40, maximo: 300, hoy, pppMinimo: 300 }).puedePagar).toBe(true);
+  });
+
   it("cuenta los emojis como un carácter en la descripción", () => {
     const base = Array.from({ length: 40 }, (_, i) => carta(String(1980 + i)));
     base[0]!.descripcion = "❤".repeat(90);

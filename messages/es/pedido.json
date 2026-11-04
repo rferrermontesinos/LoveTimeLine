@@ -25,6 +25,7 @@
       "excede-maximo": "El mazo pasa del máximo de {max} cartas.",
       "sin-fecha": "{n, plural, one {# carta no tiene fecha} other {# cartas no tienen fecha}}.",
       "fecha-futura": "{n, plural, one {# carta tiene} other {# cartas tienen}} una fecha posterior a hoy.",
+      "texto-pendiente": "{n, plural, one {# carta sin foto tiene el texto por completar} other {# cartas sin foto tienen el texto por completar}}.",
       "descripcion-larga": "{n, plural, one {# frase pasa} other {# frases pasan}} de 90 caracteres.",
       "baja-resolucion": "{n, plural, one {# foto puede verse borrosa} other {# fotos pueden verse borrosas}} al imprimir.",
       "revisar-fechas": "{n, plural, one {# fecha conviene revisarla} other {# fechas conviene revisarlas}}.",

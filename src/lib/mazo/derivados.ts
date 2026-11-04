@@ -3,9 +3,9 @@ import { pppEfectivo, recorteCentrado, recorteReversoDesdeAnverso, type Rect } f
 import { rangoAnios } from "@/domain/mazo/ordenar";
 import type { CartaParaValidar } from "@/domain/mazo/validar";
 import { asignarIconos, type MecanicaIcono } from "@/domain/mecanicas/asignar";
-import type { Catalogo } from "@/domain/precios/tipos";
+import type { Catalogo, Extra } from "@/domain/precios/tipos";
 import { PROPORCION_ANVERSO, proporcionReverso } from "@/lib/carta/dibujar";
-import type { Cara, DatosCarta } from "@/lib/carta/tipos";
+import type { Cara, DatosCarta, VarianteCaja } from "@/lib/carta/tipos";
 import { obtenerPlantilla, obtenerEstilo } from "@/lib/estilos";
 import type { FotoImportada } from "@/lib/importar/procesar";
 import { textoRecuerdos } from "@/lib/carta/textos";
@@ -24,7 +24,12 @@ export function recortesIniciales(ancho: number, alto: number, propReverso: numb
   return { recorteAnverso, recorteReverso: recorteReversoDesdeAnverso(recorteAnverso, propReverso, ancho, alto) };
 }
 
+/**
+ * Carta nueva a partir de una foto importada. La fecha solo viene puesta si era segura; si no,
+ * queda en blanco con sus sugerencias y el motivo. De los metadatos solo se guarda el resultado.
+ */
 export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: number): CartaFoto {
+  const { automatica, sugerencias, motivo } = f.propuesta;
   return {
     tipo: "foto",
     id: f.id,
@@ -35,11 +40,12 @@ export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: num
     alto: f.alto,
     anchoOriginal: f.anchoOriginal,
     altoOriginal: f.altoOriginal,
-    fecha: f.propuesta?.fecha ?? null,
-    fuente: f.propuesta?.fuente ?? null,
-    confianza: f.propuesta?.confianza ?? null,
-    revisar: f.propuesta?.revisar ?? false,
-    motivo: f.propuesta?.motivo,
+    fecha: automatica?.fecha ?? null,
+    fuente: automatica?.fuente ?? null,
+    confianza: automatica?.confianza ?? null,
+    revisar: false,
+    motivo: automatica ? undefined : motivo,
+    sugerencias: automatica ? [] : sugerencias.map(({ fecha, fuente, motivo: m }) => ({ fecha, fuente, motivo: m })),
     descripcion: "",
     descripcionEnAnverso: false,
     ...recortesIniciales(f.ancho, f.alto, propReverso),
@@ -82,6 +88,7 @@ export function paraValidar(c: Carta): CartaParaValidar {
   const foto = esFoto(c);
   return {
     id: c.id,
+    tipo: c.tipo,
     fecha: c.fecha,
     revisar: c.revisar,
     hash: foto ? c.hash : null,
@@ -142,12 +149,64 @@ export function datosCarta(c: Carta, icono: string | null): Omit<DatosCarta, "fo
   };
 }
 
-/** Datos de dibujo de la portada y de la caja (sin la imagen), para la vista previa y para imprimir. */
-export function datosPortada(mazo: Mazo, tipo: "portada" | "caja", cara: Cara): Omit<DatosCarta, "foto"> {
+/** Datos de dibujo de la portada (sin la imagen), para la vista previa y para imprimir. */
+export function datosPortada(mazo: Mazo, cara: Cara): Omit<DatosCarta, "foto"> {
   return {
-    tipo,
+    tipo: "portada",
     titulo: mazo.titulo,
     subtitulo: cara === "anverso" ? subtituloPortada(mazo) : aniosPortada(mazo),
     dedicatoria: mazo.dedicatoria,
+  };
+}
+
+/** Extra de la caja personalizada: se busca por su efecto en el catálogo, nunca por su id. */
+export function extraCajaPersonalizada(catalogo: Pick<Catalogo, "extras">): Extra | null {
+  return catalogo.extras.find((x) => x.activo && x.efecto === "caja-personalizada") ?? null;
+}
+
+/** ¿Lleva el mazo la caja personalizada (extra de pago)? Si no, va en la caja de siempre. */
+export function esCajaPersonalizada(mazo: Pick<Mazo, "extras">, catalogo: Pick<Catalogo, "extras">): boolean {
+  const extra = extraCajaPersonalizada(catalogo);
+  return !!extra && mazo.extras.includes(extra.id);
+}
+
+export function varianteCaja(mazo: Pick<Mazo, "extras">, catalogo: Pick<Catalogo, "extras">): VarianteCaja {
+  return esCajaPersonalizada(mazo, catalogo) ? "personalizada" : "generica";
+}
+
+/** Foto de la caja personalizada: lo que hace falta para dibujarla y para imprimirla. */
+export interface FotoDeCaja {
+  /** Id de la foto en el almacén del navegador (una carta o la foto propia de la caja). */
+  id: string;
+  /** Ancho de la copia de trabajo, en la que está medido el recorte. */
+  ancho: number;
+  /** Recorte de la foto para la cara de la caja. */
+  recorte: Rect;
+}
+
+/**
+ * Foto de la caja personalizada: la foto propia de la caja, la carta elegida o, si no hay
+ * ninguna (o la carta ya no está o no tiene foto), la de la portada. De una carta se usa el
+ * recorte del reverso, que es el más parecido a la cara de la caja.
+ */
+export function fotoCaja(mazo: Pick<Mazo, "cartas" | "portadaId" | "caja">): FotoDeCaja | null {
+  const caja = mazo.caja;
+  if (caja?.origen === "propia") return { id: caja.id, ancho: caja.ancho, recorte: caja.recorte };
+  const elegida = caja?.origen === "carta" ? mazo.cartas.filter(esFoto).find((c) => c.id === caja.cartaId) : undefined;
+  const carta = elegida ?? cartaPortada(mazo);
+  return carta ? { id: carta.id, ancho: carta.ancho, recorte: carta.recorteReverso } : null;
+}
+
+/**
+ * Datos de dibujo de una cara de la caja (sin la imagen). La variante va explícita: una foto
+ * nula también es una foto que aún está cargando. La caja de siempre no lleva nada del mazo.
+ */
+export function datosCaja(mazo: Mazo, cara: Cara, variante: VarianteCaja): Omit<DatosCarta, "foto"> {
+  if (variante === "generica") return { tipo: "caja", variante };
+  return {
+    tipo: "caja",
+    variante,
+    titulo: mazo.titulo,
+    subtitulo: cara === "anverso" ? subtituloPortada(mazo) : aniosPortada(mazo),
   };
 }

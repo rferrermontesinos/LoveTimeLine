@@ -1,9 +1,11 @@
 /**
  * Genera fotos de prueba sintéticas (formas de colores, sin personas) en tests/fixtures/generadas/.
  * Los nombres siguen los patrones que el portal reconoce, para probar la lectura de fechas.
+ * Aparte, en la subcarpeta escaner/, unas pocas «de escáner» y «fotos de fotos» con fechas
+ * relativas al día en que se generan, para probar que esas fechas no se rellenan solas.
  * Nunca uses fotos reales en los tests.
  *
- *   pnpm fixtures                 → 42 fotos (lo justo para el pack Pareja y un poco más)
+ *   pnpm fixtures                 → 42 fotos (lo justo para el pack pequeño y un poco más) y escaner/
  *   pnpm fixtures 60              → otra cantidad
  *   pnpm fixtures 62 salidas/fotos → en otra carpeta (los tests usan la de por defecto)
  */
@@ -40,6 +42,12 @@ function svg(i: number, ancho: number, alto: number): string {
 
 const dos = (n: number) => String(n).padStart(2, "0");
 
+/** Fecha y hora con el formato de EXIF («2019:08:14 18:30:00»), en hora local. */
+const fechaExif = (d: Date) =>
+  `${d.getFullYear()}:${dos(d.getMonth() + 1)}:${dos(d.getDate())} ${dos(d.getHours())}:${dos(d.getMinutes())}:${dos(d.getSeconds())}`;
+/** «20261101», como en los nombres de cámara y de escáner. */
+const fechaCompacta = (d: Date) => `${d.getFullYear()}${dos(d.getMonth() + 1)}${dos(d.getDate())}`;
+
 /** Nombre de archivo con una fecha en alguno de los formatos habituales. */
 function nombre(i: number): { nombre: string; exif?: string } {
   const anio = 2008 + (i % 18);
@@ -60,12 +68,73 @@ function nombre(i: number): { nombre: string; exif?: string } {
     case 5:
       return { nombre: `verano ${anio} (${i}).jpg` };
     case 6:
-      // Fecha solo en los metadatos EXIF.
+      // Fecha solo en los metadatos EXIF, de una cámara: se rellena sola.
       return { nombre: `DSC${String(1000 + i).padStart(5, "0")}.jpg`, exif: `${anio}:${dos(mes)}:${dos(dia)} 18:30:00` };
     default:
-      // Sin fecha en el nombre ni en EXIF: el portal usará la fecha del archivo y pedirá revisarla.
+      // Sin fecha en el nombre ni en EXIF: el portal sugiere la fecha del archivo, sin ponerla.
       return { nombre: `foto-${i}.jpg` };
   }
+}
+
+type Etiquetas = Record<string, string>;
+interface FotoEscaner {
+  nombre: string;
+  ifd0?: Etiquetas;
+  /** Bloque EXIF, con los nombres de libexif (DateTimeOriginal, DateTimeDigitized). */
+  ifd2?: Etiquetas;
+  modificada: Date;
+}
+
+const ESCANER_PLANO: Etiquetas = { Make: "EPSON", Model: "Perfection V600", Software: "EPSON Scan" };
+const ESCANER_FOTOS: Etiquetas = { Make: "EPSON", Model: "FastFoto FF-680W", Software: "Epson FastFoto" };
+const MOVIL: Etiquetas = { Make: "Prueba", Model: "Sintetica" };
+
+/** Escaneos y fotos de fotos antiguas, con fechas recientes respecto a `hoy`. */
+function fotosDeEscaner(hoy: Date): FotoEscaner[] {
+  const hace = (dias: number, segundos = 0) => new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - dias, 10, 15, segundos);
+  const escaneo = hace(3);
+  const sesion = hace(2);
+  return [
+    // Escáner plano, solo con la fecha del escaneo: en blanco y sin sugerencias («parece escaneada»).
+    { nombre: "escaneo-001.jpg", ifd0: ESCANER_PLANO, ifd2: { DateTimeDigitized: fechaExif(escaneo) }, modificada: escaneo },
+    // Escaneada, pero con el año escrito por una persona en el nombre: se rellena (1958).
+    { nombre: "abuelos 1958.jpg", ifd0: ESCANER_PLANO, ifd2: { DateTimeDigitized: fechaExif(escaneo) }, modificada: escaneo },
+    // Escáner de fotos que guarda la fecha original anotada: se sugiere el 14 de junio de 1987.
+    {
+      nombre: "boda tios.jpg",
+      ifd0: ESCANER_FOTOS,
+      ifd2: { DateTimeOriginal: "1987:06:14 12:00:00", DateTimeDigitized: fechaExif(escaneo) },
+      modificada: escaneo,
+    },
+    // Nombre que pone Google Drive al escanear: ni fecha ni sugerencia.
+    { nombre: `Scanned_${fechaCompacta(hace(5))}-1000.jpg`, modificada: hace(5) },
+    // Cinco fotos de fotos hechas con el móvil el mismo día: fecha reciente sugerida y aviso de
+    // «parece una sesión de escaneo».
+    ...Array.from({ length: 5 }, (_, k): FotoEscaner => {
+      const momento = hace(2, k * 7);
+      return {
+        nombre: `IMG_${fechaCompacta(sesion)}_1015${dos(k * 7)}.jpg`,
+        ifd0: MOVIL,
+        ifd2: { DateTimeOriginal: fechaExif(momento), DateTimeDigitized: fechaExif(momento) },
+        modificada: momento,
+      };
+    }),
+  ];
+}
+
+async function generarEscaner(carpeta: string) {
+  await mkdir(carpeta, { recursive: true });
+  const fotos = fotosDeEscaner(new Date());
+  for (const [k, f] of fotos.entries()) {
+    const [ancho, alto] = k % 2 ? [1800, 1200] : [1200, 1800];
+    // Colores apagados, como una copia en papel antigua.
+    let img = sharp(Buffer.from(svg(100 + k, ancho, alto))).modulate({ saturation: 0.35 });
+    if (f.ifd0 || f.ifd2) img = img.withExif({ ...(f.ifd0 ? { IFD0: f.ifd0 } : {}), ...(f.ifd2 ? { IFD2: f.ifd2 } : {}) });
+    const destino = path.join(carpeta, f.nombre);
+    await img.jpeg({ quality: 82 }).toFile(destino);
+    await utimes(destino, f.modificada, f.modificada);
+  }
+  return fotos.length;
 }
 
 async function main() {
@@ -81,14 +150,16 @@ async function main() {
     if (archivo.endsWith(".png")) {
       await img.png().toFile(destino);
     } else {
-      if (exif) img = img.withExif({ IFD0: { Make: "Prueba", Model: "Sintetica" }, IFD2: { DateTimeOriginal: exif, CreateDate: exif } });
+      // IFD2 es el bloque EXIF; las etiquetas van con los nombres de libexif (DateTimeDigitized, no CreateDate).
+      if (exif) img = img.withExif({ IFD0: MOVIL, IFD2: { DateTimeOriginal: exif, DateTimeDigitized: exif } });
       await img.jpeg({ quality: 82 }).toFile(destino);
     }
     // Fecha de modificación fija para las fotos sin fecha, para que el test sea estable.
     const fija = new Date(Date.UTC(2023, 5, 1 + (i % 20), 12));
     await utimes(destino, fija, fija);
   }
-  console.log(`${cantidad} fotos sintéticas en ${path.relative(process.cwd(), SALIDA)}`);
+  const escaner = await generarEscaner(path.join(SALIDA, "escaner"));
+  console.log(`${cantidad} fotos sintéticas en ${path.relative(process.cwd(), SALIDA)} y ${escaner} de escáner en escaner/`);
 }
 
 void main();

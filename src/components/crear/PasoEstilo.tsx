@@ -2,17 +2,19 @@
 
 import { useId, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { BRAND_NAME } from "@config/brand";
 import { CartaPortada } from "@/components/carta/CartaPortada";
+import { VistaCaja } from "@/components/carta/VistaCaja";
 import { VistaCarta } from "@/components/carta/VistaCarta";
 import { IconoMecanica } from "@/components/ui/IconoMecanica";
 import { Chip, Interruptor, Micro } from "@/components/ui/Piezas";
 import { MAX_DEDICATORIA, MAX_TITULO } from "@/domain/mazo/validar";
 import { textoEn } from "@/domain/precios/tipos";
-import { IDIOMAS_MAZO } from "@/lib/carta/textos";
+import { IDIOMAS_MAZO, nombreDeIdioma } from "@/lib/carta/textos";
 import { ESTILOS, TONOS, obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { useMazo } from "@/lib/mazo/contexto";
-import { cartaPortada } from "@/lib/mazo/derivados";
+import { cartaPortada, fotoCaja } from "@/lib/mazo/derivados";
 import { esFoto, type CampoMazo, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 
@@ -35,6 +37,8 @@ export function PasoEstilo() {
   const muestra = mazo.cartas.find((c) => c.fecha && c.id !== portada?.id) ?? mazo.cartas.find((c) => c.id !== portada?.id) ?? portada;
   const mecanicas = catalogo.mecanicas.filter((m) => m.activo).sort((a, b) => a.orden - b.orden);
   const versionPortada = portada ? (versiones[portada.id] ?? 0) : 0;
+  const idFotoCaja = fotoCaja(mazo)?.id;
+  const versionCaja = idFotoCaja ? (versiones[idFotoCaja] ?? 0) : 0;
   const filtro = (tono: Tono) => plantilla.tonosFoto[tono].filtro;
 
   return (
@@ -50,10 +54,16 @@ export function PasoEstilo() {
           <Micro className="mb-3 text-tinta-2">{t("vistaPrevia")}</Micro>
           <div className="mesa -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-5 sm:mx-0 sm:rounded-[24px] sm:px-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:p-6">
             <Figura etiqueta={t("caja")}>
-              <CartaPortada mazo={mazo} tipo="caja" cara="anverso" version={versionPortada} etiqueta={`${t("caja")}: ${mazo.titulo}`} />
+              <VistaCaja
+                mazo={mazo}
+                catalogo={catalogo}
+                cara="anverso"
+                version={versionCaja}
+                etiquetas={{ personalizada: `${t("caja")}: ${mazo.titulo}`, generica: `${t("caja")}: ${BRAND_NAME}` }}
+              />
             </Figura>
             <Figura etiqueta={t("portadaCarta")}>
-              <CartaPortada mazo={mazo} tipo="portada" cara="reverso" version={versionPortada} etiqueta={`${t("portadaCarta")}: ${mazo.dedicatoria}`} />
+              <CartaPortada mazo={mazo} cara="reverso" version={versionPortada} etiqueta={`${t("portadaCarta")}: ${mazo.dedicatoria}`} />
             </Figura>
             {muestra && (
               <>
@@ -204,7 +214,7 @@ export function PasoEstilo() {
                 const activo = mazo.idiomaMazo === idioma;
                 return (
                   <Opcion key={idioma} nombre={`${id}-idioma`} activo={activo} alElegir={() => cambiar("idiomaMazo", idioma)} etiqueta={nombreIdioma(idioma)}>
-                    <span lang={idioma} className={`tipo-boton grid min-h-10 place-items-center rounded-[10px] px-4 text-sm transition-colors ${activo ? "bg-tinta text-papel" : "hover:bg-papel-3"}`}>
+                    <span className={`tipo-boton grid min-h-10 place-items-center rounded-[10px] px-4 text-sm transition-colors ${activo ? "bg-tinta text-papel" : "hover:bg-papel-3"}`}>
                       {nombreIdioma(idioma)}
                     </span>
                   </Opcion>
@@ -219,7 +229,7 @@ export function PasoEstilo() {
                 const activa = mazo.mecanicas.includes(m.id);
                 return (
                   <li key={m.id} className="flex items-start gap-3 rounded-[14px] bg-blanco p-4">
-                    <IconoMecanica id={m.id} tamano="sm" />
+                    <IconoMecanica icono={m.icono} tamano="sm" estiloId={mazo.estiloId} paletaId={mazo.paletaId} />
                     <div className="min-w-0 flex-1">
                       <Interruptor
                         id={`${id}-mec-${m.id}`}
@@ -247,16 +257,6 @@ export function PasoEstilo() {
       </div>
     </div>
   );
-}
-
-/** «Español», «English»…: el nombre del idioma en el idioma de la interfaz. */
-function nombreDeIdioma(codigo: string, locale: string): string {
-  try {
-    const n = new Intl.DisplayNames([locale], { type: "language" }).of(codigo) ?? codigo;
-    return n.charAt(0).toLocaleUpperCase(locale) + n.slice(1);
-  } catch {
-    return codigo.toUpperCase();
-  }
 }
 
 function Bloque({ titulo, ayuda, etiquetaPara, children }: { titulo: string; ayuda?: string; etiquetaPara?: string; children: ReactNode }) {

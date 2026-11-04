@@ -13,7 +13,8 @@
       "cartas": "Cards",
       "estilo": "Style",
       "pedido": "Order",
-      "paso": "Step {n} of 4"
+      "paso": "Step {n} of 4",
+      "bloqueado": "Finish every card to continue"
     },
     "barra": {
       "siguienteCartas": "Next: cards",
@@ -22,7 +23,9 @@
       "pagar": "Pay {total}",
       "total": "Total",
       "faltan": "{n, plural, one {# photo to go} other {# photos to go}}",
-      "minimoCubierto": "Minimum reached"
+      "minimoCubierto": "Minimum reached",
+      "faltanCartas": "{n, plural, one {# card left to finish} other {# cards left to finish}}",
+      "irAPendiente": "Go to the next one"
     },
     "pack": "{pack} pack",
     "contador": "{actual} of {minimo} photos",

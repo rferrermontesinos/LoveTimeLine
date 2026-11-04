@@ -21,9 +21,6 @@ export async function Pie() {
           <Link className="hover:underline" href="/como-jugar">
             {n("comoJugar")}
           </Link>
-          <Link className="hover:underline" href="/instrucciones">
-            {t("instrucciones")}
-          </Link>
           <Link className="hover:underline" href="/privacidad">
             {n("privacidad")}
           </Link>

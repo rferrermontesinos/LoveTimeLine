@@ -16,9 +16,16 @@
     "noImagen": "{nombre} no es una imagen compatible.",
     "vacio": "Aún no hay fotos. Empieza por una carpeta de un viaje o de un año.",
     "ordenar": "Ordenar por fecha",
-    "siguienteSinFecha": "Siguiente sin fecha",
+    "irAPendientes": "Ir a las pendientes",
+    "resumenFechas": "Fechas de las fotos",
+    "conFechaCuenta": "{n, plural, one {# con fecha} other {# con fecha}}",
+    "sugeridasCuenta": "{n, plural, one {# con fecha sugerida} other {# con fecha sugerida}}",
     "sinFechaCuenta": "{n, plural, one {# sin fecha} other {# sin fecha}}",
     "revisarCuenta": "{n, plural, one {# por revisar} other {# por revisar}}",
+    "sugeridasAyuda": "Solo ponemos la fecha cuando estamos seguros. Las sugeridas, revísalas o úsalas todas de una vez.",
+    "usarSugeridas": "{n, plural, one {Usar la fecha sugerida} other {Usar las # fechas sugeridas}}",
+    "sugeridasUsadas": "{n, plural, one {# fecha sugerida puesta.} other {# fechas sugeridas puestas.}}",
+    "sesionEscaneo": "{n} fotos tienen como fecha sugerida el mismo día reciente, el {fecha}. Si son fotos antiguas que escaneaste o fotografiaste ese día, esa es la fecha de la copia: pon la del recuerdo.",
     "seleccionar": "Seleccionar",
     "seleccionadas": "{n, plural, one {# seleccionada} other {# seleccionadas}}",
     "ponerFecha": "Poner fecha",
@@ -26,10 +33,13 @@
     "borrarSeleccion": "Borrar",
     "editar": "Editar {nombre}",
     "sinFecha": "Sin fecha",
+    "sugerida": "Sin fecha. Sugerida: {fecha}",
+    "sugeridaCorta": "¿{fecha}?",
     "confianza": {
       "alta": "Fecha de la foto",
       "media": "Fecha del nombre",
-      "baja": "Revisar"
+      "baja": "Revisar",
+      "sugerida": "Fecha sugerida, sin confirmar"
     },
     "estrella": "Recuerdo estrella"
   },
@@ -42,21 +52,43 @@
     "campoDia": "Día",
     "campoMes": "Mes",
     "campoAnio": "Año",
+    "placeholderDia": "dd",
+    "placeholderAnio": "aaaa",
     "invalida": "Esa fecha no existe.",
     "futura": "La fecha no puede ser posterior a hoy.",
+    "incompleta": "{precision, select, dia {Falta el día o el mes. Si no los sabes, elige «Mes y año» o «Solo el año».} other {Falta el mes. Si no lo sabes, elige «Solo el año».}}",
     "fuente": {
       "exif": "Sacada de los datos de la foto.",
       "nombre": "Sacada del nombre del archivo.",
-      "archivo": "Es la fecha del archivo: puede ser cuándo lo copiaste. Revísala.",
+      "archivo": "Sacada de la fecha del archivo.",
       "manual": "Puesta a mano."
     },
     "motivo": {
-      "fecha-del-archivo": "Es la fecha del archivo, no la de la foto.",
+      "fecha-del-archivo": "Es la fecha del archivo: puede ser cuándo se copió, no cuándo se hizo la foto.",
       "fecha-de-hoy": "Es la fecha de hoy: seguramente es cuándo copiaste la foto.",
       "exif-y-nombre-no-coinciden": "Los datos de la foto y el nombre del archivo no coinciden.",
-      "reloj-de-camara": "Parece la fecha de una cámara con el reloj sin configurar."
+      "reloj-de-camara": "Parece la fecha de una cámara con el reloj sin configurar.",
+      "posible-escaneo": "Parece una foto escaneada o digitalizada: la fecha que trae es la del escaneo, no la del recuerdo.",
+      "digitalizada-despues": "La foto guarda esta fecha como la original, aunque se digitalizó más tarde.",
+      "fecha-anotada": "Alguien anotó esta fecha en los datos de la foto.",
+      "fecha-reciente": "Es de este último año. Si es una foto antigua que fotografiaste o escaneaste hace poco, es la fecha de la copia.",
+      "fecha-de-envio": "Es cuándo se envió o se guardó la foto (WhatsApp, Telegram…), que puede ser después del recuerdo.",
+      "captura-de-pantalla": "Es cuándo se hizo la captura de pantalla, que puede ser después del recuerdo.",
+      "sin-datos-de-camara": "La foto trae esta fecha, pero no con qué cámara se hizo: puede ser la de una copia o una edición.",
+      "fecha-digitalizacion": "Es cuándo la foto se guardó en digital. En las fotos de cámara suele ser el mismo día."
     },
     "confirmar": "La fecha está bien",
+    "vacia": "Esta carta aún no tiene fecha.",
+    "escribela": "Escríbela tú: si no sabes más, basta con el año.",
+    "eligeOEscribe": "{n, plural, one {Usa la fecha sugerida o escribe la tuya.} other {Usa una de estas fechas o escribe la tuya.}}",
+    "sugerenciasTitulo": "{n, plural, one {Fecha sugerida} other {Fechas sugeridas}}",
+    "sugerencia": "{precision, select, dia {¿Es del {fecha}?} other {¿Es de {fecha}?}}",
+    "usarSugerencia": "Usar esta fecha",
+    "origenSugerencia": {
+      "exif": "De los datos de la foto",
+      "nombre": "Del nombre del archivo",
+      "archivo": "De la fecha del archivo"
+    },
     "aplicarA": "Poner esta fecha a {n, plural, one {# foto} other {# fotos}}",
     "dialogoTitulo": "Poner la misma fecha"
   }

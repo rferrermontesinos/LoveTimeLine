@@ -41,7 +41,8 @@ export interface CartaMuestra {
   descripcion?: string;
   descripcionEnAnverso?: boolean;
   icono?: string | null;
-  estiloId: string;
+  /** Sin estilo ni paleta, los de por defecto. */
+  estiloId?: string;
   paletaId?: string;
 }
 
@@ -92,10 +93,14 @@ export function CartaDeMuestra({
   );
 }
 
+/**
+ * Cartas de ejemplo de la web. Las paletas son las de los antiguos estilos «Pareja» (rosa) y
+ * «Familia» (verde), para que la portada se siga viendo como se validó.
+ */
 export const MUESTRAS: Record<string, CartaMuestra> = {
-  menorca: { foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: "Nuestro primer viaje juntos, Menorca", descripcionEnAnverso: true, estiloId: "pareja", icono: "estrella" },
-  aniversario: { foto: "/muestras/luces.jpg", fecha: { anio: 2021, mes: 12, dia: 12 }, descripcion: "Cena de aniversario", estiloId: "pareja", icono: "bocadillo" },
-  excursion: { foto: "/muestras/montanas.jpg", fecha: { anio: 2015, mes: 5 }, descripcion: "La primera excursión con los abuelos", estiloId: "familia" },
-  jardin: { foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: "El jardín de la casa del pueblo", estiloId: "familia" },
-  nieve: { foto: "/muestras/nieve.jpg", fecha: { anio: 2010, mes: 1 }, descripcion: "Primera vez en la nieve", estiloId: "familia", paletaId: "cobalto" },
+  menorca: { foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: "Nuestro primer viaje juntos, Menorca", descripcionEnAnverso: true, paletaId: "rosa", icono: "estrella" },
+  aniversario: { foto: "/muestras/luces.jpg", fecha: { anio: 2021, mes: 12, dia: 12 }, descripcion: "Cena de aniversario", paletaId: "rosa" },
+  excursion: { foto: "/muestras/montanas.jpg", fecha: { anio: 2015, mes: 5 }, descripcion: "La primera excursión con los abuelos", paletaId: "verde" },
+  jardin: { foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: "El jardín de la casa del pueblo", paletaId: "verde" },
+  nieve: { foto: "/muestras/nieve.jpg", fecha: { anio: 2010, mes: 1 }, descripcion: "Primera vez en la nieve", paletaId: "cobalto" },
 };

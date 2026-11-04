@@ -1,4 +1,17 @@
+import { esNombreDeEscaneo } from "./escaneo";
 import { ANIO_MINIMO, crearFecha, esFutura, type FechaCarta } from "./fecha";
+
+/**
+ * De dónde sale la fecha de un nombre de archivo, que dice cuánto fiarse de ella:
+ * - camara: la pone la cámara del móvil al hacer la foto (IMG_20190814_123045, PXL_…, Samsung
+ *   20190814_123045, Dropbox «2019-08-14 12.30.45»);
+ * - mensajeria: la de envío o descarga (WhatsApp, Telegram, Signal, Facebook, marcas de tiempo);
+ * - captura: la de una captura de pantalla;
+ * - escaneo: la de un programa o una aplicación de escaneo (Scanned_20261030-1000, img20261030_…,
+ *   «CamScanner 10-30-2026 10.10», IMG_20241030_0001 de Canon);
+ * - escrito: la escribió una persona («verano 2015», «2015-08 Menorca», «Boda 14-08-2019»).
+ */
+export type OrigenNombre = "camara" | "mensajeria" | "captura" | "escaneo" | "escrito";
 
 /**
  * Propone una fecha a partir del nombre de un archivo. Función pura: no lee el archivo.
@@ -16,6 +29,7 @@ export interface FechaDesdeNombre {
     | "mes-escrito"
     | "anio-mes"
     | "anio";
+  origen: OrigenNombre;
 }
 
 const ANIO = "(18[5-9]\\d|19\\d{2}|20\\d{2})";
@@ -52,8 +66,14 @@ const RE_ANIO_MES_ESCRITO = new RegExp(`(?<!\\d)${ANIO}[\\s_-]+(${NOMBRES_MES})(
 const RE_ANIO_MES = new RegExp(`(?<!\\d)${ANIO}[-_.]${MES}(?![-_.]?\\d)`);
 const RE_ANIO = new RegExp(`(?<!\\d)${ANIO}(?!\\d)`, "g");
 
-/** Contadores de cámara al principio del nombre: IMG_2015 no es el año 2015. */
-const RE_CONTADOR = /^(?:img|dsc[nf_]?|_dsc|_mg|pict?|gopr|gh\d{2}|mvi|vid|sam|wp|p|dji|cimg|hpim|imag)[_-]?\d+/i;
+/**
+ * Contadores de cámara al principio del nombre: IMG_2015 no es el año 2015, ni IMGP2015 (Pentax),
+ * SDIM2001 (Sigma), SANY1999 (Sanyo) o 100_1987 (Kodak: número de carpeta y de foto). Además,
+ * cualquier nombre con la forma que fija el estándar de las cámaras (DCF: 4 letras, cifras o «_» y
+ * un número de 4 cifras, como «ABCD2015»), sea de la marca que sea. A cambio, un «Roma2014» escrito
+ * así, todo junto, se queda sin año: mejor en blanco que con un año falso.
+ */
+const RE_CONTADOR = /^(?:(?:img|imgp|_igp|sdim|sany|dsc[nf_]?|_dsc|_dsf|_mg|pict?|gopr|gh\d{2}|mvi|vid|sam|wp|p|dji|cimg|hpim|imag|dcp|crw)[_-]?\d+|[a-z\d_]{4}\d{4}(?![a-z\d]))/i;
 /** Resoluciones y medidas: 1920x1080, 2048px. */
 const RE_MEDIDAS = /\d{3,5}\s?[x×]\s?\d{3,5}|\d{3,5}\s?px/gi;
 
@@ -69,8 +89,43 @@ function valida(f: FechaCarta | null, hoy: Date): FechaCarta | null {
   return f;
 }
 
+/** Capturas de pantalla en varios idiomas. */
+const RE_CAPTURA = /screen\s?shot|captura\s+de\s+pantalla|^captura(?=[\s_-]*\d|$)|capture d.[ée]cran|bildschirmfoto|schermata/i;
+/** Mensajería: la fecha es la de envío o descarga. */
+const RE_MENSAJERIA = [
+  /-WA\d{4}/i, // WhatsApp en Android: IMG-20190814-WA0001
+  // WhatsApp Web y de escritorio, en el idioma de cada cual: «WhatsApp Image 2019-08-14 at 12.30.45»,
+  // «Imagen de WhatsApp 2019-08-14 a las 12.30.45_…», «Imatge de WhatsApp…», «Image WhatsApp…»,
+  // «WhatsApp Bild…». Las capturas («Screenshot_…_WhatsApp») ya se reconocen antes.
+  /(?<![a-z])whats[\s_-]?app(?![a-z])/i,
+  /^photo_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/i, // Telegram
+  /^signal-\d{4}-\d{2}-\d{2}/i, // Signal
+  /^fb_img_\d/i, // Facebook
+];
+/** Nombres que pone la cámara del móvil, siempre con la hora. */
+const RE_CAMARA = [
+  /^(?:img|pxl|vid|mvimg|pano|burst\d*|dji)[_-]?\d{8}[_-]?\d{6}/i, // Android, Pixel, OPPO (IMG20190814123045), DJI
+  /^\d{8}_\d{6}/, // Samsung
+  /^\d{14}(?!\d)/,
+  /^\d{4}-\d{2}-\d{2}[ _]\d{2}[.\-_]\d{2}[.\-_]\d{2}/, // Dropbox y exportaciones con hora
+];
+
+/** Clasifica el nombre de un archivo según de dónde sale su fecha (ver OrigenNombre). */
+export function origenDeNombre(nombreArchivo: string, patron?: FechaDesdeNombre["patron"]): OrigenNombre {
+  const base = quitarExtension(nombreArchivo).normalize("NFC");
+  if (RE_CAPTURA.test(base)) return "captura";
+  if (patron === "marca-tiempo" || RE_MENSAJERIA.some((re) => re.test(base))) return "mensajeria";
+  if (esNombreDeEscaneo(base)) return "escaneo";
+  if (RE_CAMARA.some((re) => re.test(base))) return "camara";
+  return "escrito";
+}
+
 export function fechaDesdeNombre(nombreArchivo: string, opciones: { hoy: Date }): FechaDesdeNombre | null {
-  const { hoy } = opciones;
+  const encontrada = buscarFecha(nombreArchivo, opciones.hoy);
+  return encontrada ? { ...encontrada, origen: origenDeNombre(nombreArchivo, encontrada.patron) } : null;
+}
+
+function buscarFecha(nombreArchivo: string, hoy: Date): Omit<FechaDesdeNombre, "origen"> | null {
   const base = quitarExtension(nombreArchivo).normalize("NFC");
   const minus = base.toLowerCase();
 

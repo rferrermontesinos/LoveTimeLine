@@ -1,7 +1,7 @@
 {
-  "$comentario": "Plantilla «Naipe» (dirección visual D, v3). Medidas en milímetros sobre la carta terminada de 63 × 88 mm; el sangrado se añade fuera. Las fuentes son instancias estáticas de Bricolage Grotesque (SIL OFL 1.1) servidas desde public/fonts/cartas.",
+  "$comentario": "Plantilla «Naipe» (dirección visual D, v3; versión 2: sin franja de meses, con cartas sin foto). Medidas en milímetros sobre la carta terminada de 63 × 88 mm; el sangrado se añade fuera. Las fuentes son instancias estáticas de Bricolage Grotesque (SIL OFL 1.1) servidas desde public/fonts/cartas. Los textos que se ajustan solos van del tamaño máximo al mínimo hasta caber en su zona, sin partir palabras. Los iconos son rutas SVG en una caja de 24 × 24, con trazos y huecos de 2 unidades o más para que se impriman bien a 2,8 mm; cada uno es una ruta o { d, regla } con regla «nonzero» o «evenodd».",
   "id": "naipe",
-  "version": 1,
+  "version": 2,
   "fuentes": {
     "titular": { "familia": "Brico Titular", "url": "/fonts/cartas/brico-96-75-800.woff2", "peso": 800 },
     "texto": { "familia": "Brico Texto", "url": "/fonts/cartas/brico-14-100-600.woff2", "peso": 600 },
@@ -17,7 +17,7 @@
     "tamanoValorAnverso": 8.67,
     "tamanoValorReverso": 4.33,
     "separacion": 1.67,
-    "hueco": { "diametro": 4.33, "trazo": 0.25, "visibleSinMecanica": false }
+    "hueco": { "diametro": 4.33, "trazo": 0.25, "visibleSinMecanica": false, "glifo": 1.3 }
   },
   "anverso": {
     "veloIzquierdo": { "ancho": 15, "opacidad": 0.45 },
@@ -26,11 +26,102 @@
     "pregunta": { "izquierda": 4, "abajo": 4, "tamano": 2, "espaciado": 0.14 }
   },
   "reverso": {
-    "altoFoto": 55,
-    "regla": { "alto": 2.67, "margenLateral": 4, "altoCelda": 1.33, "arribaCelda": 0.67, "separacion": 0.5, "radio": 0.33 },
+    "altoFoto": 56,
     "descripcion": { "arriba": 60, "lateral": 4, "tamano": 2.5, "interlineado": 1.25, "lineasMaximas": 3 },
     "anio": { "izquierda": 4, "abajo": 3.67, "tamano": 17.33, "espaciado": -0.01 },
     "diaMes": { "derecha": 4, "abajo": 4.17, "tamano": 6.33 }
+  },
+  "marca": { "ancho": 7, "alto": 1.2, "separacion": 3.2 },
+  "texto": {
+    "anverso": {
+      "zona": { "izquierda": 9, "derecha": 6, "arriba": 23, "abajo": 22 },
+      "alineacion": "centro",
+      "tamanoMaximo": 9.5,
+      "tamanoMinimo": 4.2,
+      "interlineado": 1.02,
+      "lineasMaximas": 7
+    },
+    "reverso": {
+      "zona": { "izquierda": 4, "derecha": 4, "arriba": 23, "abajo": 4 },
+      "alineacion": "abajo",
+      "tamanoMaximo": 6.5,
+      "tamanoMinimo": 3.2,
+      "interlineado": 1.05,
+      "lineasMaximas": 6
+    }
+  },
+  "portada": {
+    "banda": 30,
+    "margen": 4,
+    "titulo": {
+      "arriba": 4,
+      "altoMaximo": 16.5,
+      "tamanoMaximo": 9.5,
+      "tamanoMinimo": 6,
+      "interlineado": 0.9,
+      "lineasMaximas": 2
+    },
+    "subtitulo": { "abajo": 4.6, "tamano": 2.2, "espaciado": 0.14 },
+    "dedicatoria": {
+      "arriba": 6,
+      "alto": 52,
+      "radio": 2.5,
+      "relleno": 4,
+      "tamanoMaximo": 3.2,
+      "tamanoMinimo": 2.6,
+      "interlineado": 1.35,
+      "lineasMaximas": 10
+    },
+    "jugar": { "arriba": 62.4, "tamano": 2, "espaciado": 0.1, "interlineado": 1.4, "lineasMaximas": 2 },
+    "anios": { "abajo": 4.8, "tamano": 12 }
+  },
+  "caja": {
+    "marca": { "arriba": 6.3, "tamano": 2.4, "espaciado": 0.14 },
+    "pregunta": { "arriba": 13, "tamano": 9, "interlineado": 0.95, "lineasMaximas": 2 },
+    "texto": { "arriba": 30, "tamano": 3, "interlineado": 1.33, "lineasMaximas": 9 },
+    "generica": {
+      "nombre": {
+        "zona": { "izquierda": 9, "derecha": 6, "arriba": 23, "abajo": 22 },
+        "tamanoMaximo": 13,
+        "tamanoMinimo": 6,
+        "interlineado": 0.92,
+        "lineasMaximas": 3
+      },
+      "lema": { "tamano": 3.2, "interlineado": 1.3, "separacion": 3.5, "lineasMaximas": 3 }
+    }
+  },
+  "comodin": {
+    "anverso": { "centroArte": 37, "tamanoArte": 28, "titulo": { "abajo": 26, "tamano": 8.5 } },
+    "reverso": {
+      "centroArte": 30,
+      "tamanoArte": 26,
+      "titulo": { "arriba": 59.6, "tamano": 7 },
+      "regla": {
+        "arriba": 68.4,
+        "abajo": 4,
+        "tamanoMaximo": 2.6,
+        "tamanoMinimo": 2.1,
+        "interlineado": 1.3,
+        "lineasMaximas": 6
+      }
+    }
+  },
+  "enBlanco": {
+    "anverso": {
+      "zona": { "izquierda": 8, "derecha": 8, "arriba": 23, "abajo": 23, "radio": 2.5, "trazo": 0.3, "guion": [1.2, 1] },
+      "aviso": { "tamano": 2.2, "espaciado": 0.14, "interlineado": 1.5 }
+    },
+    "reverso": {
+      "frase": { "arriba": 15.5, "tamano": 2, "espaciado": 0.14, "lineas": [26, 33, 40, 47], "trazo": 0.25 },
+      "casillas": {
+        "arriba": 62,
+        "abajo": 4,
+        "separacion": 3,
+        "proporcionAnio": 0.56,
+        "radio": 2,
+        "etiqueta": { "tamano": 1.9, "espaciado": 0.14, "margen": 2.2 }
+      }
+    }
   },
   "tonosFoto": {
     "original": { "filtro": "none" },
@@ -39,6 +130,7 @@
   },
   "iconos": {
     "estrella": "M12 2.2l2.92 6.26 6.86.78-5.1 4.66 1.4 6.76L12 17.25 5.92 20.66l1.4-6.76-5.1-4.66 6.86-.78L12 2.2z",
-    "bocadillo": "M4 4.5h16a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 20 17H10.2l-4.7 3.6V17H4a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 4 4.5z"
+    "comodin": "M5.9 15.7Q12 14.8 18.1 15.7C17.9 13 18 10.2 18.6 8.2C19.4 9.2 20 10.4 20.2 12L21.9 12C22.4 8 21.4 3.6 17.8 3.5C15.4 3.4 13.2 5.4 12 8.4C10.8 5.4 8.6 3.4 6.2 3.5C2.6 3.6 1.6 8 2.1 12L3.8 12C4 10.4 4.6 9.2 5.4 8.2C6 10.2 6.1 13 5.9 15.7ZM18.75 13.7a2.3 2.3 0 1 0 4.6 0a2.3 2.3 0 1 0 -4.6 0ZM0.65 13.7a2.3 2.3 0 1 0 4.6 0a2.3 2.3 0 1 0 -4.6 0ZM6.6 21H17.4Q19 21 19 19.4Q19 17.8 17.4 17.8H6.6Q5 17.8 5 19.4Q5 21 6.6 21Z",
+    "en-blanco": "M2.77 20.59L3.41 21.23L10.16 18.65L19.5 9.31L14.69 4.5L5.35 13.84ZM21.19 7.62L22.25 6.56A1.7 1.7 0 0 0 22.25 4.15L19.85 1.75A1.7 1.7 0 0 0 17.44 1.75L16.38 2.81Z"
   }
 }

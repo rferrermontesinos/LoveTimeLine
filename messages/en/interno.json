@@ -1,0 +1,59 @@
+{
+  "interno": {
+    "folleto": {
+      "interna": "Internal tool: it doesn’t appear on the public site.",
+      "titulo": "Folding leaflet",
+      "texto": "A 252 × 176 mm sheet that folds into 8 card-sized panels and goes inside the box, with the packaging.",
+      "personalizado": "With the deck saved in this browser: title, dedication, players and lives for its number of cards, and only the icons it uses.",
+      "generico": "Generic version: the one that goes in the standard box.",
+      "sinMazo": "There’s no deck saved in this browser, so this is the generic version.",
+      "imprimir": "Print this page",
+      "verGenerico": "See the generic version",
+      "verPersonalizado": "See the version with this browser’s deck",
+      "pdf": "For the printer’s PDF, with the portal running and HERRAMIENTAS_INTERNAS=1: pnpm instrucciones:pdf. It’s saved in salidas/folleto/.",
+      "plegado": "How to fold it",
+      "plegadoTexto": "Fold in half lengthwise (side A outside), then accordion-fold along the three vertical lines. The cover panel ends up on top.",
+      "impresion": "Print on landscape A4, double-sided flipping on the short edge, at 100%. Cut along the corner marks; the side marks show the folds.",
+      "caraA": "Side A (outside)",
+      "caraB": "Side B (inside)"
+    },
+    "muestrario": {
+      "interna": "Internal tool",
+      "titulo": "Card sampler",
+      "texto": "Every face of the template with sample data, in each palette, to check them before printing. It’s an internal tool: it doesn’t appear on the public site.",
+      "pendiente": "Waiting for design sign-off.",
+      "estilo": "Style",
+      "paleta": "Palette",
+      "todas": "All",
+      "idioma": "Deck language",
+      "guias": "Safe area",
+      "anverso": "Front",
+      "reverso": "Back",
+      "secciones": {
+        "foto": "Photo memory",
+        "estrella": "Star memory",
+        "texto": "Memory without a photo",
+        "textoLargo": "Memory without a photo, long",
+        "portada": "Cover card",
+        "comodin": "Joker",
+        "enBlanco": "Blank card",
+        "cajaGenerica": "Standard box",
+        "cajaPersonalizada": "Personalised box",
+        "iconos": "Corner icons"
+      },
+      "notas": {
+        "textoLargo": "90 characters, the maximum, and a star memory.",
+        "cajaPersonalizada": "Paid extra: printed with the order, with the chosen photo.",
+        "cajaGenerica": "Stock packaging: not in the print file. Always in the default palette."
+      },
+      "ejemplos": {
+        "titulo": "Ana & Leo",
+        "dedicatoria": "For Ana and Leo, who keep adding memories. With love, the family.",
+        "foto": "Our first trip together, Menorca",
+        "estrella": "Anniversary dinner",
+        "texto": "The day we met",
+        "textoLargo": "The night the whole street lost power and we ended up having dinner by candlelight outside"
+      }
+    }
+  }
+}

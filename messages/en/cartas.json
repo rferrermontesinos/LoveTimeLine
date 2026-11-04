@@ -1,8 +1,27 @@
 {
   "cartas": {
     "titulo": "Complete your cards",
-    "texto": "Check the date, add a line if you like and frame the photo. It saves itself.",
+    "texto": "Every card needs a date. Add a line if you like and frame the photo. It saves itself.",
     "posicion": "Card {actual} of {total}",
+    "configuradas": "{n} of {total} ready",
+    "siguientePendiente": "Next unfinished",
+    "estado": {
+      "lista": "Card ready",
+      "pendiente": "Unfinished: {motivos}"
+    },
+    "pendiente": {
+      "sin-fecha": "date missing",
+      "fecha-invalida": "the date doesn’t exist",
+      "fecha-futura": "the date is after today",
+      "fecha-por-confirmar": "confirm the date",
+      "descripcion-larga": "the line is over {max} characters",
+      "texto-vacio": "the text is missing",
+      "texto-con-hueco": "fill in the part in brackets"
+    },
+    "tiraEtiqueta": "All cards",
+    "tiraItem": "{nombre}, {fecha}, {estado, select, lista {ready} other {unfinished}}",
+    "cartaSinFoto": "Card without a photo",
+    "sinFechaCorta": "no date",
     "descripcion": "A line about the memory (optional)",
     "descripcionAyuda": "Shown on the date side. Up to {max} characters.",
     "descripcionContador": "{n} / {max}",

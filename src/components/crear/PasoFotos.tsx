@@ -7,13 +7,13 @@ import { Dialogo } from "@/components/ui/Dialogo";
 import { Aviso, Chip, Franja, Micro, Pestana } from "@/components/ui/Piezas";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 import { fechaCorta, fechaLegible } from "@/domain/fechas/formato";
-import { siguienteSinFecha } from "@/domain/mazo/ordenar";
+import { sesionDeEscaneo } from "@/domain/fechas/sesion";
 import { guardarFoto } from "@/lib/almacen/idb";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo } from "@/lib/importar/procesar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaDesdeFoto, proporcionReversoDe } from "@/lib/mazo/derivados";
-import { esFoto, type Carta, type CartaFoto } from "@/lib/mazo/tipos";
+import { esFoto, type Carta, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 import { SelectorFecha } from "./SelectorFecha";
 
@@ -23,11 +23,21 @@ interface Resumen {
   errores: number;
 }
 
+/** Fechas sugeridas puestas de una vez: se puede deshacer mientras el mazo no cambie otra vez. */
+interface LoteSugeridas {
+  n: number;
+  antes: Mazo;
+  despues: Mazo | null;
+}
+
+/** Cartas sin fecha que tienen al menos una fecha sugerida. */
+const conSugerencia = (c: Carta) => !c.fecha && (c.sugerencias?.length ?? 0) > 0;
+
 export function PasoFotos() {
   const t = useTranslations();
   const locale = useLocale();
   const { mazo, despachar, puedeDeshacer } = useMazo();
-  const { cotizacion, irAPaso, versiones } = useCrear();
+  const { cotizacion, irAPaso, irASiguientePendiente, pendientes, versiones, hoy } = useCrear();
   const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
   const [resumen, setResumen] = useState<Resumen | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
@@ -35,9 +45,9 @@ export function PasoFotos() {
   const [modoSeleccion, setModoSeleccion] = useState(false);
   const [dialogoFecha, setDialogoFecha] = useState(false);
   const [fechaLote, setFechaLote] = useState<FechaCarta | null>(null);
+  const [loteSugeridas, setLoteSugeridas] = useState<LoteSugeridas | null>(null);
   const inputFotos = useRef<HTMLInputElement>(null);
   const inputCarpeta = useRef<HTMLInputElement>(null);
-  const hoy = useMemo(() => new Date(), []);
 
   const hashes = useMemo(() => new Set(mazo?.cartas.filter(esFoto).map((c) => c.hash)), [mazo?.cartas]);
   const consentido = !!mazo?.consentimientoFotos;
@@ -49,6 +59,7 @@ export function PasoFotos() {
       const vistos = new Set(hashes);
       const res: Resumen = { anadidas: 0, repetidas: 0, errores: archivos.length - imagenes.length };
       setResumen(null);
+      setLoteSugeridas(null);
       setProgreso({ hechas: 0, total: imagenes.length });
       const propReverso = proporcionReversoDe(mazo);
       let lote: Carta[] = [];
@@ -88,9 +99,27 @@ export function PasoFotos() {
     [mazo, hashes, despachar, hoy],
   );
 
+  // El mazo justo después de poner las sugeridas: el «Deshacer» del aviso vale mientras siga igual.
+  if (loteSugeridas && !loteSugeridas.despues && mazo && mazo !== loteSugeridas.antes) setLoteSugeridas({ ...loteSugeridas, despues: mazo });
+
   if (!mazo) return null;
-  const sinFecha = mazo.cartas.filter((c) => !c.fecha).length;
-  const porRevisar = mazo.cartas.filter((c) => c.fecha && c.revisar).length;
+  const fotos = mazo.cartas.filter(esFoto);
+  const conFecha = fotos.filter((c) => c.fecha).length;
+  const sugeridas = fotos.filter(conSugerencia).length;
+  const sinFecha = fotos.length - conFecha - sugeridas;
+  // Solo en mazos guardados antes de que las fechas dudosas dejaran de rellenarse solas.
+  const porRevisar = fotos.filter((c) => c.fecha && c.revisar).length;
+  const sesion = sesionDeEscaneo(mazo.cartas);
+  const idsSugeridas = mazo.cartas.filter(conSugerencia).map((c) => c.id);
+  const seleccionSugeridas = mazo.cartas.filter((c) => seleccion.has(c.id) && conSugerencia(c)).map((c) => c.id);
+  const loteVigente = loteSugeridas && loteSugeridas.despues === mazo ? loteSugeridas : null;
+
+  /** Acepta la primera sugerencia de cada carta, en un solo paso de deshacer. */
+  const usarSugeridas = (ids: string[]) => {
+    if (ids.length === 0) return;
+    setLoteSugeridas({ n: ids.length, antes: mazo, despues: null });
+    despachar({ tipo: "aceptarSugerencia", ids });
+  };
   const alternar = (id: string) =>
     setSeleccion((s) => {
       const n = new Set(s);
@@ -189,32 +218,93 @@ export function PasoFotos() {
         </Aviso>
       )}
 
-      {/* Herramientas */}
-      {mazo.cartas.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip color={sinFecha ? "var(--color-amarillo)" : undefined}>{t("fotos.sinFechaCuenta", { n: sinFecha })}</Chip>
-          <Chip color={porRevisar ? "#FBE7E4" : undefined}>{t("fotos.revisarCuenta", { n: porRevisar })}</Chip>
-          <span className="flex-1" />
-          <Boton variante="fantasma" tamano="sm" onClick={() => despachar({ tipo: "ordenarPorFecha" })}>
-            {t("fotos.ordenar")}
-          </Boton>
-          <Boton
-            variante="fantasma"
-            tamano="sm"
-            disabled={sinFecha === 0}
-            onClick={() => {
-              const i = siguienteSinFecha(mazo.cartas, -1);
-              if (i >= 0) irAPaso(2, mazo.cartas[i]!.id);
-            }}
-          >
-            {t("fotos.siguienteSinFecha")}
-          </Boton>
-          <Boton variante={modoSeleccion ? "primario" : "secundario"} tamano="sm" aria-pressed={modoSeleccion} onClick={() => { setModoSeleccion((m) => !m); setSeleccion(new Set()); }}>
-            {t("fotos.seleccionar")}
-          </Boton>
-          <Boton variante="fantasma" tamano="sm" disabled={!puedeDeshacer} onClick={() => despachar({ tipo: "deshacer" })}>
-            ↶ {t("comun.deshacer")}
-          </Boton>
+      {/* Herramientas: cuántas tienen fecha, sugerencias y acciones */}
+      {fotos.length > 0 && (
+        <div className="space-y-3">
+          <ul className="flex flex-wrap items-center gap-2" aria-label={t("fotos.resumenFechas")}>
+            <li>
+              <Chip>
+                <Punto estado="fecha" />
+                {t("fotos.conFechaCuenta", { n: conFecha })}
+              </Chip>
+            </li>
+            {sugeridas > 0 && (
+              <li>
+                <Chip color="#FFF4D6">
+                  <Punto estado="sugerida" />
+                  {t("fotos.sugeridasCuenta", { n: sugeridas })}
+                </Chip>
+              </li>
+            )}
+            <li>
+              <Chip color={sinFecha ? "var(--color-amarillo)" : undefined}>{t("fotos.sinFechaCuenta", { n: sinFecha })}</Chip>
+            </li>
+            {porRevisar > 0 && (
+              <li>
+                <Chip color="#FBE7E4">{t("fotos.revisarCuenta", { n: porRevisar })}</Chip>
+              </li>
+            )}
+          </ul>
+
+          {sesion && <Aviso tono="aviso">{t("fotos.sesionEscaneo", { n: sesion.fotos, fecha: fechaLegible(sesion.dia, locale) })}</Aviso>}
+
+          {loteVigente ? (
+            <Aviso
+              tono="exito"
+              accion={
+                <Boton
+                  variante="secundario"
+                  tamano="sm"
+                  className="max-sm:min-h-11"
+                  onClick={() => {
+                    despachar({ tipo: "deshacer" });
+                    setLoteSugeridas(null);
+                  }}
+                >
+                  ↶ {t("comun.deshacer")}
+                </Boton>
+              }
+            >
+              <span className="font-semibold">{t("fotos.sugeridasUsadas", { n: loteVigente.n })}</span>
+            </Aviso>
+          ) : (
+            idsSugeridas.length > 0 && (
+              <Aviso
+                tono="info"
+                accion={
+                  <Boton tamano="sm" className="max-sm:min-h-11 max-sm:w-full" onClick={() => usarSugeridas(idsSugeridas)}>
+                    {t("fotos.usarSugeridas", { n: idsSugeridas.length })}
+                  </Boton>
+                }
+              >
+                {t("fotos.sugeridasAyuda")}
+              </Aviso>
+            )
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Boton variante="fantasma" tamano="sm" className="max-sm:min-h-11" onClick={() => despachar({ tipo: "ordenarPorFecha" })}>
+              {t("fotos.ordenar")}
+            </Boton>
+            <Boton variante="fantasma" tamano="sm" className="max-sm:min-h-11" disabled={pendientes.length === 0} onClick={() => irASiguientePendiente()}>
+              {t("fotos.irAPendientes")}
+            </Boton>
+            <Boton
+              variante={modoSeleccion ? "primario" : "secundario"}
+              tamano="sm"
+              className="max-sm:min-h-11"
+              aria-pressed={modoSeleccion}
+              onClick={() => {
+                setModoSeleccion((m) => !m);
+                setSeleccion(new Set());
+              }}
+            >
+              {t("fotos.seleccionar")}
+            </Boton>
+            <Boton variante="fantasma" tamano="sm" className="max-sm:min-h-11" disabled={!puedeDeshacer} onClick={() => despachar({ tipo: "deshacer" })}>
+              ↶ {t("comun.deshacer")}
+            </Boton>
+          </div>
         </div>
       )}
 
@@ -241,13 +331,29 @@ export function PasoFotos() {
         <div className="sticky bottom-24 z-20 flex flex-wrap items-center gap-2 rounded-[16px] bg-tinta p-3 text-papel shadow-[var(--shadow-carta)]">
           <span className="px-2 text-sm font-semibold">{t("fotos.seleccionadas", { n: seleccion.size })}</span>
           <span className="flex-1" />
-          <Boton variante="acento" color="var(--color-amarillo)" tamano="sm" onClick={() => setDialogoFecha(true)}>
+          <Boton variante="acento" color="var(--color-amarillo)" tamano="sm" className="max-sm:min-h-11" onClick={() => setDialogoFecha(true)}>
             {t("fotos.ponerFecha")}
           </Boton>
+          {seleccionSugeridas.length > 0 && (
+            <Boton
+              variante="acento"
+              color="var(--color-papel)"
+              tamano="sm"
+              className="max-sm:min-h-11"
+              onClick={() => {
+                usarSugeridas(seleccionSugeridas);
+                setSeleccion(new Set());
+                setModoSeleccion(false);
+              }}
+            >
+              {t("fotos.usarSugeridas", { n: seleccionSugeridas.length })}
+            </Boton>
+          )}
           <Boton
             variante="acento"
             color="var(--color-papel)"
             tamano="sm"
+            className="max-sm:min-h-11"
             onClick={() => {
               despachar({ tipo: "borrarCartas", ids: [...seleccion] });
               setSeleccion(new Set());
@@ -255,7 +361,8 @@ export function PasoFotos() {
           >
             {t("fotos.borrarSeleccion")}
           </Boton>
-          <Boton variante="fantasma" tamano="sm" className="text-papel hover:bg-tinta-hover" onClick={() => setSeleccion(new Set())}>
+          {/* Sobre la barra oscura: el color del texto de la variante fantasma se fuerza a papel. */}
+          <Boton variante="fantasma" tamano="sm" className="max-sm:min-h-11 !text-papel hover:!bg-tinta-hover" onClick={() => setSeleccion(new Set())}>
             {t("fotos.quitarSeleccion")}
           </Boton>
         </div>
@@ -291,6 +398,15 @@ export function PasoFotos() {
   );
 }
 
+/** Punto de la miniatura y de los contadores: lleno con fecha, en anillo si solo hay sugerencia. */
+function Punto({ estado, color = "var(--color-verde)" }: { estado: "fecha" | "sugerida"; color?: string }) {
+  return estado === "fecha" ? (
+    <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color, boxShadow: "0 0 0 1.5px rgba(20,20,20,.6)" }} />
+  ) : (
+    <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-current" />
+  );
+}
+
 function Miniatura({
   carta,
   locale,
@@ -308,15 +424,21 @@ function Miniatura({
 }) {
   const t = useTranslations("fotos");
   const url = useUrlFoto(carta.id, "mini", version);
-  const confianza = !carta.fecha ? null : carta.revisar ? "baja" : carta.confianza === "alta" ? "alta" : "media";
+  const sugerencia = !carta.fecha ? (carta.sugerencias?.[0] ?? null) : null;
+  const confianza = carta.fecha ? (carta.revisar ? "baja" : carta.confianza === "alta" ? "alta" : "media") : sugerencia ? "sugerida" : null;
   const color = confianza === "alta" ? "var(--color-verde)" : confianza === "media" ? "var(--color-amarillo)" : "var(--color-rojo)";
+  const estadoFecha = carta.fecha
+    ? fechaLegible(carta.fecha, locale)
+    : sugerencia
+      ? t("sugerida", { fecha: fechaLegible(sugerencia.fecha, locale) })
+      : t("sinFecha");
   return (
     <li>
       <button
         type="button"
         onClick={alPulsar}
         aria-pressed={seleccionable ? seleccionada : undefined}
-        aria-label={`${t("editar", { nombre: carta.nombreArchivo })}. ${carta.fecha ? fechaLegible(carta.fecha, locale) : t("sinFecha")}`}
+        aria-label={`${t("editar", { nombre: carta.nombreArchivo })}. ${estadoFecha}`}
         className={`group relative block w-full overflow-hidden rounded-[12px] bg-papel-3 text-left outline-offset-2 ${seleccionada ? "outline outline-4 outline-cobalto" : ""}`}
       >
         <span className="block aspect-[63/88] w-full">
@@ -336,8 +458,10 @@ function Miniatura({
           </span>
         )}
         <span className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-tinta/85 to-transparent px-2 pb-1.5 pt-5 text-[0.75rem] font-semibold text-papel">
-          <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: confianza ? color : "var(--color-papel)", boxShadow: "0 0 0 1.5px rgba(20,20,20,.6)" }} />
-          <span className="truncate">{carta.fecha ? fechaCorta(carta.fecha, locale) : t("sinFecha")}</span>
+          {carta.fecha ? <Punto estado="fecha" color={color} /> : sugerencia ? <Punto estado="sugerida" /> : null}
+          <span className="truncate">
+            {carta.fecha ? fechaCorta(carta.fecha, locale) : sugerencia ? t("sugeridaCorta", { fecha: fechaCorta(sugerencia.fecha, locale) }) : t("sinFecha")}
+          </span>
         </span>
       </button>
       {confianza && (

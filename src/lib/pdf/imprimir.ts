@@ -3,7 +3,7 @@
  *
  * Cada cara es una página: la cara con sangrado rasterizada a 300 ppp (JPEG), un margen con
  * marcas de corte y las cajas TrimBox y BleedBox para la imprenta. Las caras van en pares
- * anverso-reverso, en el orden del plan (ver plan.ts).
+ * anverso-reverso, en el orden del plan (ver plan.ts): la caja solo si es la personalizada.
  */
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { BRAND_NAME } from "@config/brand";
@@ -29,7 +29,10 @@ export interface EntradaPdf {
   tono: Tono;
   idiomaMazo: string;
   titulo: string;
-  /** Devuelve la foto a la mejor resolución disponible (la copia de trabajo). */
+  /**
+   * Devuelve la foto a la mejor resolución disponible (la copia de trabajo). La foto propia de
+   * la caja personalizada está en el mismo almacén que las de las cartas, con su id.
+   */
   obtenerFoto: (id: string) => Promise<FotoParaImprimir | null>;
   alProgresar?: (hechas: number, total: number) => void;
 }
@@ -139,7 +142,7 @@ function marcasDeCorte(p: Pagina, borde: number) {
   }
 }
 
-/** Nombre de archivo sin caracteres raros: «laura-y-marc-48-cartas.pdf». */
+/** Nombre de archivo sin caracteres raros: «ana-y-leo-48-cartas.pdf». */
 export function nombreArchivoPdf(titulo: string, cartas: number): string {
   const base =
     titulo

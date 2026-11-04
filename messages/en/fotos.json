@@ -16,9 +16,16 @@
     "noImagen": "{nombre} isn’t a supported image.",
     "vacio": "No photos yet. Start with the folder of a trip or a year.",
     "ordenar": "Sort by date",
-    "siguienteSinFecha": "Next without a date",
+    "irAPendientes": "Go to unfinished cards",
+    "resumenFechas": "Photo dates",
+    "conFechaCuenta": "{n, plural, one {# with a date} other {# with a date}}",
+    "sugeridasCuenta": "{n, plural, one {# with a suggested date} other {# with a suggested date}}",
     "sinFechaCuenta": "{n, plural, one {# without a date} other {# without a date}}",
     "revisarCuenta": "{n, plural, one {# to check} other {# to check}}",
+    "sugeridasAyuda": "We only fill in a date when we’re sure. Check the suggested ones, or use them all at once.",
+    "usarSugeridas": "{n, plural, one {Use the suggested date} other {Use the # suggested dates}}",
+    "sugeridasUsadas": "{n, plural, one {# suggested date set.} other {# suggested dates set.}}",
+    "sesionEscaneo": "{n} photos share the same recent suggested date, {fecha}. If they’re old photos you scanned or photographed that day, that’s the date of the copy: add the date of the memory instead.",
     "seleccionar": "Select",
     "seleccionadas": "{n, plural, one {# selected} other {# selected}}",
     "ponerFecha": "Set date",
@@ -26,10 +33,13 @@
     "borrarSeleccion": "Delete",
     "editar": "Edit {nombre}",
     "sinFecha": "No date",
+    "sugerida": "No date. Suggested: {fecha}",
+    "sugeridaCorta": "{fecha}?",
     "confianza": {
       "alta": "Photo date",
       "media": "Date from name",
-      "baja": "Check"
+      "baja": "Check",
+      "sugerida": "Suggested date, not confirmed"
     },
     "estrella": "Star memory"
   },
@@ -42,21 +52,43 @@
     "campoDia": "Day",
     "campoMes": "Month",
     "campoAnio": "Year",
+    "placeholderDia": "dd",
+    "placeholderAnio": "yyyy",
     "invalida": "That date doesn’t exist.",
     "futura": "The date can’t be later than today.",
+    "incompleta": "{precision, select, dia {The day or month is missing. If you don’t know them, choose “Month and year” or “Just the year”.} other {The month is missing. If you don’t know it, choose “Just the year”.}}",
     "fuente": {
-      "exif": "Taken from the photo’s data.",
+      "exif": "Taken from the photo’s details.",
       "nombre": "Taken from the file name.",
-      "archivo": "This is the file’s date: it may be when you copied it. Please check it.",
+      "archivo": "Taken from the file’s date.",
       "manual": "Set by hand."
     },
     "motivo": {
-      "fecha-del-archivo": "This is the file’s date, not the photo’s.",
+      "fecha-del-archivo": "It’s the file’s date: it may be when it was copied, not when the photo was taken.",
       "fecha-de-hoy": "It’s today’s date: probably when you copied the photo.",
-      "exif-y-nombre-no-coinciden": "The photo’s data and the file name don’t match.",
-      "reloj-de-camara": "Looks like a camera whose clock was never set."
+      "exif-y-nombre-no-coinciden": "The photo’s details and the file name don’t match.",
+      "reloj-de-camara": "It looks like the date of a camera whose clock was never set.",
+      "posible-escaneo": "This looks like a scanned or digitised photo: its date is when it was scanned, not when the memory happened.",
+      "digitalizada-despues": "The photo keeps this as its original date, although it was digitised later.",
+      "fecha-anotada": "Someone noted this date in the photo’s details.",
+      "fecha-reciente": "It’s from the past year. If it’s an old photo you recently photographed or scanned, it’s the date of the copy.",
+      "fecha-de-envio": "It’s when the photo was sent or saved (WhatsApp, Telegram…), which may be after the memory.",
+      "captura-de-pantalla": "It’s when the screenshot was taken, which may be after the memory.",
+      "sin-datos-de-camara": "The photo has this date but no camera details: it may be the date of a copy or an edit.",
+      "fecha-digitalizacion": "It’s when the photo was saved digitally. For camera photos it’s usually the same day."
     },
     "confirmar": "The date is right",
+    "vacia": "This card doesn’t have a date yet.",
+    "escribela": "Add it yourself: just the year is fine if that’s all you know.",
+    "eligeOEscribe": "{n, plural, one {Use the suggested date or type your own.} other {Use one of these dates or type your own.}}",
+    "sugerenciasTitulo": "{n, plural, one {Suggested date} other {Suggested dates}}",
+    "sugerencia": "Is it from {fecha}?",
+    "usarSugerencia": "Use this date",
+    "origenSugerencia": {
+      "exif": "From the photo’s details",
+      "nombre": "From the file name",
+      "archivo": "From the file’s date"
+    },
     "aplicarA": "Set this date on {n, plural, one {# photo} other {# photos}}",
     "dialogoTitulo": "Set the same date"
   }

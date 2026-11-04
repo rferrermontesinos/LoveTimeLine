@@ -25,6 +25,7 @@
       "excede-maximo": "The deck goes over the maximum of {max} cards.",
       "sin-fecha": "{n, plural, one {# card has no date} other {# cards have no date}}.",
       "fecha-futura": "{n, plural, one {# card has} other {# cards have}} a date later than today.",
+      "texto-pendiente": "{n, plural, one {# card without a photo has unfinished text} other {# cards without a photo have unfinished text}}.",
       "descripcion-larga": "{n, plural, one {# line is} other {# lines are}} longer than 90 characters.",
       "baja-resolucion": "{n, plural, one {# photo may look blurry} other {# photos may look blurry}} when printed.",
       "revisar-fechas": "{n, plural, one {# date is worth checking} other {# dates are worth checking}}.",

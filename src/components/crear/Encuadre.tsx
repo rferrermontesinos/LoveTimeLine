@@ -39,7 +39,7 @@ export function DialogoEncuadre({ carta, abierto, alCerrar, icono, version }: { 
     reversoPersonalizado: carta.reversoPersonalizado,
   });
   const [tocado, setTocado] = useState(false);
-  const propReverso = mazo ? proporcionReversoDe(mazo) : 69 / 58;
+  const propReverso = mazo ? proporcionReversoDe(mazo) : 69 / 59;
   const aspecto = cara === "anverso" ? PROPORCION_ANVERSO : propReverso;
 
   const datos = useMemo<DatosCarta>(

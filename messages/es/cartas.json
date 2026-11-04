@@ -1,8 +1,27 @@
 {
   "cartas": {
     "titulo": "Completa las cartas",
-    "texto": "Revisa la fecha, añade una frase si quieres y encuadra la foto. Se guarda solo.",
+    "texto": "Cada carta necesita su fecha. Añade una frase si quieres y encuadra la foto. Se guarda solo.",
     "posicion": "Carta {actual} de {total}",
+    "configuradas": "{n} de {total} listas",
+    "siguientePendiente": "Siguiente pendiente",
+    "estado": {
+      "lista": "Carta lista",
+      "pendiente": "Pendiente: {motivos}"
+    },
+    "pendiente": {
+      "sin-fecha": "falta la fecha",
+      "fecha-invalida": "la fecha no existe",
+      "fecha-futura": "la fecha es posterior a hoy",
+      "fecha-por-confirmar": "confirma la fecha",
+      "descripcion-larga": "la frase pasa de {max} caracteres",
+      "texto-vacio": "falta el texto",
+      "texto-con-hueco": "completa lo que va entre corchetes"
+    },
+    "tiraEtiqueta": "Todas las cartas",
+    "tiraItem": "{nombre}, {fecha}, {estado, select, lista {lista} other {pendiente}}",
+    "cartaSinFoto": "Carta sin foto",
+    "sinFechaCorta": "sin fecha",
     "descripcion": "Frase del recuerdo (opcional)",
     "descripcionAyuda": "Sale en la cara de la fecha. Hasta {max} caracteres.",
     "descripcionContador": "{n} / {max}",

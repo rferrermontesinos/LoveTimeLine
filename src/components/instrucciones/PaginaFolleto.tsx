@@ -1,70 +1,92 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
+import { PRINT } from "@config/print";
 import { Boton } from "@/components/ui/Boton";
-import { Micro, Seccion } from "@/components/ui/Piezas";
+import { Aviso, Micro, Seccion } from "@/components/ui/Piezas";
+import { Link } from "@/i18n/navigation";
 import { textosFolleto } from "@/lib/carta/textos";
+import { textosInternos } from "@/lib/carta/textosInternos";
 import { ESTILO_POR_DEFECTO, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { aniosPortada } from "@/lib/mazo/derivados";
-import { CaraA, CaraB, type ColoresFolleto, type Personalizacion } from "./Folleto";
+import { CaraA, CaraB, type ColoresFolleto, type MecanicaFolleto, type Personalizacion } from "./Folleto";
 
 const MM = 96 / 25.4;
-const ANCHO_HOJA = 252 * MM;
-const ALTO_HOJA = 176 * MM;
+const ANCHO_HOJA = PRINT.folleto.columnas * PRINT.carta.anchoMm * MM;
+const ALTO_HOJA = PRINT.folleto.filas * PRINT.carta.altoMm * MM;
 
-export function PaginaInstrucciones({ generico }: { generico: boolean }) {
+/**
+ * Herramienta interna para imprimir el folleto plegable que va en la caja: versión genérica
+ * (la de la caja de siempre) o personalizada con el mazo guardado en este navegador.
+ */
+export function PaginaFolleto({ generico, mecanicas }: { generico: boolean; mecanicas: MecanicaFolleto[] }) {
   return (
     <ProveedorMazo>
-      <Contenido generico={generico} />
+      <Contenido generico={generico} mecanicas={mecanicas} />
     </ProveedorMazo>
   );
 }
 
-function Contenido({ generico }: { generico: boolean }) {
-  const t = useTranslations("instrucciones");
+function Contenido({ generico, mecanicas }: { generico: boolean; mecanicas: MecanicaFolleto[] }) {
   const locale = useLocale();
+  // Textos de la herramienta (fuera de los mensajes públicos); los del folleto impreso, en `textos`.
+  const t = textosInternos(locale).folleto;
   const { estado, mazo } = useMazo();
   const usarMazo = !generico && !!mazo;
   const textos = textosFolleto(usarMazo ? mazo.idiomaMazo : locale);
   const estilo = obtenerEstilo(usarMazo ? mazo.estiloId : ESTILO_POR_DEFECTO.id);
   const paleta = obtenerPaleta(estilo, usarMazo ? mazo.paletaId : null);
-  const colores: ColoresFolleto = { fondo: paleta.fondo, franja: paleta.acento, texto: paleta.texto, tinta: estilo.colores.tinta, papel: estilo.colores.papel };
-  const personal: Personalizacion | null = usarMazo ? { titulo: mazo.titulo, anios: aniosPortada(mazo), dedicatoria: mazo.dedicatoria } : null;
+  const colores: ColoresFolleto = {
+    fondo: paleta.fondo,
+    texto: paleta.texto,
+    tinta: estilo.colores.tinta,
+    papel: estilo.colores.papel,
+    estiloId: estilo.id,
+    paletaId: paleta.id,
+  };
+  const personal: Personalizacion | null = usarMazo
+    ? { titulo: mazo.titulo, anios: aniosPortada(mazo), dedicatoria: mazo.dedicatoria, cartas: mazo.cartas.length, mecanicas: mazo.mecanicas }
+    : null;
 
   return (
     <div data-listo={estado === "listo" ? "si" : "no"}>
       <style>{"@page { size: 297mm 210mm; margin: 0; }"}</style>
       <Seccion className="space-y-6 py-12 print:hidden">
         <div className="space-y-3">
-          <Micro className="text-tinta-2">{t("caraA")} · {t("caraB")}</Micro>
-          <h1 className="tipo-titular text-[clamp(2.4rem,7vw,4.4rem)] leading-[0.9]">{t("titulo")}</h1>
-          <p className="max-w-2xl text-md text-tinta-2">{t("texto")}</p>
-          <p className="text-sm font-semibold">{usarMazo ? t("personalizado") : t("generico")}</p>
+          <Micro className="text-tinta-2">{t.interna}</Micro>
+          <h1 className="tipo-titular text-[clamp(2.4rem,7vw,4.4rem)] leading-[0.9]">{t.titulo}</h1>
+          <p className="max-w-2xl text-md text-tinta-2">{t.texto}</p>
+          <p className="text-sm font-semibold">{usarMazo ? t.personalizado : t.generico}</p>
+          {!generico && estado === "listo" && !mazo && <Aviso tono="info">{t.sinMazo}</Aviso>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Boton onClick={() => window.print()}>{t("imprimir")}</Boton>
-          <a href={`/instrucciones/${locale}.pdf`} download className="tipo-boton inline-flex min-h-12 items-center rounded-full border-2 border-tinta px-5 hover:bg-papel-2">
-            {t("descargar")}
-          </a>
+        <div className="flex flex-wrap items-center gap-2">
+          <Boton onClick={() => window.print()}>{t.imprimir}</Boton>
+          <Link
+            href={generico ? "/interno/folleto" : { pathname: "/interno/folleto", query: { generico: "1" } }}
+            className="tipo-boton inline-flex min-h-12 items-center rounded-full border-2 border-tinta px-5 hover:bg-papel-2"
+          >
+            {generico ? t.verPersonalizado : t.verGenerico}
+          </Link>
         </div>
+        <p className="max-w-2xl text-sm text-tinta-2">{t.pdf}</p>
         <div className="grid gap-6 rounded-[24px] bg-papel-2 p-5 sm:p-7 md:grid-cols-[minmax(0,420px)_1fr]">
           <EsquemaPlegado />
           <div className="space-y-3">
-            <h2 className="tipo-subtitular text-xl">{t("plegado")}</h2>
-            <p>{t("plegadoTexto")}</p>
-            <p className="text-sm text-tinta-2">{t("impresion")}</p>
+            <h2 className="tipo-subtitular text-xl">{t.plegado}</h2>
+            <p>{t.plegadoTexto}</p>
+            <p className="text-sm text-tinta-2">{t.impresion}</p>
           </div>
         </div>
       </Seccion>
 
       {estado === "listo" && (
         <>
-          <Hoja etiqueta={t("caraA")}>
-            <CaraA t={textos} c={colores} p={personal} />
+          <Hoja etiqueta={t.caraA}>
+            <CaraA t={textos} c={colores} p={personal} mecanicas={mecanicas} />
           </Hoja>
-          <Hoja etiqueta={t("caraB")}>
+          <Hoja etiqueta={t.caraB}>
             <CaraB t={textos} c={colores} p={personal} />
           </Hoja>
         </>

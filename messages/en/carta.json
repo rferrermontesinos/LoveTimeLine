@@ -2,28 +2,15 @@
   "carta": {
     "pregunta": "When was it?",
     "comodin": "Joker",
-    "comodinRegla": "Ask the deck maker for a clue or swap a card in your hand for the top card of the deck. Then discard it.",
+    "comodinRegla": "Use it before placing a card: ask the deck maker for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. Then it goes back in the box.",
     "enBlancoFoto": "Stick a photo or draw here",
     "enBlancoFrase": "What happened?",
-    "enBlancoFecha": "Year · month · day",
-    "reto": "Challenge",
+    "enBlancoAnio": "Year",
+    "enBlancoDiaMes": "Day and month",
     "portadaRecuerdos": "{n, plural, one {# memory} other {# memories}}",
     "portadaReverso": "To play, see the instructions in the box.",
     "dedicatoriaPorDefecto": "To keep adding memories.",
-    "cajaTexto": "A game for putting your memories in order. Place each card before or after the ones on the table, then flip it over: did you get it right?"
-  },
-  "retos": {
-    "1": "Act out how you met. Everyone else guesses the year.",
-    "2": "Hum that summer’s song. If someone gets it, draw one card fewer.",
-    "3": "Say three words that sum up this year.",
-    "4": "Tell a memory that isn’t on any card.",
-    "5": "Who took this photo? Get it right and play again.",
-    "6": "Place a card from your hand without looking. If it fits, it stays.",
-    "7": "Pick someone: swap one card with them.",
-    "8": "Recreate the pose from the last card played.",
-    "9": "Name a place from the deck within 5 seconds.",
-    "10": "Everyone points at the most nostalgic person. They draw a card.",
-    "11": "Put the cards in your hand in order out loud, without looking.",
-    "12": "Toast: say why this memory deserves a star."
+    "cajaTexto": "A game for putting your memories in order. Place each card before or after the ones on the table, then flip it over: did you get it right?",
+    "cajaLema": "Your story, in a deck of cards."
   }
 }

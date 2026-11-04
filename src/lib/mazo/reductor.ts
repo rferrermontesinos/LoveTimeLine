@@ -28,6 +28,11 @@ export type Accion =
   | { tipo: "puntoDeshacer" }
   | { tipo: "borrarCartas"; ids: string[] }
   | { tipo: "ponerFecha"; ids: string[]; fecha: FechaCarta }
+  /**
+   * Usa una fecha sugerida (por defecto, la primera) en cada carta que la tenga. La fecha queda
+   * confirmada por el cliente: conserva de dónde salió, con confianza alta. Se puede deshacer.
+   */
+  | { tipo: "aceptarSugerencia"; ids: string[]; indice?: number }
   | { tipo: "confirmarFecha"; id: string }
   | { tipo: "ordenarPorFecha" }
   | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
@@ -51,6 +56,23 @@ export function aplicarCambios(c: Carta, cambios: CambiosCarta): Carta {
   if (c.tipo === "foto") return { ...c, ...cambios };
   const comunes = Object.fromEntries(Object.entries(cambios).filter(([k]) => CAMPOS_COMUNES.has(k)));
   return { ...c, ...comunes };
+}
+
+/** Lo que «Deshacer» no toca: el paso en que estás, el permiso de las fotos y el pedido. */
+const FUERA_DE_DESHACER = new Set<string>(["paso", "actualizadoEn", "consentimientoFotos", "pedido"]);
+
+/**
+ * Dos versiones del mazo con lo mismo que recupera «Deshacer». Basta comparar referencias: el
+ * reductor solo crea objetos nuevos para lo que cambia.
+ */
+function mismoContenido(a: Mazo, b: Mazo): boolean {
+  if (a === b) return true;
+  const x = a as unknown as Record<string, unknown>;
+  const y = b as unknown as Record<string, unknown>;
+  for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
+    if (!FUERA_DE_DESHACER.has(k) && x[k] !== y[k]) return false;
+  }
+  return true;
 }
 
 function conHistorial(e: EstadoMazo, nuevo: Mazo, deshacible = true): EstadoMazo {
@@ -105,8 +127,12 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       const ids = new Set(a.ids);
       return conHistorial(e, { ...m, cartas: m.cartas.map((c) => (ids.has(c.id) ? aplicarCambios(c, a.cambios) : c)) });
     }
-    case "puntoDeshacer":
+    case "puntoDeshacer": {
+      // Sin cambios desde el último punto, no se repite (al pasar de un campo a otro).
+      const ultimo = e.pasado[e.pasado.length - 1];
+      if (ultimo && mismoContenido(ultimo, m)) return e;
       return { ...e, pasado: [...e.pasado, m].slice(-MAX_HISTORIAL) };
+    }
     case "borrarCartas": {
       const ids = new Set(a.ids);
       return conHistorial(e, {
@@ -124,6 +150,18 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
           ids.has(c.id) ? { ...c, fecha: a.fecha, fuente: "manual", confianza: "alta", revisar: false, motivo: undefined, sugerencias: [] } : c,
         ),
       });
+    }
+    case "aceptarSugerencia": {
+      const ids = new Set(a.ids);
+      const indice = a.indice ?? 0;
+      let aceptadas = 0;
+      const cartas = m.cartas.map((c): Carta => {
+        const s = ids.has(c.id) ? c.sugerencias?.[indice] : undefined;
+        if (!s) return c;
+        aceptadas++;
+        return { ...c, fecha: s.fecha, fuente: s.fuente, confianza: "alta", revisar: false, motivo: undefined, sugerencias: [] };
+      });
+      return aceptadas ? conHistorial(e, { ...m, cartas }) : e;
     }
     case "confirmarFecha":
       return conHistorial(e, {
@@ -152,10 +190,14 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
     case "pedidoPagado":
       return m.pedido ? conHistorial(e, { ...m, pedido: { ...m.pedido, estado: "pagado" } }, false) : e;
     case "deshacer": {
-      const anterior = e.pasado[e.pasado.length - 1];
-      if (!anterior) return e;
+      // Los puntos que no cambiaron nada (entrar en un campo y salir sin tocarlo) se saltan:
+      // cada «Deshacer» recupera algo que se ve.
+      let i = e.pasado.length - 1;
+      while (i >= 0 && mismoContenido(e.pasado[i]!, m)) i--;
+      const anterior = e.pasado[i];
+      if (!anterior) return e.pasado.length ? { ...e, pasado: [] } : e;
       // El paso actual no se deshace: solo los cambios del mazo.
-      return { ...e, mazo: { ...anterior, paso: m.paso, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido }, pasado: e.pasado.slice(0, -1) };
+      return { ...e, mazo: { ...anterior, paso: m.paso, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido }, pasado: e.pasado.slice(0, i) };
     }
   }
   return e;

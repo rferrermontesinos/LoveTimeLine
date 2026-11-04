@@ -1,13 +1,13 @@
 import { aIso, esFutura, type FechaCarta } from "../fechas/fecha";
+import { textoPendiente } from "./configuracion";
+import { MAX_DESCRIPCION } from "./limites";
 
-export const MAX_DESCRIPCION = 90;
-/** Título de la portada y de la caja. */
-export const MAX_TITULO = 32;
-/** Dedicatoria del reverso de la portada. */
-export const MAX_DEDICATORIA = 140;
+export { MAX_DEDICATORIA, MAX_DESCRIPCION, MAX_TITULO } from "./limites";
 
 export interface CartaParaValidar {
   id: string;
+  /** Sin tipo cuenta como carta con foto. Las de texto necesitan su texto completo. */
+  tipo?: "foto" | "texto";
   fecha: FechaCarta | null;
   revisar: boolean;
   hash: string | null;
@@ -23,6 +23,8 @@ export type Aviso =
   | { tipo: "excede-maximo"; maximo: number }
   | { tipo: "sin-fecha"; cartas: string[] }
   | { tipo: "fecha-futura"; cartas: string[] }
+  /** Cartas sin foto con el texto vacío o con un hueco por rellenar («Nació [nombre]»). */
+  | { tipo: "texto-pendiente"; cartas: string[] }
   | { tipo: "descripcion-larga"; cartas: string[] }
   | { tipo: "baja-resolucion"; cartas: string[] }
   | { tipo: "revisar-fechas"; cartas: string[] }
@@ -36,6 +38,7 @@ export const GRAVEDAD: Record<Aviso["tipo"], Gravedad> = {
   "excede-maximo": "bloquea",
   "sin-fecha": "bloquea",
   "fecha-futura": "bloquea",
+  "texto-pendiente": "bloquea",
   "descripcion-larga": "bloquea",
   // Pide confirmación al cliente, pero no bloquea: puede imprimirla igualmente.
   "baja-resolucion": "confirmar",
@@ -67,6 +70,9 @@ export function validarMazo(e: {
 
   const futuras = cartas.filter((c) => c.fecha && esFutura(c.fecha, e.hoy)).map((c) => c.id);
   if (futuras.length) avisos.push({ tipo: "fecha-futura", cartas: futuras });
+
+  const sinTexto = cartas.filter((c) => c.tipo === "texto" && textoPendiente(c.descripcion)).map((c) => c.id);
+  if (sinTexto.length) avisos.push({ tipo: "texto-pendiente", cartas: sinTexto });
 
   const largas = cartas.filter((c) => [...c.descripcion].length > MAX_DESCRIPCION).map((c) => c.id);
   if (largas.length) avisos.push({ tipo: "descripcion-larga", cartas: largas });

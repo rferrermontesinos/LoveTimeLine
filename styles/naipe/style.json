@@ -1,11 +1,11 @@
 {
   "id": "naipe",
-  "version": 2,
+  "version": 3,
   "plantilla": "naipe",
   "nombre": { "es": "Naipe", "en": "Naipe" },
   "descripcion": {
-    "es": "Carta fotográfica con pestañas de color en las esquinas. El cliente elige la paleta.",
-    "en": "Photographic playing card with coloured corner tabs. The customer picks the palette."
+    "es": "Carta con foto y pestañas de color en las esquinas. El color que elijas va en las pestañas y en la cara de la fecha, con un detalle a juego en las cartas sin foto.",
+    "en": "Photo card with coloured corner tabs. The colour you choose goes on the tabs and the date side, with a matching detail on cards without a photo."
   },
   "paletaPorDefecto": "rosa",
   "paletas": [
@@ -19,7 +19,6 @@
   "colores": {
     "tinta": "#141414",
     "papel": "#F5F0E6",
-    "celdaInactiva": "rgba(245, 240, 230, 0.7)",
     "velo": "20, 20, 20"
   }
 }

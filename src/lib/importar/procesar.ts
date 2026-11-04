@@ -1,12 +1,12 @@
 /**
- * Procesa cada foto en el navegador: huella SHA-256, fecha (EXIF/XMP, nombre, archivo),
+ * Procesa cada foto en el navegador: huella SHA-256, fecha (EXIF/XMP/IPTC, nombre, archivo),
  * copia de trabajo y miniatura. Nada sale del dispositivo.
  */
 import { PRINT } from "@config/print";
-import type { MetadatosFecha } from "@/domain/fechas/exif";
-import { proponerFecha, type PropuestaFecha } from "@/domain/fechas/proponer";
+import { proponerFecha, type ResultadoFecha } from "@/domain/fechas/proponer";
 import { limitarLado } from "@/domain/imagen/recorte";
 import { crearLienzo } from "./lienzo";
+import { leerMetadatos } from "./metadatos";
 
 export interface FotoImportada {
   id: string;
@@ -19,7 +19,8 @@ export interface FotoImportada {
   alto: number;
   anchoOriginal: number;
   altoOriginal: number;
-  propuesta: PropuestaFecha | null;
+  /** Fecha segura (si la hay), sugerencias y por qué queda en blanco. Solo datos derivados. */
+  propuesta: ResultadoFecha;
 }
 
 const EXTENSIONES = /\.(jpe?g|png|heic|heif|webp)$/i;
@@ -38,34 +39,15 @@ async function huella(buffer: ArrayBuffer): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function leerMetadatos(buffer: ArrayBuffer): Promise<MetadatosFecha | null> {
-  try {
-    const exifr = (await import("exifr")).default;
-    const m = (await exifr.parse(buffer, {
-      tiff: true,
-      exif: true,
-      xmp: true,
-      icc: false,
-      iptc: false,
-      jfif: false,
-      ihdr: false,
-      gps: false,
-      interop: false,
-      ifd1: false,
-      reviveValues: false,
-      mergeOutput: true,
-    })) as Record<string, unknown> | undefined;
-    if (!m) return null;
-    const s = (v: unknown) => (typeof v === "string" ? v : undefined);
-    return {
-      DateTimeOriginal: s(m.DateTimeOriginal),
-      CreateDate: s(m.CreateDate),
-      DateTimeDigitized: s(m.DateTimeDigitized),
-      DateCreated: s(m.DateCreated),
-    };
-  } catch {
-    return null;
-  }
+/** Rutas de los archivos soltados con arrastrar y soltar (el navegador no las pone en el File). */
+const rutasDeArrastre = new WeakMap<File, string>();
+
+/**
+ * Ruta del archivo dentro de la carpeta elegida o soltada («Escaneos/abuelos.jpg»), o solo su
+ * nombre. Sirve para detectar carpetas de escaneos; no se guarda.
+ */
+export function rutaDe(archivo: File): string {
+  return archivo.webkitRelativePath || rutasDeArrastre.get(archivo) || archivo.name;
 }
 
 async function decodificar(archivo: File): Promise<ImageBitmap> {
@@ -112,7 +94,7 @@ export async function procesarArchivo(archivo: File, hoy: Date): Promise<FotoImp
       alto: copia.alto,
       anchoOriginal: bitmap.width,
       altoOriginal: bitmap.height,
-      propuesta: proponerFecha({ nombreArchivo: archivo.name, exif, ultimaModificacion: archivo.lastModified, hoy }),
+      propuesta: proponerFecha({ nombreArchivo: archivo.name, rutaArchivo: rutaDe(archivo), exif, ultimaModificacion: archivo.lastModified, hoy }),
     };
   } finally {
     bitmap.close();
@@ -156,6 +138,7 @@ export async function archivosDeArrastre(dt: DataTransfer): Promise<File[]> {
   const recorrer = async (entrada: FileSystemEntry): Promise<void> => {
     if (entrada.isFile) {
       const f = await new Promise<File>((ok, mal) => (entrada as FileSystemFileEntry).file(ok, mal));
+      if (!f.webkitRelativePath && entrada.fullPath) rutasDeArrastre.set(f, entrada.fullPath.replace(/^\//, ""));
       archivos.push(f);
     } else if (entrada.isDirectory) {
       const lector = (entrada as FileSystemDirectoryEntry).createReader();

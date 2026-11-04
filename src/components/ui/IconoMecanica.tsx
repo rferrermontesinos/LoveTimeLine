@@ -1,32 +1,40 @@
-/** Icono redondo de cada mecánica de juego, igual que en el hueco de la pestaña. */
-export function IconoMecanica({ id, tamano = "md" }: { id: string; tamano?: "sm" | "md" }) {
-  const comun = `${tamano === "sm" ? "h-9 w-9" : "h-12 w-12"} shrink-0 rounded-full grid place-items-center`;
-  const svg = tamano === "sm" ? "h-5 w-5" : "h-7 w-7";
-  if (id === "estrella")
-    return (
-      <span aria-hidden="true" className={`${comun} bg-tinta`}>
-        <svg viewBox="0 0 24 24" className={`${svg} fill-rosa`}>
-          <path d="M12 2.2l2.92 6.26 6.86.78-5.1 4.66 1.4 6.76L12 17.25 5.92 20.66l1.4-6.76-5.1-4.66 6.86-.78L12 2.2z" />
-        </svg>
-      </span>
-    );
-  if (id === "cuentalo")
-    return (
-      <span aria-hidden="true" className={`${comun} bg-tinta`}>
-        <svg viewBox="0 0 24 24" className={`${svg} fill-amarillo`}>
-          <path d="M4 4.5h16a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 20 17H10.2l-4.7 3.6V17H4a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 4 4.5z" />
-        </svg>
-      </span>
-    );
-  if (id === "comodin")
-    return (
-      <span aria-hidden="true" className={`${comun} tipo-titular bg-rojo text-xl`}>
-        ★
-      </span>
-    );
+import { colorGlifo, obtenerEstilo, obtenerPaleta, obtenerPlantilla, rutaIcono } from "@/lib/estilos";
+
+/**
+ * Icono de la esquina de las cartas («estrella», «comodin», «en-blanco»…), igual que en el hueco
+ * de la pestaña: la misma ruta de la plantilla, sobre un círculo de tinta y con el color de la
+ * paleta. Sin paleta, la del estilo por defecto. Si la plantilla no tiene ese icono, no pinta nada.
+ */
+export function IconoMecanica({
+  icono,
+  tamano = "md",
+  estiloId,
+  paletaId,
+  className,
+}: {
+  icono: string | null | undefined;
+  tamano?: "sm" | "md";
+  estiloId?: string;
+  paletaId?: string;
+  /** Tamaño a medida (por ejemplo en mm, para el folleto); sustituye al de `tamano`. */
+  className?: string;
+}) {
+  const estilo = obtenerEstilo(estiloId);
+  const plantilla = obtenerPlantilla(estilo.plantilla);
+  const ruta = rutaIcono(plantilla, icono);
+  if (!ruta) return null;
+  const color = colorGlifo(obtenerPaleta(estilo, paletaId), estilo.colores);
+  // En la carta, el lado del icono es `glifo` radios del círculo: aquí, en % del diámetro.
+  const lado = `${(plantilla.pestana.hueco.glifo / 2) * 100}%`;
   return (
-    <span aria-hidden="true" className={`${comun} border-2 border-dashed border-tinta bg-papel`}>
-      <span className="tipo-titular text-lg">+</span>
+    <span
+      aria-hidden="true"
+      className={`${className ?? (tamano === "sm" ? "h-9 w-9" : "h-12 w-12")} grid shrink-0 place-items-center rounded-full`}
+      style={{ background: estilo.colores.tinta }}
+    >
+      <svg viewBox="0 0 24 24" style={{ width: lado, height: lado }}>
+        <path d={ruta.d} fillRule={ruta.regla} fill={color} />
+      </svg>
     </span>
   );
 }

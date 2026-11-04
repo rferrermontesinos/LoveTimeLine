@@ -130,7 +130,7 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
             {MECANICAS.map((m) => (
               <li key={m.id} className="rounded-[var(--radius-carta)] bg-blanco p-5">
                 <div className="flex items-center gap-3">
-                  <IconoMecanica id={m.id} />
+                  <IconoMecanica icono={catalogo.mecanicas.find((x) => x.id === m.id)?.icono} />
                   <h3 className="tipo-subtitular text-lg">{t(`mecanicas.${m.clave}.nombre`)}</h3>
                 </div>
                 {m.clave === "enBlanco" ? (

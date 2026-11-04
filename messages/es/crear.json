@@ -13,7 +13,8 @@
       "cartas": "Cartas",
       "estilo": "Estilo",
       "pedido": "Pedido",
-      "paso": "Paso {n} de 4"
+      "paso": "Paso {n} de 4",
+      "bloqueado": "Completa todas las cartas para seguir"
     },
     "barra": {
       "siguienteCartas": "Siguiente: cartas",
@@ -22,7 +23,9 @@
       "pagar": "Pagar {total}",
       "total": "Total",
       "faltan": "Faltan {n, plural, one {# foto} other {# fotos}}",
-      "minimoCubierto": "Mínimo cubierto"
+      "minimoCubierto": "Mínimo cubierto",
+      "faltanCartas": "{n, plural, one {Falta # carta por completar} other {Faltan # cartas por completar}}",
+      "irAPendiente": "Ir a la siguiente"
     },
     "pack": "Pack {pack}",
     "contador": "{actual} de {minimo} fotos",

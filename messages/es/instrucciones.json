@@ -1,13 +1,5 @@
 {
   "instrucciones": {
-    "titulo": "Instrucciones plegables",
-    "texto": "Una hoja de 252 × 176 mm que se pliega en 8 paneles del tamaño de una carta y cabe en la caja.",
-    "caraA": "Cara A (exterior)",
-    "caraB": "Cara B (interior)",
-    "descargar": "Descargar PDF",
-    "imprimir": "Imprimir esta página",
-    "plegado": "Cómo se pliega",
-    "plegadoTexto": "Pliega por la mitad a lo largo (la cara A queda fuera) y después en acordeón por las tres líneas verticales. El panel de portada queda delante.",
     "portadaTitulo": "Cómo se juega",
     "portadaSub": "Despliega para empezar",
     "posterTitulo": "¿Cuándo fue?",
@@ -17,15 +9,18 @@
     "mazoDe": "Este mazo es de",
     "mazoAnios": "Años",
     "lineas": "Escribid aquí vuestro récord en «Nuestra historia»",
-    "impresion": "Imprime en A4 apaisado, a doble cara volteando por el borde corto y al 100 %. Recorta por las marcas de las esquinas; las marcas de los lados indican los pliegues.",
-    "personalizado": "Con el título y la dedicatoria de tu mazo.",
-    "generico": "Versión sin personalizar: crea un mazo para ver tu título y tu dedicatoria.",
-    "record": "Récord",
     "fecha": "Fecha",
     "cartas": "Cartas",
     "quienes": "Quiénes",
-    "antes": "¿Antes?",
-    "despues": "¿Después?",
-    "panel": "Panel {n}"
+    "vuestroMazo": "Con vuestro mazo de {n} cartas",
+    "personas": "{n} personas",
+    "vidasTitulo": "Vidas con vuestro mazo",
+    "vidasPersonas": "Personas con cartas → vidas:",
+    "vidasCompleta": "En la historia completa: {n} vidas.",
+    "comodin": {
+      "uso": "Antes de colocar, pide una pista a quien hizo el mazo («¿antes o después de esta carta?») o cambia una de tus cartas por la primera del mazo. Si no está, solo vale el cambio.",
+      "clasico": "Cuando falles y te quedes con más cartas que nadie, coge uno si queda alguno (uno por persona). Después de usarlo, vuelve a la caja.",
+      "historia": "Son del equipo y cada uno se usa una vez. La pista la da el guardián."
+    }
   }
 }

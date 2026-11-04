@@ -32,12 +32,20 @@ export function rangoAnios(cartas: readonly { fecha: FechaCarta | null }[]): [nu
   return [Math.min(...anios), Math.max(...anios)];
 }
 
-/** Índice de la siguiente carta sin fecha a partir de una posición (da la vuelta al final). */
-export function siguienteSinFecha(cartas: readonly { fecha: FechaCarta | null }[], desde: number): number {
+/**
+ * Índice de la siguiente carta que cumple una condición a partir de una posición (da la vuelta
+ * al final y acaba en la propia carta de partida). -1 si ninguna la cumple.
+ */
+export function siguienteQue<T>(cartas: readonly T[], desde: number, cumple: (c: T) => boolean): number {
   const n = cartas.length;
   for (let k = 1; k <= n; k++) {
-    const i = (desde + k) % n;
-    if (!cartas[i]!.fecha) return i;
+    const i = (((desde + k) % n) + n) % n;
+    if (cumple(cartas[i]!)) return i;
   }
   return -1;
+}
+
+/** Índice de la siguiente carta sin fecha a partir de una posición (da la vuelta al final). */
+export function siguienteSinFecha(cartas: readonly { fecha: FechaCarta | null }[], desde: number): number {
+  return siguienteQue(cartas, desde, (c) => !c.fecha);
 }

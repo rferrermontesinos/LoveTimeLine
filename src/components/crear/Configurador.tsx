@@ -7,7 +7,7 @@ import { Aviso, Franja } from "@/components/ui/Piezas";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { BarraAccion, BarraPasos } from "./Barras";
-import { ProveedorCrear } from "./contexto";
+import { ProveedorCrear, useCrear } from "./contexto";
 import { ElegirPack } from "./ElegirPack";
 import { PasoCartas } from "./PasoCartas";
 import { PasoEstilo } from "./PasoEstilo";
@@ -28,6 +28,7 @@ export function Configurador({ catalogo, packInicial, pagoCancelado }: { catalog
 function Contenido({ packInicial, pagoCancelado }: { packInicial: string | null; pagoCancelado: boolean }) {
   const t = useTranslations();
   const { estado, mazo, despachar, almacenOk, reiniciarTodo } = useMazo();
+  const { pasoActual, puedeAvanzar } = useCrear();
   const [borrando, setBorrando] = useState(false);
 
   // Ctrl/Cmd + Z deshace los cambios del mazo, salvo mientras se escribe (ahí manda el deshacer del navegador).
@@ -75,10 +76,13 @@ function Contenido({ packInicial, pagoCancelado }: { packInicial: string | null;
     window.scrollTo({ top: 0 });
   };
 
+  // Con cartas pendientes, la barra inferior crece con el aviso de las que faltan: más hueco abajo.
+  const conAvisoAbajo = pasoActual === 2 && mazo.cartas.length > 0 && !puedeAvanzar;
+
   return (
     <>
       <BarraPasos />
-      <main id="contenido" className="mx-auto max-w-[1200px] space-y-6 px-4 pb-40 pt-6 sm:px-6 sm:pt-8">
+      <main id="contenido" className={`mx-auto max-w-[1200px] space-y-6 px-4 pt-6 sm:px-6 sm:pt-8 ${conAvisoAbajo ? "pb-64 sm:pb-56" : "pb-40"}`}>
         {!almacenOk && <Aviso tono="aviso">{t("errores.almacen")}</Aviso>}
         {pagoCancelado && !mazo.pedido && <Aviso tono="info">{t("pedido.pagoCancelado")}</Aviso>}
         {mazo.pedido?.estado === "pagado" && (
@@ -94,10 +98,11 @@ function Contenido({ packInicial, pagoCancelado }: { packInicial: string | null;
           </Aviso>
         )}
 
-        {mazo.paso === 1 && <PasoFotos />}
-        {mazo.paso === 2 && <PasoCartas />}
-        {mazo.paso === 3 && <PasoEstilo />}
-        {mazo.paso === 4 && <PasoPedido />}
+        {/* Como mucho, el paso permitido: con cartas pendientes, Estilo y Pedido no se muestran. */}
+        {pasoActual === 1 && <PasoFotos />}
+        {pasoActual === 2 && <PasoCartas />}
+        {pasoActual === 3 && <PasoEstilo />}
+        {pasoActual === 4 && <PasoPedido />}
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-linea pt-6 text-sm text-tinta-2">
           <span className="inline-flex items-center gap-2">

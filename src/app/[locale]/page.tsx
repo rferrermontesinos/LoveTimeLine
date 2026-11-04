@@ -118,7 +118,7 @@ export default async function Inicio({ params }: { params: Promise<{ locale: str
             <ul className="grid gap-3 sm:grid-cols-2">
               {mecanicas.map((m) => (
                 <li key={m.id} className="flex gap-4 rounded-[var(--radius-carta)] bg-blanco p-5">
-                  <IconoMecanica id={m.id} />
+                  <IconoMecanica icono={m.icono} />
                   <div>
                     <h3 className="font-bold">{textoEn(m.nombre, locale)}</h3>
                     <p className="mt-1 text-sm text-tinta-2">{textoEn(m.descripcion, locale)}</p>

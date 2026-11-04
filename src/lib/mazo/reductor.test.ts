@@ -75,6 +75,80 @@ describe("reductor del mazo", () => {
     expect(e.mazo?.cartas.filter((c) => c.fecha === null)).toHaveLength(2);
   });
 
+  it("acepta la sugerencia de fecha: conserva la fuente, confianza alta y se puede deshacer", () => {
+    let e = nuevo();
+    const conSugerencias: CartaFoto = {
+      ...carta("a"),
+      motivo: "posible-escaneo",
+      sugerencias: [
+        { fecha: { anio: 1987, mes: 6, dia: 1 }, fuente: "exif", motivo: "digitalizada-despues" },
+        { fecha: { anio: 1987 }, fuente: "nombre", motivo: "exif-y-nombre-no-coinciden" },
+      ],
+    };
+    const otra: CartaFoto = { ...carta("b"), sugerencias: [{ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "nombre", motivo: "fecha-de-envio" }] };
+    e = reductor(e, { tipo: "anadirCartas", cartas: [conSugerencias, otra, carta("c")] });
+    const antes = e.mazo!;
+    e = reductor(e, { tipo: "aceptarSugerencia", ids: ["a", "b", "c"] });
+    expect(e.mazo?.cartas[0]).toMatchObject({ fecha: { anio: 1987, mes: 6, dia: 1 }, fuente: "exif", confianza: "alta", revisar: false, motivo: undefined, sugerencias: [] });
+    expect(e.mazo?.cartas[1]).toMatchObject({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "nombre", confianza: "alta" });
+    // La carta sin sugerencias no cambia.
+    expect(e.mazo?.cartas[2]).toBe(antes.cartas[2]);
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.cartas[0]).toEqual(conSugerencias);
+    expect(e.mazo?.cartas[1]).toEqual(otra);
+  });
+
+  it("acepta otra sugerencia por su índice; sin nada que aceptar no crea un paso de deshacer", () => {
+    let e = nuevo();
+    const c: CartaFoto = {
+      ...carta("a"),
+      sugerencias: [
+        { fecha: { anio: 2015 }, fuente: "nombre", motivo: "exif-y-nombre-no-coinciden" },
+        { fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", motivo: "exif-y-nombre-no-coinciden" },
+      ],
+    };
+    e = reductor(e, { tipo: "anadirCartas", cartas: [c] });
+    const pasos = e.pasado.length;
+    expect(reductor(e, { tipo: "aceptarSugerencia", ids: ["a"], indice: 5 })).toBe(e);
+    expect(reductor(e, { tipo: "aceptarSugerencia", ids: ["x"] })).toBe(e);
+    e = reductor(e, { tipo: "aceptarSugerencia", ids: ["a"], indice: 1 });
+    expect(e.mazo?.cartas[0]).toMatchObject({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif" });
+    expect(e.pasado.length).toBe(pasos + 1);
+  });
+
+  it("un punto de deshacer sin cambios desde el anterior no se repite", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2015)] });
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    const pasos = e.pasado.length;
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    expect(e.pasado.length).toBe(pasos);
+    e = reductor(e, { tipo: "actualizarCarta", id: "a", cambios: { fecha: { anio: 2016 } }, deshacible: false });
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    expect(e.pasado.length).toBe(pasos + 1);
+  });
+
+  it("deshacer salta los puntos que no cambiaron nada, aunque se haya cambiado de paso", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2015)] });
+    e = reductor(e, { tipo: "actualizarCarta", id: "a", cambios: { fecha: { anio: 2016 } } });
+    // Entrar en el selector de fecha y salir sin tocar nada; luego, ir a otro paso.
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    e = reductor(e, { tipo: "cambiar", campo: "paso", valor: 1 });
+    // Otro punto sin cambios (solo ha cambiado el paso): no se repite.
+    const pasos = e.pasado.length;
+    expect(reductor(e, { tipo: "puntoDeshacer" }).pasado.length).toBe(pasos);
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.cartas[0]?.fecha).toEqual({ anio: 2015 });
+    expect(e.mazo?.paso).toBe(1);
+    // Sin nada más que deshacer, el historial queda vacío y el mazo igual.
+    const antes = e.mazo;
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo).toBe(antes);
+    expect(e.pasado).toEqual([]);
+  });
+
   it("deshacer no cambia el paso actual", () => {
     let e = nuevo();
     e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2015)] });

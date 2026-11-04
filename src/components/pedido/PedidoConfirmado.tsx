@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CartaPortada } from "@/components/carta/CartaPortada";
+import { VistaCaja } from "@/components/carta/VistaCaja";
 import { VistaCarta } from "@/components/carta/VistaCarta";
 import { Boton, BotonEnlace } from "@/components/ui/Boton";
 import { Aviso, Franja, Micro } from "@/components/ui/Piezas";
 import { ordenarPorFecha } from "@/domain/mazo/ordenar";
 import { formatearImporte } from "@/domain/precios/cotizar";
 import type { Catalogo } from "@/domain/precios/tipos";
-import { textosRetos } from "@/lib/carta/textos";
 import { decodificarFoto } from "@/lib/fotos/cache";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { iconosDelMazo } from "@/lib/mazo/derivados";
@@ -27,6 +27,7 @@ export function PedidoConfirmado({ catalogo, sessionId }: { catalogo: Catalogo; 
 
 function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: string | null }) {
   const t = useTranslations("confirmado");
+  const tj = useTranslations("juego");
   const locale = useLocale();
   const { estado, mazo, despachar } = useMazo();
   const [verificacion, setVerificacion] = useState<"pagado" | "pendiente" | null>(null);
@@ -80,7 +81,7 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
 
   const generar = async () => {
     setResultado(null);
-    const plan = planImpresion({ mazo, catalogo, iconos, retos: textosRetos(mazo.idiomaMazo) });
+    const plan = planImpresion({ mazo, catalogo, iconos });
     setProgreso({ hecha: 0, total: plan.length * 2 });
     try {
       const bytes = await generarPdfMazo({
@@ -123,7 +124,7 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
           </div>
           <div aria-hidden="true" className="relative mx-auto aspect-[1.2/1] w-full max-w-[440px]">
             <div className="absolute left-1/2 top-1/2 w-[40%] -translate-x-[115%] -translate-y-[46%] -rotate-[9deg] [animation:repartir_700ms_var(--ease-salida)_both]">
-              <CartaPortada mazo={mazo} tipo="portada" cara="reverso" etiqueta="" />
+              <CartaPortada mazo={mazo} cara="reverso" etiqueta="" />
             </div>
             {muestra && (
               <div className="absolute left-1/2 top-1/2 w-[40%] translate-x-[15%] -translate-y-[44%] rotate-[9deg] [animation:repartir_700ms_var(--ease-salida)_120ms_both]">
@@ -131,7 +132,7 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
               </div>
             )}
             <div className="absolute left-1/2 top-1/2 z-10 w-[42%] -translate-x-1/2 -translate-y-1/2 [animation:repartir_700ms_var(--ease-salida)_240ms_both]">
-              <CartaPortada mazo={mazo} tipo="caja" cara="anverso" etiqueta="" />
+              <VistaCaja mazo={mazo} catalogo={catalogo} cara="anverso" etiquetas={null} />
             </div>
           </div>
         </div>
@@ -149,20 +150,18 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
             {resultado === "listo" && <span className="text-verde-texto">✓ {t("pdfListo")}</span>}
             {resultado === "error" && <span className="text-rojo-texto">{t("pdfError")}</span>}
           </p>
-          <BotonEnlace href="/instrucciones" variante="secundario">
-            {t("descargarInstrucciones")}
-          </BotonEnlace>
         </section>
 
         <section className="space-y-4 rounded-[var(--radius-carta)] bg-papel-2 p-6">
           <h2 className="tipo-subtitular text-xl">{t("siguientes")}</h2>
           <ol className="space-y-3">
-            {(["paso1", "paso2", "paso3"] as const).map((k, i) => (
-              <li key={k} className="flex gap-3">
+            {/* Las instrucciones plegables van en la caja: ya no se imprimen desde aquí. */}
+            {[t("paso1"), tj("consejo")].map((texto, i) => (
+              <li key={i} className="flex gap-3">
                 <span aria-hidden="true" className="tipo-titular grid h-8 w-8 shrink-0 place-items-center rounded-[0_0_10px_0] bg-rosa text-lg">
                   {i + 1}
                 </span>
-                <span className="pt-1">{t(k)}</span>
+                <span className="pt-1">{texto}</span>
               </li>
             ))}
           </ol>
