@@ -6,6 +6,10 @@ import { EjemplosPrecision } from "@/components/inicio/CartaVolteable";
 import { BotonEnlace } from "@/components/ui/Boton";
 import { IconoMecanica } from "@/components/ui/IconoMecanica";
 import { Micro, Pestana, Seccion } from "@/components/ui/Piezas";
+import { jugadoresPorMazo } from "@/domain/juego/reglas";
+import { packsActivos } from "@/domain/precios/cotizar";
+import { textoEn } from "@/domain/precios/tipos";
+import { obtenerCatalogo } from "@/lib/servidor/catalogo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -13,28 +17,18 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: t("titulo"), description: t("intro") };
 }
 
-const PASOS = [
-  { titulo: "componentes", texto: "componentesTexto", color: "var(--color-rosa)" },
-  { titulo: "preparacion", texto: "preparacionTexto", color: "var(--color-amarillo)" },
-  { titulo: "turno", texto: "turnoTexto", color: "var(--color-verde)" },
-  { titulo: "final", texto: "finalTexto", color: "var(--color-rojo)" },
+const MODOS = [
+  { id: "clasico", color: "var(--color-amarillo)" },
+  { id: "historia", color: "var(--color-verde)" },
 ] as const;
+
+const PARTES = ["preparacion", "turno", "final"] as const;
 
 const MECANICAS = [
   { id: "estrella", clave: "estrella" },
-  { id: "cuentalo", clave: "cuentalo" },
   { id: "comodin", clave: "comodin" },
   { id: "en-blanco", clave: "enBlanco" },
 ] as const;
-
-const MODOS = ["guardian", "cooperativo", "clasico", "duelo", "generaciones"] as const;
-const COLOR_MODO: Record<(typeof MODOS)[number], string> = {
-  guardian: "var(--color-rosa)",
-  cooperativo: "var(--color-verde)",
-  clasico: "var(--color-amarillo)",
-  duelo: "var(--color-rojo)",
-  generaciones: "var(--color-papel)",
-};
 
 export default async function ComoJugar({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -42,7 +36,9 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
   const t = await getTranslations("juego");
   const tm = await getTranslations("modos");
   const n = await getTranslations("nav");
-  const ti = await getTranslations("instrucciones");
+  const catalogo = await obtenerCatalogo();
+  const packs = packsActivos(catalogo);
+  const lista = (clave: `${(typeof MODOS)[number]["id"]}.${(typeof PARTES)[number]}`) => t.raw(clave) as string[];
 
   return (
     <>
@@ -56,18 +52,68 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
         </Seccion>
 
         <Seccion className="pb-14">
-          <ol className="grid gap-4 md:grid-cols-2">
-            {PASOS.map((p, i) => (
-              <li key={p.titulo} className="relative overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 pl-[4.5rem] pt-7">
-                <Pestana color={p.color}>{i + 1}</Pestana>
-                <h2 className="tipo-subtitular text-xl">{t(p.titulo)}</h2>
-                <p className="mt-2 text-tinta-2">{t(p.texto)}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[var(--radius-carta)] bg-blanco p-6">
+              <h2 className="tipo-subtitular text-xl">{t("componentes")}</h2>
+              <p className="mt-2 text-tinta-2">{t("componentesTexto")}</p>
+            </div>
+            <div className="rounded-[var(--radius-carta)] bg-blanco p-6">
+              <h2 className="tipo-subtitular text-xl">{t("jugadores.titulo")}</h2>
+              <p className="mt-2 text-tinta-2">{t("jugadores.texto")}</p>
+              <ul className="mt-3 space-y-1 text-sm">
+                {packs.map((p) => {
+                  const j = jugadoresPorMazo(p.cartas);
+                  return (
+                    <li key={p.id}>
+                      <span className="font-semibold">{textoEn(p.nombre, locale)}</span>: {t("jugadores.rango", { n: j.recomendado })}
+                      {j.maximo > j.recomendado && ` (${t("jugadores.maximo", { n: j.maximo })})`}
+                      {j.porParejas && `. ${t("jugadores.parejas")}`}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
         </Seccion>
 
-        <Seccion className="pb-16">
+        <div className="bg-tinta py-16 text-papel">
+          <Seccion>
+            <h2 className="tipo-titular max-w-3xl text-3xl">{t("tiposTitulo")}</h2>
+            <p className="mt-4 max-w-2xl text-md text-papel/80">{t("tiposTexto")}</p>
+            <div className="mt-10 grid gap-4 lg:grid-cols-2">
+              {MODOS.map((m) => (
+                <article key={m.id} className="relative overflow-hidden rounded-[var(--radius-carta)] bg-[#1f1f1f] p-6 pt-[4.8rem]">
+                  <Pestana color={m.color}>{m.id === "clasico" ? "1" : "2"}</Pestana>
+                  <h3 className="tipo-titular text-2xl">{tm(`${m.id}.nombre`)}</h3>
+                  <p className="tipo-micro mt-1 text-micro text-papel/70">
+                    {tm(`${m.id}.etiqueta`)} · {tm(`${m.id}.jugadores`)}
+                  </p>
+                  <p className="mt-3 text-papel/90">{tm(`${m.id}.resumen`)}</p>
+                  {PARTES.map((parte) => (
+                    <section key={parte} className="mt-6">
+                      <h4 className="tipo-subtitular text-lg">{t(parte)}</h4>
+                      <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-papel/90 marker:text-papel/60">
+                        {lista(`${m.id}.${parte}`).map((paso) => (
+                          <li key={paso}>{paso}</li>
+                        ))}
+                      </ol>
+                    </section>
+                  ))}
+                  {m.id === "historia" && (
+                    <section className="mt-6 rounded-[14px] bg-papel/10 p-4">
+                      <h4 className="tipo-subtitular text-lg">{t("historia.completa")}</h4>
+                      <p className="mt-1 text-papel/90">{t("historia.completaTexto")}</p>
+                      <p className="mt-3 text-sm text-papel/75">{t("historia.dificultad")}</p>
+                    </section>
+                  )}
+                </article>
+              ))}
+            </div>
+            <p className="tipo-subtitular mt-8 max-w-2xl rounded-[var(--radius-carta)] bg-amarillo p-6 text-xl text-tinta">{t("consejo")}</p>
+          </Seccion>
+        </div>
+
+        <Seccion className="py-16">
           <div className="grid items-center gap-8 rounded-[28px] bg-papel-2 p-6 sm:p-10 lg:grid-cols-[1fr_minmax(0,420px)]">
             <div>
               <h2 className="tipo-titular text-3xl">{t("fechas")}</h2>
@@ -78,49 +124,36 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
         </Seccion>
 
         <Seccion className="pb-16">
-          <h2 className="tipo-titular text-3xl">{t("mecanicasTitulo")}</h2>
-          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+          <h2 className="tipo-titular text-3xl">{t("mecanicas.titulo")}</h2>
+          <p className="mt-3 max-w-2xl text-md text-tinta-2">{t("mecanicas.texto")}</p>
+          <ul className="mt-6 grid gap-3 md:grid-cols-3">
             {MECANICAS.map((m) => (
-              <li key={m.id} className="flex gap-4 rounded-[var(--radius-carta)] bg-blanco p-5">
-                <IconoMecanica id={m.id} />
-                <p className="pt-1">{t(m.clave)}</p>
+              <li key={m.id} className="rounded-[var(--radius-carta)] bg-blanco p-5">
+                <div className="flex items-center gap-3">
+                  <IconoMecanica id={m.id} />
+                  <h3 className="tipo-subtitular text-lg">{t(`mecanicas.${m.clave}.nombre`)}</h3>
+                </div>
+                {m.clave === "enBlanco" ? (
+                  <p className="mt-3 text-tinta-2">{t("mecanicas.enBlanco.texto")}</p>
+                ) : (
+                  <dl className="mt-3 space-y-2 text-sm">
+                    {MODOS.map((modo) => (
+                      <div key={modo.id}>
+                        <dt className="font-semibold">{tm(`${modo.id}.nombre`)}</dt>
+                        <dd className="text-tinta-2">{t(`mecanicas.${m.clave}.${modo.id}`)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
               </li>
             ))}
           </ul>
         </Seccion>
 
-        <div className="bg-tinta py-16 text-papel">
-          <Seccion>
-            <h2 className="tipo-titular max-w-3xl text-3xl">{t("modosTitulo")}</h2>
-            <p className="mt-4 max-w-2xl text-md text-papel/80">{t("modosTexto")}</p>
-            <ul className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {MODOS.map((m) => (
-                <li key={m} className="relative overflow-hidden rounded-[var(--radius-carta)] bg-[#1f1f1f] p-6 pt-[4.8rem]">
-                  <Pestana color={COLOR_MODO[m]}>?</Pestana>
-                  <h3 className="tipo-titular text-2xl">{tm(`${m}.nombre`)}</h3>
-                  <p className="tipo-micro mt-1 text-micro text-papel/70">{tm(`${m}.jugadores`)}</p>
-                  <p className="mt-3 text-papel/90">{t(`modos.${m}`)}</p>
-                </li>
-              ))}
-              <li className="flex items-end rounded-[var(--radius-carta)] bg-amarillo p-6 text-tinta">
-                <p className="tipo-subtitular text-xl">{t("consejo")}</p>
-              </li>
-            </ul>
-          </Seccion>
-        </div>
-
-        <Seccion className="py-16">
+        <Seccion className="pb-16">
           <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-rosa p-8 sm:p-10">
-            <div className="max-w-xl">
-              <h2 className="tipo-titular text-3xl">{ti("titulo")}</h2>
-              <p className="mt-3">{ti("texto")}</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <BotonEnlace href="/instrucciones">{ti("titulo")}</BotonEnlace>
-              <BotonEnlace href="/crear" variante="secundario">
-                {n("crear")}
-              </BotonEnlace>
-            </div>
+            <h2 className="tipo-titular max-w-xl text-3xl">{n("crear")}</h2>
+            <BotonEnlace href="/crear">{n("crear")}</BotonEnlace>
           </div>
         </Seccion>
       </main>

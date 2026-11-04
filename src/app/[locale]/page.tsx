@@ -10,13 +10,10 @@ import { formatearImporte, precioDesde } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { obtenerCatalogo } from "@/lib/servidor/catalogo";
 
-const MODOS = ["guardian", "cooperativo", "clasico", "duelo", "generaciones"] as const;
+const MODOS = ["clasico", "historia"] as const;
 const COLOR_MODO: Record<(typeof MODOS)[number], string> = {
-  guardian: "var(--color-rosa)",
-  cooperativo: "var(--color-verde)",
   clasico: "var(--color-amarillo)",
-  duelo: "var(--color-rojo)",
-  generaciones: "var(--color-papel)",
+  historia: "var(--color-verde)",
 };
 
 export default async function Inicio({ params }: { params: Promise<{ locale: string }> }) {
@@ -86,17 +83,19 @@ export default async function Inicio({ params }: { params: Promise<{ locale: str
           </div>
         </Seccion>
 
-        {/* Formas de jugar */}
+        {/* Tipos de juego */}
         <div className="bg-tinta py-16 text-papel">
           <Seccion>
             <h2 className="tipo-titular max-w-3xl text-3xl">{t("modosTitulo")}</h2>
             <p className="mt-4 max-w-2xl text-md text-papel/80">{t("modosTexto")}</p>
-            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <ul className="mt-10 grid gap-4 sm:grid-cols-2">
               {MODOS.map((m) => (
                 <li key={m} className="relative overflow-hidden rounded-[var(--radius-carta)] bg-[#1f1f1f] p-5 pt-[4.6rem]">
                   <Pestana color={COLOR_MODO[m]}>?</Pestana>
                   <h3 className="tipo-titular text-xl">{tm(`${m}.nombre`)}</h3>
-                  <p className="tipo-micro mt-1 text-micro text-papel/70">{tm(`${m}.jugadores`)}</p>
+                  <p className="tipo-micro mt-1 text-micro text-papel/70">
+                    {tm(`${m}.etiqueta`)} · {tm(`${m}.jugadores`)}
+                  </p>
                   <p className="mt-3 text-sm text-papel/85">{tm(`${m}.resumen`)}</p>
                 </li>
               ))}

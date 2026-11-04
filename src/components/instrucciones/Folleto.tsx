@@ -147,10 +147,9 @@ export function CaraA({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
   const j = t.juego;
   const m = t.modos;
   const iconos: { color: string; simbolo: ReactNode; texto: string }[] = [
-    { color: c.tinta, simbolo: <EstrellaSvg color="#F7739E" />, texto: j.estrella },
-    { color: c.tinta, simbolo: <BocadilloSvg color="#FFC93C" />, texto: j.cuentalo },
-    { color: "#E8402F", simbolo: <span className="tipo-titular text-[7pt] text-[#141414]">★</span>, texto: j.comodin },
-    { color: "transparent", simbolo: <span className="tipo-titular text-[8pt]">+</span>, texto: j.enBlanco },
+    { color: c.tinta, simbolo: <EstrellaSvg color="#F7739E" />, texto: `${j.mecanicas.estrella.nombre}: ${j.mecanicas.estrella.clasico}` },
+    { color: "#E8402F", simbolo: <span className="tipo-titular text-[7pt] text-[#141414]">★</span>, texto: `${j.mecanicas.comodin.nombre}: ${j.mecanicas.comodin.clasico}` },
+    { color: "transparent", simbolo: <span className="tipo-titular text-[8pt]">+</span>, texto: `${j.mecanicas.enBlanco.nombre}: ${j.mecanicas.enBlanco.texto}` },
   ];
   return (
     <div className="flex h-[176mm] w-[252mm] flex-col">
@@ -160,11 +159,11 @@ export function CaraA({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
           <Titulo>{j.componentes}</Titulo>
           <p className={CUERPO}>{j.componentesTexto}</p>
           <Titulo className="pt-[1mm]">{j.preparacion}</Titulo>
-          <p className={CUERPO}>{j.preparacionTexto}</p>
+          <p className={CUERPO}>{j.clasico.preparacion.join(" ")}</p>
         </Regla>
         <Regla n={2} c={c}>
           <Titulo>{j.turno}</Titulo>
-          <p className={CUERPO}>{j.turnoTexto}</p>
+          <p className={CUERPO}>{j.clasico.turno.join(" ")}</p>
           <div className="relative mt-[3mm] flex items-end justify-center gap-[2.2mm] pt-[9mm]">
             <MiniReverso anio="2015" mes={5} c={c} />
             <span className="absolute left-1/2 top-0 -translate-x-1/2">
@@ -190,8 +189,8 @@ export function CaraA({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
         </Regla>
         <Regla n={4} c={c}>
           <Titulo>{j.final}</Titulo>
-          <p className={CUERPO}>{j.finalTexto}</p>
-          <Titulo className="pt-[1mm]">{j.mecanicasTitulo}</Titulo>
+          <p className={CUERPO}>{j.clasico.final.join(" ")}</p>
+          <Titulo className="pt-[1mm]">{j.mecanicas.titulo}</Titulo>
           <ul className="space-y-[1.6mm]">
             {iconos.map((i, k) => (
               <li key={k} className="flex gap-[1.8mm]">
@@ -211,21 +210,20 @@ export function CaraA({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
           cabecera={
             <>
               <h3 className="tipo-titular text-[15pt] leading-[0.95]" style={{ color: c.fondo }}>
-                {j.modosTitulo}
+                {j.tiposTitulo}
               </h3>
-              <p className={`${CUERPO} opacity-85`}>{j.modosTexto}</p>
+              <p className={`${CUERPO} opacity-85`}>{j.tiposTexto}</p>
             </>
           }
         >
-          <Modo nombre={m.guardian.nombre} jugadores={m.guardian.jugadores} texto={j.modos.guardian} color="#F7739E" />
+          <Modo nombre={m.historia.nombre} jugadores={`${m.historia.etiqueta} · ${m.historia.jugadores}`} texto={j.historia.preparacion.join(" ")} color="#22A861" />
         </PanelModos>
         <PanelModos c={c}>
-          <Modo nombre={m.cooperativo.nombre} jugadores={m.cooperativo.jugadores} texto={j.modos.cooperativo} color="#22A861" />
-          <Modo nombre={m.clasico.nombre} jugadores={m.clasico.jugadores} texto={j.modos.clasico} color="#FFC93C" />
+          <Modo nombre={j.turno} jugadores={m.historia.nombre} texto={j.historia.turno.join(" ")} color="#22A861" />
+          <Modo nombre={j.final} jugadores={m.historia.nombre} texto={j.historia.final.join(" ")} color="#22A861" />
         </PanelModos>
         <PanelModos c={c}>
-          <Modo nombre={m.duelo.nombre} jugadores={m.duelo.jugadores} texto={j.modos.duelo} color="#E8402F" />
-          <Modo nombre={m.generaciones.nombre} jugadores={m.generaciones.jugadores} texto={j.modos.generaciones} color="#F5F0E6" />
+          <Modo nombre={j.historia.completa} jugadores={m.historia.nombre} texto={j.historia.completaTexto} color="#F5F0E6" />
           <p className="rounded-[1.6mm] p-[2mm] text-[6.6pt] font-semibold leading-[1.3]" style={{ background: "#FFC93C", color: "#141414" }}>
             {j.consejo}
           </p>
@@ -313,10 +311,3 @@ function EstrellaSvg({ color }: { color: string }) {
   );
 }
 
-function BocadilloSvg({ color }: { color: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[3mm] w-[3mm]" style={{ fill: color }} aria-hidden="true">
-      <path d="M4 4.5h16a1.5 1.5 0 0 1 1.5 1.5v9.5A1.5 1.5 0 0 1 20 17H10.2l-4.7 3.6V17H4a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 4 4.5z" />
-    </svg>
-  );
-}

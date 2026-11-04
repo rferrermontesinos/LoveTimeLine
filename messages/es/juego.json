@@ -1,58 +1,98 @@
 {
   "juego": {
     "titulo": "Cómo se juega",
-    "intro": "Un juego de ordenar recuerdos. Cada carta tiene la foto delante y la fecha detrás. Gana quien coloca bien todas sus cartas en la línea del tiempo.",
+    "intro": "Un juego para ordenar vuestros recuerdos. Cada carta tiene la foto delante y la fecha detrás: colócala en la línea del tiempo donde creas que va, dale la vuelta y descubre si acertaste.",
+    "mesaAlt": "Una partida en marcha: la línea del tiempo en el centro de la mesa y las cartas de cada persona delante, con la foto a la vista.",
     "componentes": "Qué trae la caja",
-    "componentesTexto": "Las cartas con vuestras fotos, una portada, los comodines y las cartas en blanco (si los elegiste) y este folleto.",
-    "preparacion": "Preparación",
-    "preparacionTexto": "Baraja y reparte 4 cartas a cada persona (3 si sois más de 5), con la foto a la vista y sin mirar la fecha. Pon una carta en el centro con la fecha hacia arriba: es el principio de la línea del tiempo.",
-    "turno": "En tu turno",
-    "turnoTexto": "Elige una carta de tu mano y colócala en la línea: antes, después o entre dos cartas. Dale la vuelta. Si la fecha encaja, se queda. Si no, va al descarte y robas otra.",
-    "fechas": "Fechas con año o con mes",
-    "fechasTexto": "Una carta con solo el año vale en cualquier punto de ese año. Una con mes y año, en cualquier día de ese mes.",
-    "final": "Quién gana",
-    "finalTexto": "Quien se queda antes sin cartas. Si varias personas acaban en la misma ronda, jugáis una ronda más con una carta cada una.",
-    "mecanicasTitulo": "Iconos de la esquina",
-    "estrella": "Recuerdo estrella: si la aciertas, juegas otra vez.",
-    "cuentalo": "Cuéntalo: antes de darle la vuelta, cuenta el recuerdo. Si fallas, pero al grupo le gusta la historia, no robas carta.",
-    "comodin": "Comodín: al empezar la segunda ronda, quien tenga más cartas se lleva uno. Úsalo para pedir una pista o cambiar una carta.",
-    "enBlanco": "Cartas en blanco: cuando salga un recuerdo que no estaba, escribidlo con su fecha y entrará en la próxima partida.",
-    "modosTitulo": "Formas de jugar",
-    "modosTexto": "Quien hace el mazo conoce las fechas. Estas variantes convierten eso en parte del juego.",
-    "modos": {
-      "clasico": "Las reglas de arriba. Si juega quien hizo el mazo, empieza con una carta más.",
-      "guardian": "Quien hizo el mazo no compite. Presenta cada carta, decide en los «Cuéntalo», da las pistas de los comodines y cuenta la historia al darle la vuelta. Ideal para regalar: el regalo es la partida.",
-      "cooperativo": "Una sola línea para todo el grupo y 3 vidas. Colocáis por turnos y podéis hablarlo. Quien hizo el mazo no coloca cartas: solo puede decir «antes» o «después» una vez por carta. Objetivo: 15 cartas en la línea, y luego batir vuestro récord.",
-      "duelo": "Para dos. Quien hizo el mazo empieza con 6 cartas y no usa comodines; la otra persona empieza con 4 y puede pedir una pista de una palabra en cada turno.",
-      "generaciones": "Para familias. Haced equipos que mezclen edades: los mayores saben las fechas antiguas y los pequeños las recientes. Cada equipo coloca por turnos y puede consultarlo."
+    "componentesTexto": "Vuestras cartas de recuerdos, la portada y, si los elegisteis, 2 comodines y 4 cartas en blanco. También un folleto con estas reglas.",
+    "fechas": "Fechas iguales o con solo el año",
+    "fechasTexto": "Si dos cartas tienen la misma fecha, vale cualquier orden entre ellas. Una carta con solo el año vale en cualquier punto de ese año, y una con mes y año, en cualquier día de ese mes.",
+    "jugadores": {
+      "titulo": "Cuántas personas",
+      "texto": "Cada persona juega con 7 cartas, así que depende del tamaño del mazo.",
+      "rango": "De 2 a {n} personas",
+      "maximo": "{n} como mucho",
+      "parejas": "Si sois más, jugad por parejas: cada pareja decide junta."
     },
-    "consejo": "Consejo: la primera partida, en modo Guardián. La segunda, todos contra el mazo."
+    "tiposTitulo": "Tipos de juego",
+    "tiposTexto": "El mismo mazo, dos formas de jugar: cada uno con sus cartas o todos juntos.",
+    "preparacion": "Preparación",
+    "turno": "En tu turno",
+    "final": "Cómo acaba",
+    "clasico": {
+      "preparacion": [
+        "Dejad los comodines en el centro de la mesa y las cartas en blanco a un lado, con un boli.",
+        "Barajad las cartas de recuerdos con la fecha hacia abajo y repartid 7 a cada persona. Ponedlas delante con la foto a la vista: nadie mira las fechas.",
+        "Dad la vuelta a la primera carta del mazo y ponedla en el centro con la fecha a la vista: es el principio de la línea del tiempo. El resto es el mazo de robo.",
+        "Si juega quien hizo el mazo, recibe 8 cartas: se sabe mejor las fechas.",
+        "Empieza la persona más joven y se sigue en el sentido de las agujas del reloj."
+      ],
+      "turno": [
+        "Elige una de tus cartas y colócala en la línea del tiempo: antes de todas, después de todas o entre dos.",
+        "Dale la vuelta. Si la fecha encaja, la carta se queda en la línea.",
+        "Si no encaja, va al descarte (buen momento para contar ese recuerdo) y robas una carta del mazo sin mirar la fecha.",
+        "Si se acaba el mazo de robo, barajad el descarte y seguid jugando."
+      ],
+      "final": [
+        "Cuando alguien coloca bien su última carta, se termina la ronda: así todos juegan las mismas veces.",
+        "Si solo una persona se ha quedado sin cartas, gana.",
+        "Si son varias, desempatan: cada una roba una carta y la coloca, y quien falla queda fuera. Si aciertan todas o ninguna, otra ronda, hasta que solo quede una."
+      ]
+    },
+    "historia": {
+      "preparacion": [
+        "Barajad las cartas de recuerdos con la fecha hacia abajo y repartid 7 a cada persona, con la foto a la vista de todos. Nadie mira las fechas.",
+        "Poned la carta inicial en el centro, como en el Clásico, y dejad los comodines para el equipo.",
+        "Tenéis tantas vidas como personas con cartas, más una: 3 si sois 2, 4 si sois 3… Contadlas con monedas o con lo que tengáis a mano.",
+        "Si juega quien hizo el mazo, no recibe cartas: es el guardián de la memoria. Responde las pistas y cuenta cada recuerdo al darle la vuelta.",
+        "Empieza la persona de más edad y se sigue en el sentido de las agujas del reloj."
+      ],
+      "turno": [
+        "Habladlo entre todos, pero decide a quien le toca: coloca una de sus cartas en la línea y le da la vuelta.",
+        "Si la fecha encaja, la carta se queda derecha.",
+        "Si no encaja, perdéis una vida. La carta se pone en su sitio, tumbada: forma parte de vuestra historia, pero no cuenta.",
+        "Al fallar no se roba."
+      ],
+      "final": [
+        "Ganáis si colocáis todas vuestras cartas antes de perder la última vida.",
+        "Ganéis o no, contad las cartas derechas y apuntad el récord para batirlo la próxima vez."
+      ],
+      "completa": "Historia completa",
+      "completaTexto": "Para jugar con el mazo entero, ideal en pareja: al acabar cada turno, robad hasta volver a tener 7 cartas mientras quede mazo. Empezad con una vida por cada 8 cartas del mazo.",
+      "dificultad": "¿Muy fácil? Empezad con una vida menos. ¿Muy difícil? El guardián puede decir «antes» o «después» una vez por carta."
+    },
+    "mecanicas": {
+      "titulo": "Iconos de la esquina",
+      "texto": "Algunas cartas llevan un icono en la esquina. Esto es lo que hace cada uno.",
+      "estrella": {
+        "nombre": "Recuerdo estrella",
+        "clasico": "Si lo colocas bien, juegas otra vez.",
+        "historia": "Si lo colocáis bien, recuperáis una vida (nunca más de las del principio)."
+      },
+      "comodin": {
+        "nombre": "Comodín",
+        "clasico": "Cuando falles y te quedes con más cartas que nadie, coge un comodín si queda alguno (uno por persona). Úsalo antes de colocar: pide una pista a quien hizo el mazo («¿antes o después de esta carta?») o cambia una de tus cartas por la primera del mazo. Después vuelve a la caja. Si quien hizo el mazo no está, solo vale el cambio.",
+        "historia": "Son del equipo y cada uno se usa una vez. Antes de colocar, pedid una pista al guardián («¿antes o después de esta carta?») o cambiad una carta por la primera del mazo. Sin guardián, solo vale el cambio."
+      },
+      "enBlanco": {
+        "nombre": "Carta en blanco",
+        "texto": "Si sale un recuerdo que no está en el mazo, escribidlo en una carta en blanco, con la fecha detrás. Entrará en la próxima partida."
+      }
+    },
+    "consejo": "Para la primera partida, Nuestra historia con quien hizo el mazo de guardián. Para la segunda, cada uno con sus cartas."
   },
   "modos": {
     "clasico": {
       "nombre": "Clásico",
-      "jugadores": "2–6",
-      "resumen": "Cada uno con su mano: coloca tus cartas en la línea del tiempo antes que nadie."
+      "etiqueta": "Competitivo",
+      "jugadores": "De 2 a 6 personas",
+      "resumen": "Cada persona con sus 7 cartas: gana quien las coloca todas en la línea del tiempo antes que nadie."
     },
-    "guardian": {
-      "nombre": "Guardián de la memoria",
-      "jugadores": "3–8",
-      "resumen": "Quien hizo el mazo no compite: presenta, da pistas y cuenta la historia de cada carta."
-    },
-    "cooperativo": {
+    "historia": {
       "nombre": "Nuestra historia",
-      "jugadores": "2+, en equipo",
-      "resumen": "Todos juntos contra el mazo, con 3 vidas. Quien hizo el mazo solo puede decir «antes» o «después»."
-    },
-    "duelo": {
-      "nombre": "Duelo con ventaja",
-      "jugadores": "2",
-      "resumen": "Para jugar a dos: quien hizo el mazo empieza con 2 cartas más y la otra persona puede pedir pistas."
-    },
-    "generaciones": {
-      "nombre": "Generaciones",
-      "jugadores": "4+, por equipos",
-      "resumen": "Abuelos con nietos, padres con hijos: cada uno sabe una época y el equipo decide."
+      "etiqueta": "Cooperativo",
+      "jugadores": "De 2 a 6 personas, en equipo",
+      "resumen": "Todos juntos contra el mazo: colocad vuestras cartas en la línea del tiempo antes de perder todas las vidas."
     }
   }
 }
