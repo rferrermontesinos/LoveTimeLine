@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { crearFecha, diasDelMes, esFutura, precisionDe, type FechaCarta, type Precision } from "@/domain/fechas/fecha";
 import { nombresMeses } from "@/domain/fechas/formato";
@@ -53,16 +53,15 @@ export function SelectorFecha({
   const meses = useMemo(() => nombresMeses(locale), [locale]);
   const [b, setB] = useState<Borrador>(() => aBorrador(valor, "dia"));
 
-  // Si cambia la carta (o la fecha desde fuera), recargamos el borrador.
+  // Si cambia la fecha desde fuera (otra carta, deshacer…), recargamos el borrador durante el render.
   const clave = valor ? `${valor.anio}-${valor.mes ?? ""}-${valor.dia ?? ""}` : "";
-  useEffect(() => {
-    setB((actual) => {
-      const f = desdeBorrador(actual);
-      const igual = f && valor && f.anio === valor.anio && f.mes === valor.mes && f.dia === valor.dia;
-      return igual ? actual : aBorrador(valor, actual.precision);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clave]);
+  const [claveAnterior, setClaveAnterior] = useState(clave);
+  if (clave !== claveAnterior) {
+    setClaveAnterior(clave);
+    const f = desdeBorrador(b);
+    const igual = f && valor && f.anio === valor.anio && f.mes === valor.mes && f.dia === valor.dia;
+    if (!igual) setB(aBorrador(valor, b.precision));
+  }
 
   const actualizar = (cambios: Partial<Borrador>) => {
     const nuevo = { ...b, ...cambios };

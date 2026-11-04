@@ -91,3 +91,31 @@ describe("reductor del mazo", () => {
     expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a", "b", "x"]);
   });
 });
+
+describe("acciones de lote y pedido", () => {
+  it("actualiza varias cartas con un solo paso de deshacer", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a"), carta("b"), carta("c")] });
+    const antes = e.pasado.length;
+    e = reductor(e, { tipo: "actualizarCartas", ids: ["a", "c"], cambios: { pppConfirmado: true } });
+    expect(e.mazo?.cartas.map((c) => c.pppConfirmado)).toEqual([true, false, true]);
+    expect(e.pasado.length).toBe(antes + 1);
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.cartas.every((c) => !c.pppConfirmado)).toBe(true);
+  });
+
+  it("el pedido no se pierde al deshacer y se marca como pagado", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    e = reductor(e, { tipo: "cambiar", campo: "tintaId", valor: "cobalto" });
+    e = reductor(e, {
+      tipo: "registrarPedido",
+      pedido: { id: "p1", modo: "stripe", estado: "pendiente", totalCents: 4900, moneda: "EUR", cartasFisicas: 41, fecha: 0 },
+    });
+    e = reductor(e, { tipo: "pedidoPagado" });
+    expect(e.mazo?.pedido?.estado).toBe("pagado");
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.tintaId).toBe("rosa");
+    expect(e.mazo?.pedido?.id).toBe("p1");
+  });
+});

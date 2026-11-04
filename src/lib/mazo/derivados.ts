@@ -5,7 +5,7 @@ import type { CartaParaValidar } from "@/domain/mazo/validar";
 import { asignarIconos, type MecanicaIcono } from "@/domain/mecanicas/asignar";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { PROPORCION_ANVERSO, proporcionReverso } from "@/lib/carta/dibujar";
-import type { DatosCarta } from "@/lib/carta/tipos";
+import type { Cara, DatosCarta } from "@/lib/carta/tipos";
 import { obtenerPlantilla, obtenerEstilo } from "@/lib/estilos";
 import type { FotoImportada } from "@/lib/importar/procesar";
 import { textoRecuerdos } from "@/lib/carta/textos";
@@ -111,5 +111,15 @@ export function datosCarta(c: Carta, icono: string | null): Omit<DatosCarta, "fo
     descripcionEnAnverso: c.descripcionEnAnverso,
     icono,
     adornos: c.adornos,
+  };
+}
+
+/** Datos de dibujo de la portada y de la caja (sin la imagen), para la vista previa y para imprimir. */
+export function datosPortada(mazo: Mazo, tipo: "portada" | "caja", cara: Cara): Omit<DatosCarta, "foto"> {
+  return {
+    tipo,
+    titulo: mazo.titulo,
+    subtitulo: cara === "anverso" ? subtituloPortada(mazo) : aniosPortada(mazo),
+    dedicatoria: mazo.dedicatoria,
   };
 }

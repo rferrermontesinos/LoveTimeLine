@@ -103,3 +103,30 @@
     transform: translateY(24px) rotate(0deg) scale(0.96);
   }
 }
+
+/* Impresión del folleto: cada cara en su A4 apaisado, a tamaño real. */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  .escala-pantalla {
+    transform: none !important;
+    height: auto !important;
+  }
+  .hoja-folleto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 297mm;
+    height: 210mm;
+    break-after: page;
+    overflow: hidden;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .hoja-folleto .escala-pantalla.relative {
+    width: 252mm;
+    height: 176mm !important;
+  }
+}

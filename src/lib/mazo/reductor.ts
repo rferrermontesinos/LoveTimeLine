@@ -25,6 +25,7 @@ export type Accion =
   | { tipo: "consentir"; ahora: number }
   | { tipo: "anadirCartas"; cartas: Carta[] }
   | { tipo: "actualizarCarta"; id: string; cambios: Partial<Carta>; deshacible?: boolean }
+  | { tipo: "actualizarCartas"; ids: string[]; cambios: Partial<Carta> }
   | { tipo: "puntoDeshacer" }
   | { tipo: "borrarCartas"; ids: string[] }
   | { tipo: "ponerFecha"; ids: string[]; fecha: FechaCarta }
@@ -32,6 +33,7 @@ export type Accion =
   | { tipo: "ordenarPorFecha" }
   | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
   | { tipo: "registrarPedido"; pedido: Pedido }
+  | { tipo: "pedidoPagado" }
   | { tipo: "deshacer" }
   | { tipo: "reiniciar" };
 
@@ -86,6 +88,10 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         { ...m, cartas: m.cartas.map((c) => (c.id === a.id ? { ...c, ...a.cambios } : c)) },
         a.deshacible !== false,
       );
+    case "actualizarCartas": {
+      const ids = new Set(a.ids);
+      return conHistorial(e, { ...m, cartas: m.cartas.map((c) => (ids.has(c.id) ? { ...c, ...a.cambios } : c)) });
+    }
     case "puntoDeshacer":
       return { ...e, pasado: [...e.pasado, m].slice(-MAX_HISTORIAL) };
     case "borrarCartas": {
@@ -119,11 +125,13 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
     }
     case "registrarPedido":
       return conHistorial(e, { ...m, pedido: a.pedido }, false);
+    case "pedidoPagado":
+      return m.pedido ? conHistorial(e, { ...m, pedido: { ...m.pedido, estado: "pagado" } }, false) : e;
     case "deshacer": {
       const anterior = e.pasado[e.pasado.length - 1];
       if (!anterior) return e;
       // El paso actual no se deshace: solo los cambios del mazo.
-      return { ...e, mazo: { ...anterior, paso: m.paso, consentimientoFotos: m.consentimientoFotos }, pasado: e.pasado.slice(0, -1) };
+      return { ...e, mazo: { ...anterior, paso: m.paso, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido }, pasado: e.pasado.slice(0, -1) };
     }
   }
   return e;

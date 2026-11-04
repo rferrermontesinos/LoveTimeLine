@@ -82,7 +82,7 @@ export function PasoCartas() {
     setGirando(true);
     const nuevo = await girarFoto(carta.id, 1);
     if (nuevo) {
-      actualizar({ ancho: nuevo.alto === carta.alto ? nuevo.ancho : nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, adornos: carta.adornos, pppConfirmado: false });
+      actualizar({ ancho: nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, adornos: carta.adornos, pppConfirmado: false });
       tocarVersion(carta.id);
     }
     setGirando(false);

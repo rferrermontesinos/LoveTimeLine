@@ -38,8 +38,11 @@ export type Paso = 1 | 2 | 3 | 4;
 export interface Pedido {
   id: string;
   modo: "simulado" | "stripe";
+  /** «pendiente» hasta que Stripe confirma el pago; los pedidos simulados nacen pagados. */
+  estado: "pendiente" | "pagado";
   totalCents: number;
   moneda: string;
+  cartasFisicas: number;
   fecha: number;
   stripeSessionId?: string;
 }

@@ -36,7 +36,7 @@ export async function Cabecera({ ocultarCta = false }: { ocultarCta?: boolean })
         <Link href="/" className="rounded-md" aria-label={`${BRAND_NAME}, ${t("inicio")}`}>
           <Marca />
         </Link>
-        <nav aria-label="Principal" className="flex items-center gap-1 sm:gap-2">
+        <nav aria-label={t("principal")} className="flex items-center gap-1 sm:gap-2">
           <Link href="/como-jugar" className="tipo-boton hidden min-h-10 items-center rounded-full px-3 text-sm hover:bg-papel-2 md:inline-flex">
             {t("comoJugar")}
           </Link>

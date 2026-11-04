@@ -17,6 +17,8 @@ export function textosCarta(idiomaMazo: string): TextosCarta {
     enBlancoFecha: m.enBlancoFecha,
     reto: m.reto,
     portadaReverso: m.portadaReverso,
+    dedicatoriaPorDefecto: m.dedicatoriaPorDefecto,
+    cajaTexto: m.cajaTexto,
     marca: BRAND_NAME,
   };
 }
@@ -37,3 +39,10 @@ export function textoRecuerdos(n: number, idiomaMazo: string): string {
 }
 
 export const IDIOMAS_MAZO = ["es", "en"] as const;
+
+/** Textos del folleto de instrucciones en el idioma del mazo (independiente del de la interfaz). */
+export function textosFolleto(idiomaMazo: string) {
+  const m = MENSAJES[idiomaMazo] ?? es;
+  return { juego: m.juego, modos: m.modos, instrucciones: m.instrucciones, pregunta: m.carta.pregunta, marca: BRAND_NAME };
+}
+export type TextosFolleto = ReturnType<typeof textosFolleto>;

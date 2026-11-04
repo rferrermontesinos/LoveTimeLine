@@ -52,6 +52,8 @@ export interface TextosCarta {
   enBlancoFecha: string;
   reto: string;
   portadaReverso: string;
+  dedicatoriaPorDefecto: string;
+  cajaTexto: string;
   marca: string;
 }
 

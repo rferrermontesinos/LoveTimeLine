@@ -142,6 +142,18 @@ function tonoManual(lz: Lienzo, x: number, y: number, w: number, h: number) {
   ctx.putImageData(img, x0, y0);
 }
 
+/** Ajusta un recorte a otra proporción recortando por el centro, para no deformar la foto. */
+function cubrir(r: { x: number; y: number; ancho: number; alto: number }, proporcion: number) {
+  const actual = r.ancho / r.alto;
+  if (Math.abs(actual - proporcion) < 0.004) return r;
+  if (actual > proporcion) {
+    const ancho = r.alto * proporcion;
+    return { ...r, x: r.x + (r.ancho - ancho) / 2, ancho };
+  }
+  const alto = r.ancho / proporcion;
+  return { ...r, y: r.y + (r.alto - alto) / 2, alto };
+}
+
 /** Dibuja la foto recortada para cubrir un rectángulo de la carta (en mm). */
 function foto(lz: Lienzo, datos: DatosCarta, cara: Cara, x: number, y: number, w: number, h: number) {
   const f = datos.foto;
@@ -151,7 +163,7 @@ function foto(lz: Lienzo, datos: DatosCarta, cara: Cara, x: number, y: number, w
     ctx.fillRect(lz.X(x), lz.X(y), lz.L(w), lz.L(h));
     return;
   }
-  const r = cara === "anverso" ? f.recorteAnverso : f.recorteReverso;
+  const r = cubrir(cara === "anverso" ? f.recorteAnverso : f.recorteReverso, w / h);
   ctx.save();
   ctx.beginPath();
   ctx.rect(lz.X(x), lz.X(y), lz.L(w), lz.L(h));
@@ -441,7 +453,8 @@ function anversoPortada(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
   rellenarTodo(lz, op.estilo.colores.tinta);
   const banda = 30;
-  foto(lz, d, "anverso", -B, -B, W + 2 * B, H - banda + B);
+  // La foto de la portada es apaisada: parte del recorte del reverso, que es el más parecido.
+  foto(lz, d, "reverso", -B, -B, W + 2 * B, H - banda + B);
   ctx.fillStyle = op.tinta.fondo;
   ctx.fillRect(lz.X(-B), lz.X(H - banda), lz.L(W + 2 * B), lz.L(banda + B));
   regla(lz, H - banda, null, op.tinta.franja, true);
@@ -475,7 +488,7 @@ function reversoPortada(lz: Lienzo, d: DatosCarta) {
   fuente(lz, "texto", s);
   ctx.fillStyle = op.estilo.colores.tinta;
   ctx.textAlign = "left";
-  const lineas = partirLineas(ctx, (d.dedicatoria ?? "").trim(), lz.L(W - 16), 8);
+  const lineas = partirLineas(ctx, (d.dedicatoria ?? "").trim() || op.textos.dedicatoriaPorDefecto, lz.L(W - 16), 8);
   lineas.forEach((l, i) => ctx.fillText(l, lz.X(8), lz.X(lineaBase(10, s, 1.35) + i * 1.35 * s)));
 
   regla(lz, 60, null, op.tinta.franja, true);
@@ -503,7 +516,7 @@ function traseraCaja(lz: Lienzo, d: DatosCarta) {
   ctx.textAlign = "left";
   partirLineas(ctx, op.textos.pregunta, lz.L(W - 8), 2).forEach((l, i) => ctx.fillText(l, lz.X(4), lz.X(26 + i * 8.5)));
   fuente(lz, "texto", 3);
-  partirLineas(ctx, d.texto ?? "", lz.L(W - 8), 9).forEach((l, i) => ctx.fillText(l, lz.X(4), lz.X(44 + i * 4)));
+  partirLineas(ctx, d.texto || op.textos.cajaTexto, lz.L(W - 8), 9).forEach((l, i) => ctx.fillText(l, lz.X(4), lz.X(44 + i * 4)));
   if (d.subtitulo) {
     fuente(lz, "titular", 12);
     ctx.fillText(d.subtitulo, lz.X(4), lz.X(H - 4.8));

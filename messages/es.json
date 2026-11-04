@@ -13,7 +13,9 @@
     "cambiarIdioma": "English",
     "prototipo": "Prototipo · modo prueba",
     "prototipoDetalle": "Esto es un prototipo para los socios: los pagos son de prueba y las fotos no salen de tu dispositivo.",
-    "saltar": "Saltar al contenido"
+    "saltar": "Saltar al contenido",
+    "principal": "Principal",
+    "pie": "Pie de página"
   },
   "comun": {
     "cartas": "{n, plural, one {# carta} other {# cartas}}",
@@ -171,7 +173,8 @@
     },
     "pack": "Pack {pack}",
     "contador": "{actual} de {minimo} fotos",
-    "huecos": "{n, plural, one {Te queda # carta libre en tu última ampliación} other {Te quedan # cartas libres en tu última ampliación}}"
+    "huecos": "{n, plural, one {Te queda # carta libre en tu última ampliación} other {Te quedan # cartas libres en tu última ampliación}}",
+    "abriendo": "Abriendo tu mazo…"
   },
   "fotos": {
     "titulo": "Sube tus fotos",
@@ -301,7 +304,9 @@
     "mecanicasAyuda": "No cambian el precio. Puedes quitarlos.",
     "vistaPrevia": "Así queda",
     "caja": "La caja",
-    "portadaCarta": "La portada"
+    "portadaCarta": "La portada",
+    "sinFotos": "Cuando subas fotos, podrás elegir la portada.",
+    "masCartas": "+{n} cartas"
   },
   "pedido": {
     "titulo": "Revisa y haz el pedido",
@@ -313,7 +318,7 @@
     "resumen": "Resumen",
     "linea": {
       "pack": "Pack {pack} ({n} cartas)",
-      "ampliacion": "{n, plural, one {Ampliación de # cartas} other {Ampliaciones de 10 cartas × #}}",
+      "ampliacion": "{n, plural, one {Ampliación de {bloque} cartas} other {# ampliaciones de {bloque} cartas}}",
       "caja": "{n, plural, one {Caja extra} other {# cajas extra}}",
       "envio": "Envío en España"
     },
@@ -335,7 +340,15 @@
       "fechas-duplicadas": "{n, plural, one {Hay # fecha repetida} other {Hay # fechas repetidas}}: en el juego valdrá cualquier orden entre esas cartas.",
       "fotos-duplicadas": "{n, plural, one {Hay # foto repetida} other {Hay # fotos repetidas}}."
     },
-    "confirmarBaja": "Imprimir igualmente"
+    "confirmarBaja": "Imprimir igualmente",
+    "anadirFotos": "Añadir fotos",
+    "sinFecha": "Sin fecha",
+    "yaPedido": "Ya has hecho el pedido de este mazo. Puedes seguir retocándolo y volver a descargar el archivo.",
+    "verPedido": "Ver el pedido",
+    "bloquea": "Antes de pagar, resuelve lo que está marcado en rojo.",
+    "faltaConfirmar": "Marca la casilla de revisión para pagar.",
+    "pagoCancelado": "Has cancelado el pago. Tu mazo sigue aquí, tal cual.",
+    "total": "Total"
   },
   "confirmado": {
     "titulo": "¡Pedido hecho!",
@@ -347,7 +360,17 @@
     "descargarInstrucciones": "Descargar las instrucciones plegables",
     "volver": "Volver a mi mazo",
     "sinMazo": "No encontramos el mazo en este dispositivo.",
-    "referencia": "Referencia: {id}"
+    "referencia": "Referencia: {id}",
+    "comprobando": "Comprobando el pago…",
+    "pendiente": "El pago aún no está confirmado. Si acabas de pagar, espera unos segundos y recarga la página.",
+    "pdfListo": "Archivo listo. Si no se ha descargado solo, vuelve a pulsar el botón.",
+    "pdfError": "No se ha podido generar el PDF. Inténtalo otra vez.",
+    "resumen": "{cartas} cartas impresas · {total}",
+    "siguientes": "Y ahora",
+    "paso1": "Descarga el archivo de impresión: cada cara lleva sangrado de 3 mm y marcas de corte.",
+    "paso2": "Imprime las instrucciones a doble cara y dóblalas al tamaño de una carta.",
+    "paso3": "Para la primera partida, probad el modo Guardián: quien hizo el mazo presenta y cuenta.",
+    "comoJugar": "Ver cómo se juega"
   },
   "carta": {
     "pregunta": "¿Cuándo fue?",
@@ -359,7 +382,8 @@
     "reto": "Reto",
     "portadaRecuerdos": "{n, plural, one {# recuerdo} other {# recuerdos}}",
     "portadaReverso": "Para jugar, mira las instrucciones de la caja.",
-    "dedicatoriaPorDefecto": "Para seguir sumando recuerdos."
+    "dedicatoriaPorDefecto": "Para seguir sumando recuerdos.",
+    "cajaTexto": "Un juego para ordenar vuestros recuerdos. Coloca cada carta antes o después de las que ya están en la mesa y dale la vuelta: ¿acertaste?"
   },
   "retos": {
     "1": "Imita cómo os conocisteis. El resto adivina el año.",
@@ -419,7 +443,17 @@
     "posterTexto": "Una baraja para ordenar vuestros recuerdos.",
     "dedicatoriaPara": "Para",
     "dedicatoriaDe": "De",
-    "lineas": "Escribid aquí vuestro récord en «Nuestra historia»"
+    "lineas": "Escribid aquí vuestro récord en «Nuestra historia»",
+    "impresion": "Imprime en A4 apaisado, a doble cara volteando por el borde corto y al 100 %. Recorta por las marcas de las esquinas; las marcas de los lados indican los pliegues.",
+    "personalizado": "Con el título y la dedicatoria de tu mazo.",
+    "generico": "Versión sin personalizar: crea un mazo para ver tu título y tu dedicatoria.",
+    "record": "Récord",
+    "fecha": "Fecha",
+    "cartas": "Cartas",
+    "quienes": "Quiénes",
+    "antes": "¿Antes?",
+    "despues": "¿Después?",
+    "panel": "Panel {n}"
   },
   "privacidadPagina": {
     "titulo": "Privacidad",

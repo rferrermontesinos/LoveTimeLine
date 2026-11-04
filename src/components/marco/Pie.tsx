@@ -14,7 +14,7 @@ export async function Pie() {
           <p className="max-w-md text-sm text-papel/80">{t("texto", { marca: BRAND_NAME })}</p>
           <p className="text-sm text-papel/70">{t("fuentes")}</p>
         </div>
-        <nav aria-label="Pie" className="grid grid-cols-2 gap-2 text-sm">
+        <nav aria-label={n("pie")} className="grid grid-cols-2 gap-2 text-sm">
           <Link className="hover:underline" href="/crear">
             {n("crear")}
           </Link>

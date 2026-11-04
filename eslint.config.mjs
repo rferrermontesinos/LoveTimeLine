@@ -15,6 +15,8 @@ const config = [
     ],
   },
   {
+    // La propia regla menciona la marca: este archivo queda fuera.
+    ignores: ["eslint.config.mjs"],
     rules: {
       // El nombre comercial vive solo en config/brand.ts.
       "no-restricted-syntax": [

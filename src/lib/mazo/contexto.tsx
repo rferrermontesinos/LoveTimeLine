@@ -9,6 +9,8 @@ interface ValorContexto extends EstadoMazo {
   puedeDeshacer: boolean;
   almacenOk: boolean;
   reiniciarTodo: () => Promise<void>;
+  /** Guarda ya, sin esperar al guardado automático (antes de salir hacia el pago). */
+  guardarAhora: () => Promise<void>;
 }
 
 const Contexto = createContext<ValorContexto | null>(null);
@@ -18,6 +20,10 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
   const [almacenOk, setAlmacenOk] = useState(true);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cargado = useRef(false);
+  const ultimo = useRef(estado.mazo);
+  useEffect(() => {
+    ultimo.current = estado.mazo;
+  }, [estado.mazo]);
 
   useEffect(() => {
     let vivo = true;
@@ -56,9 +62,14 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     despachar({ tipo: "reiniciar" });
   }, []);
 
+  const guardarAhora = useCallback(async () => {
+    if (temporizador.current) clearTimeout(temporizador.current);
+    if (cargado.current) await guardarMazo(ultimo.current);
+  }, []);
+
   const valor = useMemo<ValorContexto>(
-    () => ({ ...estado, despachar, puedeDeshacer: estado.pasado.length > 0, almacenOk, reiniciarTodo }),
-    [estado, almacenOk, reiniciarTodo],
+    () => ({ ...estado, despachar, puedeDeshacer: estado.pasado.length > 0, almacenOk, reiniciarTodo, guardarAhora }),
+    [estado, almacenOk, reiniciarTodo, guardarAhora],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

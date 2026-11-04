@@ -13,7 +13,9 @@
     "cambiarIdioma": "Español",
     "prototipo": "Prototype · test mode",
     "prototipoDetalle": "This is a prototype for the partners: payments are test payments and photos never leave your device.",
-    "saltar": "Skip to content"
+    "saltar": "Skip to content",
+    "principal": "Main",
+    "pie": "Footer"
   },
   "comun": {
     "cartas": "{n, plural, one {# card} other {# cards}}",
@@ -171,7 +173,8 @@
     },
     "pack": "{pack} pack",
     "contador": "{actual} of {minimo} photos",
-    "huecos": "{n, plural, one {# free card left in your last add-on} other {# free cards left in your last add-on}}"
+    "huecos": "{n, plural, one {# free card left in your last add-on} other {# free cards left in your last add-on}}",
+    "abriendo": "Opening your deck…"
   },
   "fotos": {
     "titulo": "Upload your photos",
@@ -301,7 +304,9 @@
     "mecanicasAyuda": "They don’t change the price. You can remove them.",
     "vistaPrevia": "How it looks",
     "caja": "The box",
-    "portadaCarta": "The cover"
+    "portadaCarta": "The cover",
+    "sinFotos": "Once you add photos, you can choose the cover.",
+    "masCartas": "+{n} cards"
   },
   "pedido": {
     "titulo": "Review and order",
@@ -313,7 +318,7 @@
     "resumen": "Summary",
     "linea": {
       "pack": "{pack} pack ({n} cards)",
-      "ampliacion": "{n, plural, one {Add-on of # cards} other {10-card add-ons × #}}",
+      "ampliacion": "{n, plural, one {{bloque}-card add-on} other {# add-ons of {bloque} cards}}",
       "caja": "{n, plural, one {Extra box} other {# extra boxes}}",
       "envio": "Shipping in Spain"
     },
@@ -335,7 +340,15 @@
       "fechas-duplicadas": "{n, plural, one {There is # repeated date} other {There are # repeated dates}}: in the game, any order between those cards counts.",
       "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}."
     },
-    "confirmarBaja": "Print anyway"
+    "confirmarBaja": "Print anyway",
+    "anadirFotos": "Add photos",
+    "sinFecha": "No date",
+    "yaPedido": "You’ve already ordered this deck. You can keep editing it and download the file again.",
+    "verPedido": "See the order",
+    "bloquea": "Before paying, fix what’s marked in red.",
+    "faltaConfirmar": "Tick the review box to pay.",
+    "pagoCancelado": "You cancelled the payment. Your deck is still here, just as it was.",
+    "total": "Total"
   },
   "confirmado": {
     "titulo": "Order placed!",
@@ -347,7 +360,17 @@
     "descargarInstrucciones": "Download the folding instructions",
     "volver": "Back to my deck",
     "sinMazo": "We can’t find the deck on this device.",
-    "referencia": "Reference: {id}"
+    "referencia": "Reference: {id}",
+    "comprobando": "Checking the payment…",
+    "pendiente": "The payment isn’t confirmed yet. If you just paid, wait a few seconds and reload the page.",
+    "pdfListo": "File ready. If it didn’t download on its own, press the button again.",
+    "pdfError": "We couldn’t generate the PDF. Please try again.",
+    "resumen": "{cartas} printed cards · {total}",
+    "siguientes": "What’s next",
+    "paso1": "Download the print file: every side has 3 mm of bleed and crop marks.",
+    "paso2": "Print the instructions double-sided and fold them to card size.",
+    "paso3": "For your first game, try Guardian mode: whoever made the deck presents and tells the stories.",
+    "comoJugar": "See how to play"
   },
   "carta": {
     "pregunta": "When was it?",
@@ -359,7 +382,8 @@
     "reto": "Challenge",
     "portadaRecuerdos": "{n, plural, one {# memory} other {# memories}}",
     "portadaReverso": "To play, see the instructions in the box.",
-    "dedicatoriaPorDefecto": "To keep adding memories."
+    "dedicatoriaPorDefecto": "To keep adding memories.",
+    "cajaTexto": "A game for putting your memories in order. Place each card before or after the ones on the table, then flip it over: did you get it right?"
   },
   "retos": {
     "1": "Act out how you met. Everyone else guesses the year.",
@@ -419,7 +443,17 @@
     "posterTexto": "A deck to put your memories in order.",
     "dedicatoriaPara": "To",
     "dedicatoriaDe": "From",
-    "lineas": "Write your “Our story” record here"
+    "lineas": "Write your “Our story” record here",
+    "impresion": "Print on landscape A4, double-sided flipping on the short edge, at 100%. Cut along the corner marks; the side marks show the folds.",
+    "personalizado": "With your deck’s title and dedication.",
+    "generico": "Generic version: make a deck to see your title and dedication.",
+    "record": "Record",
+    "fecha": "Date",
+    "cartas": "Cards",
+    "quienes": "Who",
+    "antes": "Earlier?",
+    "despues": "Later?",
+    "panel": "Panel {n}"
   },
   "privacidadPagina": {
     "titulo": "Privacy",

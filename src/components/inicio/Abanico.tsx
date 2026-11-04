@@ -6,7 +6,7 @@ import { CartaDeMuestra, MUESTRAS } from "@/components/carta/Muestra";
 /** Tres cartas en abanico sobre la mesa, repartidas con una animación corta. */
 export function Abanico({ idioma }: { idioma: string }) {
   const t = useTranslations("inicio");
-  const m = (clave: keyof typeof MUESTRAS) => ({ ...MUESTRAS[clave]!, descripcion: t(`muestras.${clave}`) });
+  const m = (clave: "menorca" | "excursion") => ({ ...MUESTRAS[clave]!, descripcion: t(`muestras.${clave}`) });
   const cartas = [
     { muestra: m("menorca"), cara: "reverso" as const, giro: -11, x: "-58%", y: "6%", retraso: 0 },
     { muestra: m("excursion"), cara: "anverso" as const, giro: 1, x: "0%", y: "-4%", retraso: 120 },

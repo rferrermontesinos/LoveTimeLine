@@ -8,7 +8,13 @@ import { formatearImporte } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { nuevoId } from "@/lib/importar/procesar";
 import { useMazo } from "@/lib/mazo/contexto";
+import type { Accion } from "@/lib/mazo/reductor";
 import { useCrear } from "./contexto";
+
+/** Acción para crear un mazo nuevo (fuera del componente: usa la hora y un id aleatorio). */
+function accionCrear(packId: string, estiloId: string, idiomaMazo: string, mecanicas: string[], titulo: string): Accion {
+  return { tipo: "crear", id: nuevoId(), ahora: Date.now(), packId, estiloId, idiomaMazo, mecanicas, titulo };
+}
 
 export function ElegirPack({ packInicial }: { packInicial?: string | null }) {
   const t = useTranslations();
@@ -19,16 +25,9 @@ export function ElegirPack({ packInicial }: { packInicial?: string | null }) {
 
   const empezar = (packId: string) => {
     const pack = packs.find((p) => p.id === packId)!;
-    despachar({
-      tipo: "crear",
-      id: nuevoId(),
-      ahora: Date.now(),
-      packId,
-      estiloId: pack.estiloPorDefecto,
-      idiomaMazo: locale,
-      mecanicas: catalogo.mecanicas.filter((m) => m.activo && m.porDefecto).map((m) => m.id),
-      titulo: t("estilo.tituloPorDefecto"),
-    });
+    despachar(
+      accionCrear(pack.id, pack.estiloPorDefecto, locale, catalogo.mecanicas.filter((m) => m.activo && m.porDefecto).map((m) => m.id), t("estilo.tituloPorDefecto")),
+    );
   };
 
   return (

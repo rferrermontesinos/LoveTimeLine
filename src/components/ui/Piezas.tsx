@@ -45,6 +45,7 @@ export function Interruptor({
   descripcion,
   id,
   deshabilitado,
+  alFinal = false,
 }: {
   activo: boolean;
   alCambiar: (v: boolean) => void;
@@ -52,29 +53,46 @@ export function Interruptor({
   descripcion?: ReactNode;
   id: string;
   deshabilitado?: boolean;
+  /** Pone el interruptor a la derecha del texto, como en los ajustes del móvil. */
+  alFinal?: boolean;
 }) {
+  const boton = (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={activo}
+      aria-describedby={descripcion ? `${id}-desc` : undefined}
+      disabled={deshabilitado}
+      onClick={() => alCambiar(!activo)}
+      className={`relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full border-2 border-tinta transition-colors disabled:opacity-45 ${activo ? "bg-tinta" : "bg-blanco"}`}
+    >
+      <span className={`inline-block h-5 w-5 rounded-full transition-transform duration-150 ${activo ? "translate-x-[22px] bg-papel" : "translate-x-[2px] bg-tinta"}`} />
+    </button>
+  );
+  const texto = (
+    <label htmlFor={id} className={`cursor-pointer ${alFinal ? "min-w-0 flex-1" : ""}`}>
+      <span className="block font-semibold leading-snug">{etiqueta}</span>
+      {descripcion && (
+        <span id={`${id}-desc`} className="mt-0.5 block text-sm text-tinta-2">
+          {descripcion}
+        </span>
+      )}
+    </label>
+  );
   return (
-    <div className="flex items-start gap-3">
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={activo}
-        aria-describedby={descripcion ? `${id}-desc` : undefined}
-        disabled={deshabilitado}
-        onClick={() => alCambiar(!activo)}
-        className={`relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full border-2 border-tinta transition-colors disabled:opacity-45 ${activo ? "bg-tinta" : "bg-blanco"}`}
-      >
-        <span className={`inline-block h-5 w-5 rounded-full transition-transform duration-150 ${activo ? "translate-x-[22px] bg-papel" : "translate-x-[2px] bg-tinta"}`} />
-      </button>
-      <label htmlFor={id} className="cursor-pointer">
-        <span className="block font-semibold leading-snug">{etiqueta}</span>
-        {descripcion && (
-          <span id={`${id}-desc`} className="mt-0.5 block text-sm text-tinta-2">
-            {descripcion}
-          </span>
-        )}
-      </label>
+    <div className={`flex items-start gap-3 ${alFinal ? "justify-between" : ""}`}>
+      {alFinal ? (
+        <>
+          {texto}
+          {boton}
+        </>
+      ) : (
+        <>
+          {boton}
+          {texto}
+        </>
+      )}
     </div>
   );
 }
