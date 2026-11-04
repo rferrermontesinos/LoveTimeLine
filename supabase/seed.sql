@@ -1,0 +1,37 @@
+-- Generado con `pnpm db:seed` a partir de supabase/catalogo.json. No lo edites a mano.
+-- Importes en céntimos. Los textos van por idioma en jsonb: {"es": "…", "en": "…"}.
+begin;
+
+insert into public.ajustes_catalogo (id, version, moneda, max_cartas, oferta_max_cartas, capacidad_caja, precio_caja_extra_cents) values
+  (1, 2, 'EUR', 300, 10, 120, 500)
+on conflict (id) do update set version = excluded.version, moneda = excluded.moneda, max_cartas = excluded.max_cartas, oferta_max_cartas = excluded.oferta_max_cartas, capacidad_caja = excluded.capacidad_caja, precio_caja_extra_cents = excluded.precio_caja_extra_cents;
+
+insert into public.paises (codigo, activo, moneda, envio_incluido, dias_min, dias_max) values
+  ('ES', true, 'EUR', true, 5, 8)
+on conflict (codigo) do update set activo = excluded.activo, moneda = excluded.moneda, envio_incluido = excluded.envio_incluido, dias_min = excluded.dias_min, dias_max = excluded.dias_max;
+
+insert into public.packs (id, orden, activo, cartas, precio_cents, precio_carta_extra_cents, moneda, nombre, claim, descripcion) values
+  ('pequeno', 1, true, 40, 4900, 80, 'EUR', '{"es":"Pequeño","en":"Small"}'::jsonb, '{"es":"Ideal para parejas","en":"Perfect for couples"}'::jsonb, '{"es":"40 recuerdos de vuestra historia, para jugar a dos o con amigos.","en":"40 memories of your story, to play as a couple or with friends."}'::jsonb),
+  ('mediano', 2, true, 60, 5900, 70, 'EUR', '{"es":"Mediano","en":"Medium"}'::jsonb, '{"es":"Ideal para familias o amigos","en":"Perfect for families or friends"}'::jsonb, '{"es":"60 recuerdos de la familia o de la pandilla, para la sobremesa.","en":"60 memories of the family or the gang, for after dinner."}'::jsonb),
+  ('grande', 3, true, 100, 7900, 60, 'EUR', '{"es":"Grande","en":"Large"}'::jsonb, '{"es":"Ideal para bodas, aniversarios y grandes celebraciones","en":"Perfect for weddings, anniversaries and big celebrations"}'::jsonb, '{"es":"100 recuerdos para las fechas importantes: bodas, bodas de plata, aniversarios redondos.","en":"100 memories for the big dates: weddings, silver anniversaries, milestone birthdays."}'::jsonb),
+  ('pareja', 11, false, 40, 4900, 60, 'EUR', '{"es":"Pareja","en":"Couple"}'::jsonb, '{"es":"","en":""}'::jsonb, '{"es":"40 recuerdos de vuestra historia para jugar a dos o con amigos.","en":"40 memories of your story to play as a couple or with friends."}'::jsonb),
+  ('familia', 12, false, 60, 5900, 60, 'EUR', '{"es":"Familia","en":"Family"}'::jsonb, '{"es":"","en":""}'::jsonb, '{"es":"60 recuerdos de varias generaciones para jugar en la sobremesa.","en":"60 memories across generations to play after a family meal."}'::jsonb)
+on conflict (id) do update set orden = excluded.orden, activo = excluded.activo, cartas = excluded.cartas, precio_cents = excluded.precio_cents, precio_carta_extra_cents = excluded.precio_carta_extra_cents, moneda = excluded.moneda, nombre = excluded.nombre, claim = excluded.claim, descripcion = excluded.descripcion;
+
+insert into public.extras (id, orden, activo, precio_tipo, precio_cents, porcentaje, cartas_fisicas, efecto, nombre, descripcion) values
+  ('copia-extra', 1, true, 'porcentajeMazo', null, 60, null, null, '{"es":"Segunda copia del mazo","en":"Second copy of the deck"}'::jsonb, '{"es":"El mismo mazo otra vez, para regalar a los abuelos o a los amigos que salen en las fotos.","en":"The same deck again, for the grandparents or the friends in the photos."}'::jsonb),
+  ('envoltorio-regalo', 2, true, 'fijo', 400, null, null, null, '{"es":"Envoltorio de regalo","en":"Gift wrapping"}'::jsonb, '{"es":"Llega envuelto y con tu dedicatoria impresa, listo para dar.","en":"Arrives wrapped with your printed dedication, ready to give."}'::jsonb),
+  ('envio-urgente', 3, true, 'fijo', 600, null, null, null, '{"es":"Envío urgente (24–48 h tras imprimir)","en":"Express shipping (24–48 h after printing)"}'::jsonb, '{"es":"Para cuando el aniversario es la semana que viene.","en":"For when the anniversary is next week."}'::jsonb),
+  ('caja-personalizada', 4, true, 'fijo', 700, null, null, 'caja-personalizada', '{"es":"Caja personalizada","en":"Personalised box"}'::jsonb, '{"es":"La caja con una de vuestras fotos y el título del mazo, en vez de la caja de siempre.","en":"The box with one of your photos and the deck''s title, instead of the standard box."}'::jsonb),
+  ('pack-retos', 10, false, 'fijo', 600, null, 12, null, '{"es":"Pack Retos: 12 cartas","en":"Challenge pack: 12 cards"}'::jsonb, '{"es":"Cartas de reto ya diseñadas («imita cómo os conocisteis», «tararea la canción de ese verano») que se mezclan con las vuestras.","en":"Ready-made challenge cards (“act out how you met”, “hum that summer''s song”) shuffled in with yours."}'::jsonb),
+  ('acabado-lino', 11, false, 'fijo', 900, null, null, null, '{"es":"Acabado lino","en":"Linen finish"}'::jsonb, '{"es":"La textura de las barajas de casino: se barajan mejor y duran más.","en":"The texture of casino decks: they shuffle better and last longer."}'::jsonb)
+on conflict (id) do update set orden = excluded.orden, activo = excluded.activo, precio_tipo = excluded.precio_tipo, precio_cents = excluded.precio_cents, porcentaje = excluded.porcentaje, cartas_fisicas = excluded.cartas_fisicas, efecto = excluded.efecto, nombre = excluded.nombre, descripcion = excluded.descripcion;
+
+insert into public.mecanicas (id, orden, activo, tipo, icono, asignacion, max_cartas, cada_n, cartas_fisicas, por_defecto, precio_cents, nombre, descripcion) values
+  ('estrella', 1, true, 'icono', 'estrella', 'manual', 5, null, null, true, 0, '{"es":"Recuerdos estrella","en":"Star memories"}'::jsonb, '{"es":"Marca hasta 5 recuerdos favoritos: llevan una estrella en la esquina. En el modo clásico, quien acierta una juega otra vez; jugando juntos, recupera una vida.","en":"Mark up to 5 favourite memories: they carry a star in the corner. In the classic game, whoever places one correctly plays again; playing together, it wins back a life."}'::jsonb),
+  ('comodin', 2, true, 'cartas', 'comodin', null, null, null, 2, true, 0, '{"es":"2 comodines","en":"2 jokers"}'::jsonb, '{"es":"Sirven para pedir una pista a quien hizo el mazo o para cambiar una carta por otra.","en":"Use them to ask the deck maker for a clue or to swap a card for another."}'::jsonb),
+  ('en-blanco', 3, true, 'cartas', 'en-blanco', null, null, null, 4, true, 0, '{"es":"4 cartas en blanco","en":"4 blank cards"}'::jsonb, '{"es":"Con el mismo diseño que las demás, para escribir a mano los recuerdos nuevos que salgan jugando. El mazo crece con vosotros.","en":"Same design as the rest, to handwrite the new memories that come up while playing. The deck grows with you."}'::jsonb),
+  ('cuentalo', 10, false, 'icono', 'bocadillo', 'automatica', null, 4, null, true, 0, '{"es":"Cuéntalo","en":"Tell it"}'::jsonb, '{"es":"1 de cada 4 cartas lleva un bocadillo: quien la juega cuenta el recuerdo y, si la historia convence al grupo, se queda la carta aunque falle la fecha.","en":"1 in 4 cards carries a speech bubble: whoever plays it tells the story and, if the group is convinced, keeps the card even with the wrong date."}'::jsonb)
+on conflict (id) do update set orden = excluded.orden, activo = excluded.activo, tipo = excluded.tipo, icono = excluded.icono, asignacion = excluded.asignacion, max_cartas = excluded.max_cartas, cada_n = excluded.cada_n, cartas_fisicas = excluded.cartas_fisicas, por_defecto = excluded.por_defecto, precio_cents = excluded.precio_cents, nombre = excluded.nombre, descripcion = excluded.descripcion;
+
+commit;

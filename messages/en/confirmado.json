@@ -1,0 +1,25 @@
+{
+  "confirmado": {
+    "titulo": "Order placed!",
+    "tituloSimulado": "Test order placed",
+    "texto": "In the real version you’d get an email and the deck in {min}–{max} working days.",
+    "archivo": "Print file",
+    "textoPrototipo": "For the print tests: download the file and send it to print as it is.",
+    "descargarPdf": "Download the print file (PDF)",
+    "descargaPendiente": "You’ll be able to download it as soon as the payment is confirmed.",
+    "generando": "Generating side {hecha} of {total}…",
+    "volver": "Back to my deck",
+    "sinMazo": "We can’t find the deck on this device.",
+    "referencia": "Reference: {id}",
+    "comprobando": "Checking the payment…",
+    "pendiente": "The payment isn’t confirmed yet. If you just paid, wait a few seconds and reload the page.",
+    "pdfListo": "File ready. If it didn’t download on its own, press the button again.",
+    "pdfError": "We couldn’t generate the PDF. Please try again.",
+    "resumen": "{cartas} printed cards · {total}",
+    "siguientes": "What’s next",
+    "paso1": "Download the print file: every side has {sangrado} mm of bleed{marcas, select, si { and crop marks} other {}}.",
+    "paso1SinDescarga": "We check every card and send your deck to print.",
+    "aJugar": "Once the deck is in your hands, shuffle and play: the game modes and rules are in “How to play”.",
+    "comoJugar": "See how to play"
+  }
+}

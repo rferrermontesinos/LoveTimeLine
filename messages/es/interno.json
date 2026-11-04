@@ -1,0 +1,59 @@
+{
+  "interno": {
+    "folleto": {
+      "interna": "Herramienta interna: no aparece en la web pública.",
+      "titulo": "Folleto plegable",
+      "texto": "Una hoja de 252 × 176 mm que se pliega en 8 paneles del tamaño de una carta y va dentro de la caja, con el packaging.",
+      "personalizado": "Con el mazo guardado en este navegador: título, dedicatoria, personas y vidas según sus cartas, y solo los iconos que lleva.",
+      "generico": "Versión genérica: la que va en la caja de siempre.",
+      "sinMazo": "No hay ningún mazo guardado en este navegador: se muestra la versión genérica.",
+      "imprimir": "Imprimir esta página",
+      "verGenerico": "Ver la versión genérica",
+      "verPersonalizado": "Ver la versión con el mazo de este navegador",
+      "pdf": "Para el PDF de la imprenta, con el portal en marcha y HERRAMIENTAS_INTERNAS=1: pnpm instrucciones:pdf. Se guarda en salidas/folleto/.",
+      "plegado": "Cómo se pliega",
+      "plegadoTexto": "Pliega por la mitad a lo largo (la cara A queda fuera) y después en acordeón por las tres líneas verticales. El panel de portada queda delante.",
+      "impresion": "Imprime en A4 apaisado, a doble cara volteando por el borde corto y al 100 %. Recorta por las marcas de las esquinas; las marcas de los lados indican los pliegues.",
+      "caraA": "Cara A (exterior)",
+      "caraB": "Cara B (interior)"
+    },
+    "muestrario": {
+      "interna": "Herramienta interna",
+      "titulo": "Muestrario de cartas",
+      "texto": "Todas las caras de la plantilla con datos de ejemplo, en cada paleta, para revisarlas antes de imprimir. Es una herramienta interna: no aparece en la web pública.",
+      "pendiente": "Pendiente de la validación de diseño.",
+      "estilo": "Estilo",
+      "paleta": "Paleta",
+      "todas": "Todas",
+      "idioma": "Idioma del mazo",
+      "guias": "Zona segura",
+      "anverso": "Delante",
+      "reverso": "Detrás",
+      "secciones": {
+        "foto": "Recuerdo con foto",
+        "estrella": "Recuerdo estrella",
+        "texto": "Recuerdo sin foto",
+        "textoLargo": "Recuerdo sin foto, largo",
+        "portada": "Portada",
+        "comodin": "Comodín",
+        "enBlanco": "Carta en blanco",
+        "cajaGenerica": "Caja de siempre",
+        "cajaPersonalizada": "Caja personalizada",
+        "iconos": "Iconos de la esquina"
+      },
+      "notas": {
+        "textoLargo": "90 caracteres, el máximo, y recuerdo estrella.",
+        "cajaPersonalizada": "Extra de pago: se imprime con el pedido, con la foto elegida.",
+        "cajaGenerica": "Packaging de stock: no va en el archivo de impresión. Siempre con la paleta por defecto."
+      },
+      "ejemplos": {
+        "titulo": "Ana y Leo",
+        "dedicatoria": "Para Ana y Leo, que siguen sumando recuerdos. Con cariño, la familia.",
+        "foto": "Nuestro primer viaje juntos, Menorca",
+        "estrella": "Cena de aniversario",
+        "texto": "El día que nos conocimos",
+        "textoLargo": "La noche que se fue la luz en todo el barrio y cenamos a la luz de las velas en la terraza"
+      }
+    }
+  }
+}

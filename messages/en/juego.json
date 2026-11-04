@@ -1,0 +1,128 @@
+{
+  "juego": {
+    "titulo": "How to play",
+    "intro": "A game for putting your memories in order. Each card has the photo on the front and the date on the back: place it in the memory line where you think it goes, flip it and see if you got it right.",
+    "mesaAlt": "A game in progress seen from above: in the middle of the table, the memory line with the cards in date order and a gap where someone is about to place theirs; around it, two players’ cards photo side up, the draw pile, a joker and a blank card.",
+    "mesa": {
+      "titulo": "What a game looks like",
+      "texto": "The photo on each card is the clue; the date on the back, the answer.",
+      "textoCarta": "The day we met",
+      "leyenda": {
+        "linea": "The memory line: cards already placed, date side up and in order. Some are memories with no photo, just text.",
+        "candidata": "On your turn, pick one of your cards and put it where you think it goes. Then flip it: does the date fit?",
+        "manos": "Each player’s cards, photo side up and date hidden.",
+        "robo": "The draw pile, for when you miss in Classic.",
+        "comodin": "The jokers, to ask for a hint or swap a card.",
+        "enBlanco": "A blank card, to write down the memories that come up while playing."
+      }
+    },
+    "componentes": "What’s in the box",
+    "contenidoCaja": {
+      "conEspeciales": "Your memory cards, the cover card and the special cards you choose: {especiales}. Plus a leaflet with these rules.",
+      "sinEspeciales": "Your memory cards and the cover card. Plus a leaflet with these rules.",
+      "comodines": "{n, plural, one {# joker} other {# jokers}}",
+      "enBlanco": "{n, plural, one {# blank card} other {# blank cards}}"
+    },
+    "fechas": "Same dates, or just the year",
+    "fechasTexto": "If two cards have the same date, either order is right. A card with just the year fits anywhere in that year, and one with month and year, on any day of that month.",
+    "jugadores": {
+      "titulo": "How many players",
+      "texto": "Everyone plays with 7 cards, so it depends on the size of the deck.",
+      "rango": "2 to {n} players",
+      "maximo": "{n} at most",
+      "parejas": "More of you? Play in pairs: each pair decides together."
+    },
+    "tiposTitulo": "Ways to play",
+    "tiposTexto": "One deck, two ways to play: everyone with their own cards, or all together.",
+    "reglas": {
+      "etiqueta": "Ways to play",
+      "cartasPorPersona": "{n} cards per player",
+      "vidasTitulo": "Lives by number of players with cards",
+      "vidasFila": "{personas, plural, one {# player} other {# players}}: {vidas, plural, one {# life} other {# lives}}",
+      "completaVidas": "Lives with the whole deck",
+      "packVidas": "{pack}: {vidas, plural, one {# life} other {# lives}}"
+    },
+    "preparacion": "Setup",
+    "turno": "On your turn",
+    "final": "How it ends",
+    "clasico": {
+      "preparacion": [
+        "If your deck has jokers, put them in the middle of the table; blank cards go to one side, with a pen.",
+        "Shuffle the memory cards date side down and deal 7 to each player. Lay them out in front of you, photo side up: nobody looks at the dates.",
+        "Flip the top card of the deck and put it in the middle, date side up: it starts the memory line. The rest is the draw pile.",
+        "If the person who made the deck plays, they get 8 cards: they know the dates better.",
+        "The youngest player starts, and play goes clockwise."
+      ],
+      "turno": [
+        "Pick one of your cards and place it in the memory line: before all the others, after all of them or between two.",
+        "Flip it. If the date fits, the card stays in the line.",
+        "If it doesn’t, it goes to the discard pile (a good moment to tell that story) and you draw a card from the deck without looking at the date.",
+        "If the draw pile runs out, shuffle the discard pile and keep playing."
+      ],
+      "final": [
+        "When someone places their last card correctly, finish the round so everyone gets the same number of turns.",
+        "If only one player has run out of cards, they win.",
+        "If several have, they play a tiebreak: each draws a card and places it, and anyone who misses is out. If everyone hits or everyone misses, play another round until only one is left."
+      ]
+    },
+    "historia": {
+      "preparacion": [
+        "Shuffle the memory cards date side down and deal 7 to each player, photo side up for everyone to see. Nobody looks at the dates.",
+        "Put the starting card in the middle, as in Classic. If you have jokers, they belong to the team.",
+        "You get as many lives as players with cards, plus one: 3 for 2 players, 4 for 3… Keep count with coins or whatever you have to hand.",
+        "If the person who made the deck plays, they don’t get cards: they’re the memory keeper. They answer hints and tell each story when the card is flipped.",
+        "The oldest player starts, and play goes clockwise."
+      ],
+      "turno": [
+        "Talk it over together, but whoever’s turn it is decides: they place one of their cards in the line and flip it.",
+        "If the date fits, the card stays upright.",
+        "If it doesn’t, you lose a life. The card goes in its right place, turned sideways: it’s part of your story, but it doesn’t count.",
+        "You don’t draw a card when you miss."
+      ],
+      "final": [
+        "You win if you place all your cards before losing your last life.",
+        "Win or lose, count the upright cards and write down your record to beat next time."
+      ],
+      "completa": "The whole story",
+      "completaTexto": "To play with the whole deck, great for two: at the end of each turn, draw back up to 7 cards while the deck lasts. Start with one life for every 8 cards in the deck.",
+      "dificultad": "Too easy? Start with one life fewer. Too hard? The memory keeper can say “before” or “after” once per card."
+    },
+    "mecanicas": {
+      "titulo": "Corner icons",
+      "texto": "Some cards have an icon in the corner. Here’s what each one does.",
+      "estrella": {
+        "nombre": "Star memory",
+        "clasico": "Place it correctly and you play again.",
+        "historia": "Place it correctly and you win back a life (never more than you started with)."
+      },
+      "comodin": {
+        "nombre": "Joker",
+        "clasico": "When you miss and end up with more cards than anyone else, take a joker if there’s one left (one each). Use it before placing a card: ask the person who made the deck for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. Then it goes back in the box. If the deck maker isn’t there, only the swap works.",
+        "historia": "They belong to the team and each one can be used once. Before placing a card, ask the memory keeper for a hint (“before or after this card?”) or swap a card for the top card of the deck. With no keeper, only the swap works."
+      },
+      "enBlanco": {
+        "nombre": "Blank card",
+        "texto": "If a memory comes up that isn’t in the deck, write it on a blank card with the date on the back. It joins the next game."
+      }
+    },
+    "consejo": "For your first game, play Our story with the deck maker as memory keeper. For the second, everyone with their own cards.",
+    "cta": {
+      "titulo": "Shall we play with your memories?",
+      "texto": "Upload your photos, check the dates and choose the colours. We’ll take care of the rest."
+    }
+  },
+  "modos": {
+    "clasico": {
+      "nombre": "Classic",
+      "etiqueta": "Competitive",
+      "jugadores": "2 to 6 players, depending on the deck",
+      "resumen": "Everyone with their own 7 cards: the first to place them all in the memory line wins."
+    },
+    "historia": {
+      "nombre": "Our story",
+      "etiqueta": "Cooperative",
+      "jugadores": "As a team, 2 to 6 depending on the deck",
+      "resumen": "All together against the deck: place your cards in the memory line before you run out of lives."
+    }
+  }
+}

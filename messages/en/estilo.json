@@ -1,0 +1,40 @@
+{
+  "estilo": {
+    "titulo": "Choose the style",
+    "texto": "Colours, cover, box and game extras. The preview updates as you go.",
+    "estilo": "Style",
+    "tinta": "Colours",
+    "tintaAyuda": "The main colour goes on the corners and the date side; the second one on the details of cards without a photo.",
+    "tituloMazo": "Deck title",
+    "tituloMazoAyuda": "Shown on the cover (and on the box, if you personalise it). For example: Ana and Leo.",
+    "tituloPorDefecto": "Our memories",
+    "dedicatoria": "Dedication (optional)",
+    "dedicatoriaAyuda": "Printed on the back of the cover. Up to {max} characters.",
+    "portada": "Cover photo",
+    "portadaAyuda": "Tap a photo to put it on the cover.",
+    "tono": "Photo tone",
+    "tonos": {
+      "original": "Original",
+      "bn": "Black and white",
+      "calido": "Warm"
+    },
+    "idiomaMazo": "Deck language",
+    "idiomaMazoAyuda": "Months, card texts and instructions.",
+    "mecanicas": "Free game extras",
+    "mecanicasAyuda": "They don’t change the price. You can remove them.",
+    "vistaPrevia": "How it looks",
+    "caja": "The box",
+    "cajaAyuda": "The standard box is included. If you like, we’ll personalise it with one of your photos and the deck’s title.",
+    "cajaFoto": "Box photo",
+    "cajaFotoAyuda": "Unless you pick another, it’s the cover photo.",
+    "cajaPortada": "The cover photo",
+    "cajaPropia": "Your photo",
+    "cajaSubir": "Upload another photo",
+    "cajaSubiendo": "Preparing the photo…",
+    "cajaError": "We couldn’t open that photo. Try another one in JPG, PNG, HEIC or WEBP.",
+    "cajaBaja": "This photo is a little small for the box ({ppp} ppi): it may look blurry when printed. A larger one would be better.",
+    "portadaCarta": "The cover",
+    "sinFotos": "Once you add photos, you can choose the cover.",
+    "masCartas": "+{n} cards"
+  }
+}

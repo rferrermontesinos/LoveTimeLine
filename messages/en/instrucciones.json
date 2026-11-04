@@ -1,0 +1,26 @@
+{
+  "instrucciones": {
+    "portadaTitulo": "How to play",
+    "portadaSub": "Unfold to start",
+    "posterTitulo": "When was it?",
+    "posterTexto": "A deck to put your memories in order.",
+    "dedicatoriaPara": "To",
+    "dedicatoriaDe": "From",
+    "mazoDe": "This deck belongs to",
+    "mazoAnios": "Years",
+    "lineas": "Write your “Our story” record here",
+    "fecha": "Date",
+    "cartas": "Cards",
+    "quienes": "Who",
+    "vuestroMazo": "With your {n}-card deck",
+    "personas": "{n} players",
+    "vidasTitulo": "Lives with your deck",
+    "vidasPersonas": "Players with cards → lives:",
+    "vidasCompleta": "In the whole story: {n} lives.",
+    "comodin": {
+      "uso": "Before placing a card, ask the deck maker for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. If they aren’t there, only the swap works.",
+      "clasico": "When you miss and end up with more cards than anyone else, take one if there’s one left (one each). Once used, it goes back in the box.",
+      "historia": "They belong to the team and each one can be used once. The memory keeper gives the hint."
+    }
+  }
+}

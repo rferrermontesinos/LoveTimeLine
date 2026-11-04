@@ -1,0 +1,56 @@
+{
+  "pedido": {
+    "titulo": "Revisa y haz el pedido",
+    "lineaTemporal": "Vuestra línea del tiempo",
+    "lineaTemporalAyuda": "Así quedarían las cartas ordenadas. Toca una para editarla.",
+    "comprobaciones": "Comprobaciones",
+    "todoBien": "Todo listo para imprimir.",
+    "extras": "Extras",
+    "resumen": "Resumen",
+    "pack": {
+      "titulo": "Tu pack",
+      "ayuda": "Puedes cambiarlo aquí: el total se recalcula al momento."
+    },
+    "linea": {
+      "pack": "Pack {pack} ({n} cartas)",
+      "cartasExtra": "{n, plural, one {# carta extra} other {# cartas extra}} ({precio} cada una)",
+      "caja": "{n, plural, one {Caja extra} other {# cajas extra}}",
+      "envio": "Envío en España"
+    },
+    "cartasImpresas": "Se imprimen {n} cartas: recuerdos, portada y extras de juego.",
+    "confirmacion": "He revisado fotos, fechas y textos: se imprimirá tal cual.",
+    "pagarPrueba": "Pagar {total} (prueba)",
+    "pagando": "Preparando el pago…",
+    "errorPago": "No se ha podido preparar el pago. Inténtalo de nuevo.",
+    "sinConexionPagar": "Para pagar hace falta conexión. Tu mazo sigue guardado aquí.",
+    "modoPrueba": "Modo prueba: no se cobra nada. Con Stripe en modo test puedes usar la tarjeta 4242 4242 4242 4242.",
+    "irACarta": "Ver",
+    "avisos": {
+      "faltan-cartas": "{n, plural, one {Falta # carta} other {Faltan # cartas}} para el mínimo del pack ({minimo}).",
+      "excede-maximo": "El mazo pasa del máximo de {max} cartas.",
+      "sin-fecha": "{n, plural, one {# carta no tiene fecha} other {# cartas no tienen fecha}}.",
+      "fecha-futura": "{n, plural, one {# carta tiene} other {# cartas tienen}} una fecha posterior a hoy.",
+      "texto-pendiente": "{n, plural, one {# carta sin foto tiene el texto por completar} other {# cartas sin foto tienen el texto por completar}}.",
+      "descripcion-larga": "{n, plural, one {# frase pasa} other {# frases pasan}} de 90 caracteres.",
+      "baja-resolucion": "{n, plural, one {# foto puede verse borrosa} other {# fotos pueden verse borrosas}} al imprimir.",
+      "revisar-fechas": "{n, plural, one {# fecha conviene revisarla} other {# fechas conviene revisarlas}}.",
+      "fechas-duplicadas": "{n, plural, one {Hay # fecha repetida} other {Hay # fechas repetidas}}: en el juego valdrá cualquier orden entre esas cartas.",
+      "fotos-duplicadas": "{n, plural, one {Hay # foto repetida} other {Hay # fotos repetidas}}.",
+      "caja-sin-foto": "La caja personalizada aún no tiene foto: elige una o quita ese extra."
+    },
+    "confirmarBaja": "Imprimir igualmente",
+    "anadirFotos": "Añadir fotos",
+    "fotoCaja": "Foto de la caja",
+    "cambiarFotoCaja": "Cambiar foto",
+    "sinFotoCaja": "Aún no tiene foto: sube una o elige una del mazo.",
+    "elegirFotoCaja": "Elegir foto",
+    "sinFecha": "Sin fecha",
+    "yaPedido": "Ya has hecho el pedido de este mazo. Puedes seguir retocándolo y volver a descargar el archivo.",
+    "yaPedidoSinDescarga": "Ya has hecho el pedido de este mazo.",
+    "verPedido": "Ver el pedido",
+    "bloquea": "Antes de pagar, resuelve lo que está marcado en rojo.",
+    "faltaConfirmar": "Marca la casilla de revisión para pagar.",
+    "pagoCancelado": "Has cancelado el pago. Tu mazo sigue aquí, tal cual.",
+    "total": "Total"
+  }
+}

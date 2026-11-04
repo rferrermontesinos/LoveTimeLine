@@ -1,0 +1,110 @@
+{
+  "inicio": {
+    "heroAntetitulo": "Un juego de cartas con vuestras fotos",
+    "heroTitulo": "Vuestra historia, en una baraja.",
+    "heroTexto": "Sube vuestras fotos, nosotros leemos las fechas y te mandamos a casa un juego para ordenar recuerdos. ¿Qué fue antes, el viaje en tren o la primera cena en casa?",
+    "heroCta": "Crear mi mazo",
+    "heroSecundario": "Cómo se juega",
+    "abanicoAlt": "Tres cartas de ejemplo en abanico: una por la cara de la fecha, {fecha}, y dos por la cara de la foto.",
+    "packs": {
+      "titulo": "Elige tu pack",
+      "unidad": "{n, plural, one {carta} other {cartas}}",
+      "extra": "Cada carta de más, {precio}",
+      "empezar": "Empezar",
+      "empezarCon": "Empezar con el pack {pack}",
+      "sinFoto": "Las cartas también pueden ser recuerdos sin foto, solo con texto, al mismo precio.",
+      "caja": "La caja va incluida. Si la quieres con vuestra foto, son {precio} más.",
+      "envio": "Envío incluido a {paises}."
+    },
+    "comoTitulo": "Tres pasos y a jugar",
+    "como": {
+      "1": {
+        "titulo": "Sube las fotos",
+        "texto": "Arrastra una carpeta o elige de la galería. La fecha sale sola de la foto o del nombre del archivo; tú solo revisas las que no la tengan."
+      },
+      "2": {
+        "titulo": "Dale tu toque",
+        "texto": "Encuadra, añade una frase si quieres y elige los colores y una dedicatoria para la portada."
+      },
+      "3": {
+        "titulo": "Recíbelo y jugad",
+        "texto": "Te llega una baraja impresa, con su caja y unas instrucciones que se pliegan al tamaño de una carta."
+      }
+    },
+    "cartasTitulo": "Dos caras, una pregunta",
+    "cartasTexto": "Delante, la foto y la pregunta: ¿cuándo fue? Detrás, la respuesta: el año en grande y, si los sabes, el día y el mes.",
+    "cartasPrecision": "Día, mes o solo año: cada carta lleva la fecha que conozcas.",
+    "voltear": "Dar la vuelta a la carta",
+    "ejemplosPrecision": "Tres cartas, tres precisiones: día exacto, mes y año, solo el año.",
+    "tipos": {
+      "titulo": "Tipos de juego",
+      "texto": "El mismo mazo, dos formas de jugar: cada uno con sus cartas o todos juntos contra el mazo. En las dos, cada persona empieza con {n} cartas.",
+      "reglas": {
+        "clasico": "Reglas del Clásico",
+        "historia": "Reglas de Nuestra historia"
+      }
+    },
+    "mecanicasTitulo": "Extras de juego, sin coste",
+    "mecanicasTexto": "Se imprimen en el hueco de la esquina o como cartas especiales. Los activas o los quitas con un toque.",
+    "extrasTitulo": "Extras opcionales",
+    "extrasTexto": "Para regalar, para que llegue a tiempo o para tenerlo por partida doble. Se eligen al terminar el mazo.",
+    "extraPorcentaje": "{porcentaje} del precio del mazo",
+    "privacidadTitulo": "Tus fotos son tuyas",
+    "privacidad": {
+      "1": "En este prototipo, las fotos no salen de tu dispositivo: las fechas se leen aquí mismo.",
+      "2": "Cuando abramos los pedidos reales, se guardarán en servidores de la Unión Europea, cifradas y privadas.",
+      "3": "Borramos las fotos y los archivos de impresión 60 días después del envío.",
+      "4": "Sin analítica de terceros sobre tus imágenes. Nunca las usamos para nada más."
+    },
+    "faqTitulo": "Preguntas",
+    "faq": {
+      "1": {
+        "p": "¿Cuánto se tarda en hacer un mazo?",
+        "r": "Unos 15 minutos para 40 fotos: la mayoría ya trae la fecha y solo tienes que revisar las dudosas."
+      },
+      "2": {
+        "p": "¿Y si no sé la fecha exacta de una foto?",
+        "r": "Pon solo el mes o solo el año. En el juego, una carta con solo el año vale en cualquier punto de ese año."
+      },
+      "3": {
+        "p": "¿Y si de un recuerdo no tengo foto?",
+        "r": "Hazle una carta de texto: lleva el recuerdo escrito, como «El día que nos conocimos», con su fecha detrás y el mismo diseño que las demás. Cuenta y cuesta igual que una carta con foto."
+      },
+      "4": {
+        "p": "¿Qué tamaño tienen las cartas?",
+        "r": "El de una baraja de póker, {ancho} × {alto} mm, con las esquinas redondeadas."
+      },
+      "5": {
+        "p": "¿En qué idiomas?",
+        "r": "La web está en español e inglés, y el mazo puede ir en cualquiera de los dos: meses, textos e instrucciones."
+      }
+    },
+    "ctaTitulo": "¿Empezamos con unas fotos?",
+    "ctaTexto": "Tu mazo se guarda solo en este dispositivo mientras lo haces. Puedes dejarlo y seguir otro día.",
+    "borrador": {
+      "etiqueta": "Tu mazo guardado",
+      "aMedias": "Tienes un mazo a medias",
+      "pedido": "Mazo ya pedido",
+      "sinTitulo": "Tu mazo",
+      "guardado": "guardado {cuando}",
+      "momento": "hace un momento",
+      "continuar": "Continuar mi mazo",
+      "continuarCorto": "Continuar",
+      "ver": "Ver mi mazo",
+      "cerrar": "Cerrar el aviso"
+    },
+    "muestras": {
+      "cita": "Nuestra primera cita",
+      "tren": "El interrail de aquel verano",
+      "picnic": "Pícnic en el parque",
+      "playa": "Atardecer en la playa",
+      "montana": "Primera ruta por la montaña",
+      "furgoneta": "Una semana en furgoneta",
+      "acampada": "Acampada con la pandilla",
+      "cumple": "Los 30 de Ana",
+      "boda": "El día de la boda",
+      "nochevieja": "Nochevieja con confeti",
+      "casa": "Las llaves de casa"
+    }
+  }
+}

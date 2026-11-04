@@ -1,0 +1,110 @@
+{
+  "inicio": {
+    "heroAntetitulo": "A card game made with your photos",
+    "heroTitulo": "Your story, in a deck of cards.",
+    "heroTexto": "Upload your photos, we read the dates and send you a game where you put memories in order. What came first, the train trip or your first dinner at home?",
+    "heroCta": "Make my deck",
+    "heroSecundario": "How to play",
+    "abanicoAlt": "Three sample cards fanned out: one date side up, {fecha}, and two photo side up.",
+    "packs": {
+      "titulo": "Choose your pack",
+      "unidad": "{n, plural, one {card} other {cards}}",
+      "extra": "Each extra card, {precio}",
+      "empezar": "Start",
+      "empezarCon": "Start with the {pack} pack",
+      "sinFoto": "Cards can also be memories with no photo, just text, for the same price.",
+      "caja": "The box is included. If you’d like it with your photo, it’s {precio} more.",
+      "envio": "Free shipping to {paises}."
+    },
+    "comoTitulo": "Three steps, then play",
+    "como": {
+      "1": {
+        "titulo": "Upload your photos",
+        "texto": "Drop a folder or pick from your gallery. The date comes from the photo or the file name; you only check the ones without one."
+      },
+      "2": {
+        "titulo": "Make it yours",
+        "texto": "Frame each photo, add a line if you like, and choose the colours and a dedication for the cover."
+      },
+      "3": {
+        "titulo": "Get it and play",
+        "texto": "You receive a printed deck with its box and instructions that fold down to the size of a card."
+      }
+    },
+    "cartasTitulo": "Two sides, one question",
+    "cartasTexto": "On the front, the photo and the question: when was it? On the back, the answer: the year in big type and, if you know them, the day and the month.",
+    "cartasPrecision": "Day, month or just the year: each card carries the date you know.",
+    "voltear": "Flip the card",
+    "ejemplosPrecision": "Three cards, three precisions: exact day, month and year, year only.",
+    "tipos": {
+      "titulo": "Ways to play",
+      "texto": "One deck, two ways to play: everyone with their own cards, or all together against the deck. In both, each player starts with {n} cards.",
+      "reglas": {
+        "clasico": "Classic rules",
+        "historia": "Our story rules"
+      }
+    },
+    "mecanicasTitulo": "Free game extras",
+    "mecanicasTexto": "They’re printed in the corner slot or as special cards. Turn them on or off with one tap.",
+    "extrasTitulo": "Optional extras",
+    "extrasTexto": "To give it as a gift, to get it in time or to have two. You choose them when your deck is ready.",
+    "extraPorcentaje": "{porcentaje} of the deck price",
+    "privacidadTitulo": "Your photos are yours",
+    "privacidad": {
+      "1": "In this prototype, photos never leave your device: dates are read right here.",
+      "2": "When real orders open, they’ll be stored on servers in the European Union, encrypted and private.",
+      "3": "We delete photos and print files 60 days after shipping.",
+      "4": "No third-party analytics on your images. We never use them for anything else."
+    },
+    "faqTitulo": "Questions",
+    "faq": {
+      "1": {
+        "p": "How long does it take to make a deck?",
+        "r": "About 15 minutes for 40 photos: most already carry their date and you only check the doubtful ones."
+      },
+      "2": {
+        "p": "What if I don’t know the exact date of a photo?",
+        "r": "Set just the month or just the year. In the game, a year-only card fits anywhere in that year."
+      },
+      "3": {
+        "p": "What if I have no photo of a memory?",
+        "r": "Make it a text card: it carries the memory in words, like “The day we met”, with its date on the back and the same design as the rest. It counts and costs the same as a photo card."
+      },
+      "4": {
+        "p": "How big are the cards?",
+        "r": "Standard poker size, {ancho} × {alto} mm, with rounded corners."
+      },
+      "5": {
+        "p": "Which languages?",
+        "r": "The site is in Spanish and English, and the deck can be in either: months, card texts and instructions."
+      }
+    },
+    "ctaTitulo": "Shall we start with a few photos?",
+    "ctaTexto": "Your deck is saved only on this device while you make it. You can leave and come back another day.",
+    "borrador": {
+      "etiqueta": "Your saved deck",
+      "aMedias": "You have a deck in progress",
+      "pedido": "Deck already ordered",
+      "sinTitulo": "Your deck",
+      "guardado": "saved {cuando}",
+      "momento": "just now",
+      "continuar": "Continue my deck",
+      "continuarCorto": "Continue",
+      "ver": "See my deck",
+      "cerrar": "Dismiss"
+    },
+    "muestras": {
+      "cita": "Our first date",
+      "tren": "That summer’s interrail trip",
+      "picnic": "Picnic in the park",
+      "playa": "Sunset on the beach",
+      "montana": "Our first mountain hike",
+      "furgoneta": "A week in a camper van",
+      "acampada": "Camping with the gang",
+      "cumple": "Ana’s 30th",
+      "boda": "Our wedding day",
+      "nochevieja": "New Year’s Eve, confetti everywhere",
+      "casa": "The keys to our home"
+    }
+  }
+}

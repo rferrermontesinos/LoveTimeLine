@@ -1,0 +1,121 @@
+{
+  "crear": {
+    "titulo": "Make my deck",
+    "reanudar": {
+      "titulo": "Picking up where you left off",
+      "detalle": "“{titulo}” · {n, plural, one {# card} other {# cards}} · saved {cuando}",
+      "sinTitulo": "Your deck"
+    },
+    "empezarOtro": "Start another deck",
+    "empezarOtroConfirmar": "Delete the current deck and start another? Its photos will be removed from this device.",
+    "empezarOtroConPedido": "This deck already has an order. If you start another one, this deck and its photos will be deleted from this device and you won’t be able to open it here again. Start another?",
+    "cerrarAviso": "Dismiss notice",
+    "pasos": {
+      "etiqueta": "Steps",
+      "fotos": "Photos",
+      "cartas": "Cards",
+      "estilo": "Style",
+      "pedido": "Order",
+      "paso": "Step {n} of 4",
+      "bloqueado": "Finish every card to continue"
+    },
+    "barra": {
+      "siguienteCartas": "Next: cards",
+      "siguienteEstilo": "Next: style",
+      "siguientePedido": "Next: order",
+      "pagar": "Pay {total}",
+      "total": "Total",
+      "faltan": "{n, plural, one {# card to go} other {# cards to go}}",
+      "minimoCubierto": "Minimum reached",
+      "faltanCartas": "{n, plural, one {# card left to finish} other {# cards left to finish}}",
+      "irAPendiente": "Go to the next one"
+    },
+    "pack": "{pack} pack",
+    "contador": "{actual} of {minimo} cards",
+    "contadorCompleto": "{actual} cards · minimum {minimo}",
+    "abriendo": "Opening your deck…",
+    "guardado": {
+      "guardado": "Saved on this device · {cuando}",
+      "ahoraMismo": "just now",
+      "guardando": "Saving on this device…",
+      "sinEspacio": "Not saved: this device is out of space",
+      "error": "Not saved: something went wrong while saving",
+      "conflicto": "Not saved: the deck changed in another tab",
+      "avisoSinEspacio": "Your latest changes weren’t saved: this device is out of space. Free up some space and try again, and keep this tab open in the meantime.",
+      "avisoError": "Your latest changes weren’t saved on this device. Try again, and keep this tab open in the meantime.",
+      "reintentar": "Try again",
+      "avisoConflicto": "You’ve changed this deck in another tab. So those changes aren’t overwritten, this tab has stopped saving: load the latest version and carry on from there.",
+      "avisoOtroMazo": "You’ve started another deck in another tab. So it isn’t overwritten, this tab has stopped saving.",
+      "cargarReciente": "Load the latest version",
+      "abrirOtro": "Open that deck"
+    },
+    "sinConexion": {
+      "aviso": "You’re offline: carry on, everything is saved on this device."
+    },
+    "error": {
+      "titulo": "Something went wrong",
+      "texto": "Your deck is safe on this device. Try again, and if it keeps failing, reload the page.",
+      "sinConexion": "It looks like you’re offline, and this part needs the internet to load. Your deck is safe on this device: try again once you’re back online.",
+      "reintentar": "Try again"
+    },
+    "avisoPack": {
+      "cambiado": "We’ve moved your deck to the {pack} pack: {n} cards included. Your cards stay as they are.",
+      "conPedido": "This deck has already been ordered, so it keeps its pack. If you’d like another one with the {pack} pack, start a new deck.",
+      "empezarOtro": "Start another with the {pack} pack"
+    },
+    "packs": {
+      "etiqueta": "Packs",
+      "cambiar": "Change pack",
+      "titulo": "Choose your pack",
+      "ayuda": "Each pack includes a set number of cards: that’s the minimum to order. Add more and each one is charged separately at the pack’s price. And if a bigger pack works out cheaper for your cards, we apply it automatically.",
+      "incluidas": "{n} cards included",
+      "extra": "{precio} per extra card",
+      "conTus": "With your {n} cards: {total}",
+      "teFaltan": "{n, plural, one {# more card needed} other {# more cards needed}}",
+      "aplicado": "Applied: it works out cheaper"
+    },
+    "ofertas": {
+      "subir": "With {n, plural, one {# more card} other {# more cards}} you move up to the {pack} pack for just {diferencia} more.",
+      "subirDetalle": "With {n, plural, one {# more card} other {# more cards}} you move up to the {pack} pack: just {diferencia} more, {ahorro} less than adding them one by one.",
+      "subirMenos": "With {n, plural, one {# more card} other {# more cards}} you move up to the {pack} pack and pay {menos} less than now.",
+      "subirIgual": "With {n, plural, one {# more card} other {# more cards}} you move up to the {pack} pack and pay the same as now.",
+      "packAplicado": "We’ve applied the {pack} pack: you save {ahorro}.",
+      "packAplicadoDetalle": "With this many cards the {pack} pack works out cheaper, so we’ve applied it: you save {ahorro}.",
+      "packAplicadoHuecos": "We’ve applied the {pack} pack: you save {ahorro} and {huecos, plural, one {# more card fits} other {# more cards fit}} at no extra cost.",
+      "packAplicadoHuecosDetalle": "The {pack} pack works out cheaper than adding cards one by one, so we’ve applied it: you save {ahorro} and {huecos, plural, one {# more card still fits} other {# more cards still fit}} at no extra cost.",
+      "bajar": "With the {pack} pack you could already check out ({total}).",
+      "cambiarA": "Switch to the {pack} pack"
+    },
+    "recuerdo": {
+      "boton": "Add a memory without a photo",
+      "titulo": "Memory without a photo",
+      "intro": "It comes in your deck’s style, with the text nice and big. It costs the same as a photo card.",
+      "texto": "What’s the memory?",
+      "textoAyuda": "Up to {max} characters. Replace the part in brackets with the name.",
+      "contador": "{n} / {max}",
+      "ideas": "Ideas",
+      "fecha": "Date",
+      "fechaAyuda": "If you don’t know it now, you can add it later.",
+      "anadir": "Add the card",
+      "anadido": "Memory added: “{texto}”."
+    }
+  },
+  "encuadre": {
+    "titulo": "Frame the photo",
+    "caraFoto": "Photo side",
+    "caraFecha": "Date side",
+    "zoom": "Zoom",
+    "restablecer": "Reset",
+    "ayuda": "Drag the photo to frame it. The dark part is trimmed when printing.",
+    "reversoAuto": "The date side follows the photo side until you change it."
+  },
+  "adornos": {
+    "titulo": "Emojis",
+    "anadir": "Add {emoji}",
+    "ayuda": "Drag them over the photo. They’re printed on the photo side.",
+    "quitarTodos": "Remove all",
+    "tamano": "Size",
+    "seleccionado": "Selected emoji",
+    "quitar": "Remove this emoji"
+  }
+}

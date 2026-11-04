@@ -1,0 +1,16 @@
+{
+  "carta": {
+    "pregunta": "¿Cuándo fue?",
+    "comodin": "Comodín",
+    "comodinRegla": "Úsalo antes de colocar: pide una pista a quien hizo el mazo («¿antes o después de esta carta?») o cambia una de tus cartas por la primera del mazo. Después, vuelve a la caja.",
+    "enBlancoFoto": "Pega una foto o dibuja aquí",
+    "enBlancoFrase": "¿Qué pasó?",
+    "enBlancoAnio": "Año",
+    "enBlancoDiaMes": "Día y mes",
+    "portadaRecuerdos": "{n, plural, one {# recuerdo} other {# recuerdos}}",
+    "portadaReverso": "Para jugar, mira las instrucciones de la caja.",
+    "dedicatoriaPorDefecto": "Para seguir sumando recuerdos.",
+    "cajaTexto": "Un juego para ordenar vuestros recuerdos. Coloca cada carta antes o después de las que ya están en la mesa y dale la vuelta: ¿acertaste?",
+    "cajaLema": "Vuestra historia, en una baraja."
+  }
+}

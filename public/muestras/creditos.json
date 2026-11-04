@@ -1,0 +1,166 @@
+{
+  "$comentario": "Generado por scripts/muestras/preparar.ts a partir de las originales de Pexels. No lo edites a mano.",
+  "fuente": "Pexels",
+  "licencia": {
+    "nombre": "Pexels License",
+    "url": "https://www.pexels.com/license/"
+  },
+  "fotos": [
+    {
+      "id": "tren",
+      "archivos": [
+        "/muestras/tren.jpg",
+        "/muestras/mini/tren.jpg"
+      ],
+      "fotografo": "veerasak Piyawatanakul",
+      "pagina": "https://www.pexels.com/photo/woman-and-man-waiting-on-train-station-1170184/",
+      "descripcion": {
+        "es": "Pareja de mochileros junto a un tren",
+        "en": "Backpacking couple next to a train"
+      }
+    },
+    {
+      "id": "playa",
+      "archivos": [
+        "/muestras/playa.jpg",
+        "/muestras/mini/playa.jpg"
+      ],
+      "fotografo": "Jorge Zaldívar Marroquín",
+      "pagina": "https://www.pexels.com/photo/romantic-couple-embracing-at-sunset-beach-30716714/",
+      "descripcion": {
+        "es": "Pareja abrazada en la playa al atardecer",
+        "en": "Couple hugging on the beach at sunset"
+      }
+    },
+    {
+      "id": "montana",
+      "archivos": [
+        "/muestras/montana.jpg",
+        "/muestras/mini/montana.jpg"
+      ],
+      "fotografo": "Arina Krasnikova",
+      "pagina": "https://www.pexels.com/photo/a-couple-looking-mountain-view-7350882/",
+      "descripcion": {
+        "es": "Pareja mirando el valle desde la montaña",
+        "en": "Couple looking out over a valley from a mountain"
+      }
+    },
+    {
+      "id": "furgoneta",
+      "archivos": [
+        "/muestras/furgoneta.jpg",
+        "/muestras/mini/furgoneta.jpg"
+      ],
+      "fotografo": "RDNE Stock project",
+      "pagina": "https://www.pexels.com/photo/a-woman-showing-a-photo-to-a-man-in-sunglasses-driving-a-van-8230959/",
+      "descripcion": {
+        "es": "Pareja de viaje con una furgoneta camper",
+        "en": "Couple on a road trip with a camper van"
+      }
+    },
+    {
+      "id": "cumple",
+      "archivos": [
+        "/muestras/cumple.jpg",
+        "/muestras/mini/cumple.jpg"
+      ],
+      "fotografo": "cottonbro studio",
+      "pagina": "https://www.pexels.com/photo/a-couple-holding-a-birthday-cake-with-sparkling-candle-6800133/",
+      "descripcion": {
+        "es": "Pareja con una tarta de cumpleaños y una bengala",
+        "en": "Couple with a birthday cake and a sparkler"
+      }
+    },
+    {
+      "id": "boda",
+      "archivos": [
+        "/muestras/boda.jpg",
+        "/muestras/mini/boda.jpg"
+      ],
+      "fotografo": "Rene Terp",
+      "pagina": "https://www.pexels.com/photo/newly-weds-drinking-champagne-636006/",
+      "descripcion": {
+        "es": "Brindis de boda",
+        "en": "Wedding toast"
+      }
+    },
+    {
+      "id": "picnic",
+      "archivos": [
+        "/muestras/picnic.jpg",
+        "/muestras/mini/picnic.jpg"
+      ],
+      "fotografo": "Vlada Karpovich",
+      "pagina": "https://www.pexels.com/photo/man-and-woman-lying-on-a-picnic-blanket-4873547/",
+      "descripcion": {
+        "es": "Pareja de pícnic en un prado",
+        "en": "Couple having a picnic in a meadow"
+      }
+    },
+    {
+      "id": "cita",
+      "archivos": [
+        "/muestras/cita.jpg",
+        "/muestras/mini/cita.jpg"
+      ],
+      "fotografo": "Los Muertos Crew",
+      "pagina": "https://www.pexels.com/photo/a-couple-in-the-coffee-shop-8836421/",
+      "descripcion": {
+        "es": "Pareja riendo en una cafetería",
+        "en": "Couple laughing in a café"
+      }
+    },
+    {
+      "id": "nochevieja",
+      "archivos": [
+        "/muestras/nochevieja.jpg",
+        "/muestras/mini/nochevieja.jpg"
+      ],
+      "fotografo": "cottonbro studio",
+      "pagina": "https://www.pexels.com/photo/people-holding-wine-glasses-3171811/",
+      "descripcion": {
+        "es": "Brindis bajo una lluvia de confeti",
+        "en": "A toast under falling confetti"
+      }
+    },
+    {
+      "id": "acampada",
+      "archivos": [
+        "/muestras/acampada.jpg",
+        "/muestras/mini/acampada.jpg"
+      ],
+      "fotografo": "Ivan S",
+      "pagina": "https://www.pexels.com/photo/people-cooking-marshmallows-on-campfire-9630132/",
+      "descripcion": {
+        "es": "Amigos alrededor de una hoguera",
+        "en": "Friends around a campfire"
+      }
+    },
+    {
+      "id": "casa",
+      "archivos": [
+        "/muestras/casa.jpg",
+        "/muestras/mini/casa.jpg"
+      ],
+      "fotografo": "Vitaly Gariev",
+      "pagina": "https://www.pexels.com/photo/happy-couple-holding-keys-in-new-home-36729704/",
+      "descripcion": {
+        "es": "Pareja con las llaves de su casa nueva",
+        "en": "Couple with the keys to their new home"
+      }
+    },
+    {
+      "id": "mesa",
+      "archivos": [
+        "/juego/mesa.jpg",
+        "/juego/mesa-movil.jpg"
+      ],
+      "fotografo": "MILO TEXTURES",
+      "pagina": "https://www.pexels.com/photo/wooden-surface-2768391/",
+      "descripcion": {
+        "es": "Mesa de madera vista desde arriba",
+        "en": "Wooden table seen from above"
+      }
+    }
+  ]
+}

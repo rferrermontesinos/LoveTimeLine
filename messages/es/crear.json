@@ -1,0 +1,121 @@
+{
+  "crear": {
+    "titulo": "Crear mi mazo",
+    "reanudar": {
+      "titulo": "Seguimos donde lo dejaste",
+      "detalle": "«{titulo}» · {n, plural, one {# carta} other {# cartas}} · guardado {cuando}",
+      "sinTitulo": "Tu mazo"
+    },
+    "empezarOtro": "Empezar otro mazo",
+    "empezarOtroConfirmar": "¿Borrar el mazo actual y empezar otro? Se borrarán sus fotos de este dispositivo.",
+    "empezarOtroConPedido": "Este mazo ya tiene un pedido. Si empiezas otro, este mazo y sus fotos se borrarán de este dispositivo y ya no podrás abrirlo aquí. ¿Empezar otro?",
+    "cerrarAviso": "Cerrar el aviso",
+    "pasos": {
+      "etiqueta": "Pasos",
+      "fotos": "Fotos",
+      "cartas": "Cartas",
+      "estilo": "Estilo",
+      "pedido": "Pedido",
+      "paso": "Paso {n} de 4",
+      "bloqueado": "Completa todas las cartas para seguir"
+    },
+    "barra": {
+      "siguienteCartas": "Siguiente: cartas",
+      "siguienteEstilo": "Siguiente: estilo",
+      "siguientePedido": "Siguiente: pedido",
+      "pagar": "Pagar {total}",
+      "total": "Total",
+      "faltan": "{n, plural, one {Falta # carta} other {Faltan # cartas}}",
+      "minimoCubierto": "Mínimo cubierto",
+      "faltanCartas": "{n, plural, one {Falta # carta por completar} other {Faltan # cartas por completar}}",
+      "irAPendiente": "Ir a la siguiente"
+    },
+    "pack": "Pack {pack}",
+    "contador": "{actual} de {minimo} cartas",
+    "contadorCompleto": "{actual} cartas · mínimo {minimo}",
+    "abriendo": "Abriendo tu mazo…",
+    "guardado": {
+      "guardado": "Guardado en este dispositivo · {cuando}",
+      "ahoraMismo": "ahora mismo",
+      "guardando": "Guardando en este dispositivo…",
+      "sinEspacio": "Sin guardar: no queda espacio en este dispositivo",
+      "error": "Sin guardar: algo ha fallado al guardar",
+      "conflicto": "Sin guardar: el mazo ha cambiado en otra pestaña",
+      "avisoSinEspacio": "Tus últimos cambios no se han guardado: no queda espacio en este dispositivo. Libera algo de espacio y vuelve a intentarlo; mientras, no cierres esta pestaña.",
+      "avisoError": "Tus últimos cambios no se han guardado en este dispositivo. Vuelve a intentarlo; mientras, no cierres esta pestaña.",
+      "reintentar": "Volver a intentarlo",
+      "avisoConflicto": "Has cambiado este mazo en otra pestaña. Para no pisar esos cambios, esta ha dejado de guardar: carga la versión más reciente y sigue desde ahí.",
+      "avisoOtroMazo": "Has empezado otro mazo en otra pestaña. Para no pisarlo, esta ha dejado de guardar.",
+      "cargarReciente": "Cargar la versión más reciente",
+      "abrirOtro": "Abrir ese mazo"
+    },
+    "sinConexion": {
+      "aviso": "Sin conexión: puedes seguir, todo se guarda en este dispositivo."
+    },
+    "error": {
+      "titulo": "Algo no ha ido bien",
+      "texto": "Tu mazo está a salvo en este dispositivo. Vuelve a intentarlo y, si sigue fallando, recarga la página.",
+      "sinConexion": "Parece que no hay conexión y esta parte necesita internet para cargarse. Tu mazo está a salvo en este dispositivo: vuelve a intentarlo cuando tengas conexión.",
+      "reintentar": "Reintentar"
+    },
+    "avisoPack": {
+      "cambiado": "Hemos pasado tu mazo al pack {pack}: {n} cartas incluidas. Tus cartas siguen igual.",
+      "conPedido": "Este mazo ya está pedido, así que se queda con su pack. Si quieres otro con el pack {pack}, empieza uno nuevo.",
+      "empezarOtro": "Empezar otro con el pack {pack}"
+    },
+    "packs": {
+      "etiqueta": "Packs",
+      "cambiar": "Cambiar de pack",
+      "titulo": "Elige tu pack",
+      "ayuda": "Cada pack incluye unas cartas, que son el mínimo para hacer el pedido. Si añades más, cada una se cobra aparte al precio del pack. Y si con tus cartas te sale más barato un pack mayor, te lo aplicamos solo.",
+      "incluidas": "{n} cartas incluidas",
+      "extra": "Cada carta más, {precio}",
+      "conTus": "Con tus {n} cartas: {total}",
+      "teFaltan": "{n, plural, one {Te falta # carta} other {Te faltan # cartas}}",
+      "aplicado": "Aplicado: sale más barato"
+    },
+    "ofertas": {
+      "subir": "Con {n, plural, one {# carta más} other {# cartas más}} pasas al pack {pack} por solo {diferencia} más.",
+      "subirDetalle": "Con {n, plural, one {# carta más} other {# cartas más}} pasas al pack {pack}: pagas solo {diferencia} más, {ahorro} menos que si las sumas sueltas.",
+      "subirMenos": "Con {n, plural, one {# carta más} other {# cartas más}} pasas al pack {pack} y pagas {menos} menos que ahora.",
+      "subirIgual": "Con {n, plural, one {# carta más} other {# cartas más}} pasas al pack {pack} y pagas lo mismo que ahora.",
+      "packAplicado": "Ya te aplicamos el pack {pack}: te ahorras {ahorro}.",
+      "packAplicadoDetalle": "Con tantas cartas te sale mejor el pack {pack}, así que te lo aplicamos: te ahorras {ahorro}.",
+      "packAplicadoHuecos": "Ya te aplicamos el pack {pack}: te ahorras {ahorro} y {huecos, plural, one {te cabe # carta más} other {te caben # cartas más}} sin pagar nada.",
+      "packAplicadoHuecosDetalle": "El pack {pack} te sale más barato que sumar cartas sueltas, así que te lo aplicamos: te ahorras {ahorro} y {huecos, plural, one {aún te cabe # carta más} other {aún te caben # cartas más}} sin pagar nada.",
+      "bajar": "Con el pack {pack} ya podrías pagar ({total}).",
+      "cambiarA": "Cambiar al pack {pack}"
+    },
+    "recuerdo": {
+      "boton": "Añadir un recuerdo sin foto",
+      "titulo": "Recuerdo sin foto",
+      "intro": "Sale con el estilo de tu mazo y el texto en grande. Cuesta lo mismo que una carta con foto.",
+      "texto": "¿Qué recuerdo es?",
+      "textoAyuda": "Hasta {max} caracteres. Lo que va entre corchetes, cámbialo por el nombre.",
+      "contador": "{n} / {max}",
+      "ideas": "Ideas",
+      "fecha": "Fecha",
+      "fechaAyuda": "Si ahora no la sabes, puedes ponerla después.",
+      "anadir": "Añadir la carta",
+      "anadido": "Recuerdo añadido: «{texto}»."
+    }
+  },
+  "encuadre": {
+    "titulo": "Encuadrar la foto",
+    "caraFoto": "Cara de la foto",
+    "caraFecha": "Cara de la fecha",
+    "zoom": "Zoom",
+    "restablecer": "Restablecer",
+    "ayuda": "Arrastra la foto para encuadrarla. La parte oscura se corta al imprimir.",
+    "reversoAuto": "La cara de la fecha sigue a la de la foto hasta que la toques."
+  },
+  "adornos": {
+    "titulo": "Emojis",
+    "anadir": "Añadir {emoji}",
+    "ayuda": "Arrástralos sobre la foto. Se imprimen en la cara de la foto.",
+    "quitarTodos": "Quitar todos",
+    "tamano": "Tamaño",
+    "seleccionado": "Emoji seleccionado",
+    "quitar": "Quitar este emoji"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "confirmado": {
+    "titulo": "¡Pedido hecho!",
+    "tituloSimulado": "Pedido de prueba hecho",
+    "texto": "En la versión real te llegaría un correo y el mazo en {min}–{max} días laborables.",
+    "archivo": "Archivo de impresión",
+    "textoPrototipo": "Para las pruebas de impresión: descarga el archivo y mándalo a imprimir tal cual.",
+    "descargarPdf": "Descargar el archivo de impresión (PDF)",
+    "descargaPendiente": "Podrás descargarlo en cuanto se confirme el pago.",
+    "generando": "Generando cara {hecha} de {total}…",
+    "volver": "Volver a mi mazo",
+    "sinMazo": "No encontramos el mazo en este dispositivo.",
+    "referencia": "Referencia: {id}",
+    "comprobando": "Comprobando el pago…",
+    "pendiente": "El pago aún no está confirmado. Si acabas de pagar, espera unos segundos y recarga la página.",
+    "pdfListo": "Archivo listo. Si no se ha descargado solo, vuelve a pulsar el botón.",
+    "pdfError": "No se ha podido generar el PDF. Inténtalo otra vez.",
+    "resumen": "{cartas} cartas impresas · {total}",
+    "siguientes": "Y ahora",
+    "paso1": "Descarga el archivo de impresión: cada cara lleva {sangrado} mm de sangrado{marcas, select, si { y marcas de corte} other {}}.",
+    "paso1SinDescarga": "Revisamos cada carta y mandamos tu mazo a imprimir.",
+    "aJugar": "Cuando tengáis el mazo en la mano, barajad y a jugar: los modos de juego y las reglas están en «Cómo se juega».",
+    "comoJugar": "Ver cómo se juega"
+  }
+}

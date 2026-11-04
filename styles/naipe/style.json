@@ -1,0 +1,24 @@
+{
+  "id": "naipe",
+  "version": 3,
+  "plantilla": "naipe",
+  "nombre": { "es": "Naipe", "en": "Naipe" },
+  "descripcion": {
+    "es": "Carta con foto y pestañas de color en las esquinas. El color que elijas va en las pestañas y en la cara de la fecha, con un detalle a juego en las cartas sin foto.",
+    "en": "Photo card with coloured corner tabs. The colour you choose goes on the tabs and the date side, with a matching detail on cards without a photo."
+  },
+  "paletaPorDefecto": "rosa",
+  "paletas": [
+    { "id": "rosa", "nombre": { "es": "Rosa", "en": "Pink" }, "fondo": "#F7739E", "acento": "#E8402F", "texto": "#141414" },
+    { "id": "rojo", "nombre": { "es": "Rojo", "en": "Red" }, "fondo": "#E8402F", "acento": "#FFC93C", "texto": "#141414" },
+    { "id": "amarillo", "nombre": { "es": "Amarillo", "en": "Yellow" }, "fondo": "#FFC93C", "acento": "#22A861", "texto": "#141414" },
+    { "id": "verde", "nombre": { "es": "Verde", "en": "Green" }, "fondo": "#22A861", "acento": "#FFC93C", "texto": "#141414" },
+    { "id": "cobalto", "nombre": { "es": "Cobalto", "en": "Cobalt" }, "fondo": "#2E56E6", "acento": "#FFC93C", "texto": "#F5F0E6" },
+    { "id": "noche", "nombre": { "es": "Noche", "en": "Night" }, "fondo": "#141414", "acento": "#F7739E", "texto": "#F5F0E6" }
+  ],
+  "colores": {
+    "tinta": "#141414",
+    "papel": "#F5F0E6",
+    "velo": "20, 20, 20"
+  }
+}
