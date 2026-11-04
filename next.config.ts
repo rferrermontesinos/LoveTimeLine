@@ -4,6 +4,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // Permite tener dos servidores de desarrollo a la vez (cada uno con su carpeta).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   poweredByHeader: false,
   // Las fotos nunca pasan por el optimizador de imágenes de Next: se procesan en el navegador.
