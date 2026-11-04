@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Boton } from "@/components/ui/Boton";
 import { Micro, Seccion } from "@/components/ui/Piezas";
 import { textosFolleto } from "@/lib/carta/textos";
-import { obtenerEstilo, obtenerTinta } from "@/lib/estilos";
+import { ESTILO_POR_DEFECTO, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { aniosPortada } from "@/lib/mazo/derivados";
 import { CaraA, CaraB, type ColoresFolleto, type Personalizacion } from "./Folleto";
@@ -28,9 +28,9 @@ function Contenido({ generico }: { generico: boolean }) {
   const { estado, mazo } = useMazo();
   const usarMazo = !generico && !!mazo;
   const textos = textosFolleto(usarMazo ? mazo.idiomaMazo : locale);
-  const estilo = obtenerEstilo(usarMazo ? mazo.estiloId : "pareja");
-  const tinta = obtenerTinta(estilo, usarMazo ? mazo.tintaId : null);
-  const colores: ColoresFolleto = { fondo: tinta.fondo, franja: tinta.franja, texto: tinta.texto, tinta: estilo.colores.tinta, papel: estilo.colores.papel };
+  const estilo = obtenerEstilo(usarMazo ? mazo.estiloId : ESTILO_POR_DEFECTO.id);
+  const paleta = obtenerPaleta(estilo, usarMazo ? mazo.paletaId : null);
+  const colores: ColoresFolleto = { fondo: paleta.fondo, franja: paleta.acento, texto: paleta.texto, tinta: estilo.colores.tinta, papel: estilo.colores.papel };
   const personal: Personalizacion | null = usarMazo ? { titulo: mazo.titulo, anios: aniosPortada(mazo), dedicatoria: mazo.dedicatoria } : null;
 
   return (

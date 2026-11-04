@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
-import { cotizar, type Cotizacion } from "@/domain/precios/cotizar";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { cotizar, normalizarSeleccion, type Cotizacion } from "@/domain/precios/cotizar";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { useMazo } from "@/lib/mazo/contexto";
 import { iconosDelMazo } from "@/lib/mazo/derivados";
@@ -27,20 +27,24 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
   const [cartaActiva, setCartaActiva] = useState<string | null>(null);
   const [versiones, setVersiones] = useState<Record<string, number>>({});
 
+  // Pack, extras o mecánicas retirados del catálogo (por ejemplo, en un mazo guardado con una
+  // versión anterior) se cambian por los vigentes en cuanto se abre el configurador.
+  const seleccion = useMemo(
+    () => (mazo ? normalizarSeleccion({ packId: mazo.packId, extras: mazo.extras, mecanicas: mazo.mecanicas }, catalogo) : null),
+    [mazo, catalogo],
+  );
+  useEffect(() => {
+    if (seleccion?.cambiado) despachar({ tipo: "normalizarSeleccion", packId: seleccion.packId, extras: seleccion.extras, mecanicas: seleccion.mecanicas });
+  }, [seleccion, despachar]);
+
   const cotizacion = useMemo(() => {
-    if (!mazo) return null;
+    if (!mazo || !seleccion) return null;
     try {
-      return cotizar({
-        catalogo,
-        packId: mazo.packId,
-        cartasFoto: mazo.cartas.length,
-        extras: mazo.extras.filter((id) => catalogo.extras.some((x) => x.id === id && x.activo)),
-        mecanicas: mazo.mecanicas.filter((id) => catalogo.mecanicas.some((m) => m.id === id && m.activo)),
-      });
+      return cotizar({ catalogo, packId: seleccion.packId, cartas: mazo.cartas.length, extras: seleccion.extras, mecanicas: seleccion.mecanicas });
     } catch {
       return null;
     }
-  }, [mazo, catalogo]);
+  }, [mazo, seleccion, catalogo]);
 
   const iconos = useMemo(() => (mazo ? iconosDelMazo(mazo, catalogo) : new Map<string, string>()), [mazo, catalogo]);
 

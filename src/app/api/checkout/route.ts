@@ -33,14 +33,14 @@ export async function POST(req: Request) {
   const base = { pedidoId, totalCents: cotizacion.totalCents, moneda: cotizacion.moneda, cartasFisicas: cotizacion.cartasFisicas };
   const cliente = stripe();
   if (!cliente) {
-    await registrarPedido({ pedidoId, solicitud, cotizacion, modo: "simulado" });
+    await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "simulado" });
     return NextResponse.json({ modo: "simulado", ...base });
   }
 
   const origen = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || new URL(req.url).origin;
   try {
     const sesion = await crearSesionStripe({ stripe: cliente, catalogo, solicitud, cotizacion, pedidoId, origen });
-    await registrarPedido({ pedidoId, solicitud, cotizacion, modo: "stripe", stripeSessionId: sesion.id });
+    await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "stripe", stripeSessionId: sesion.id });
     return NextResponse.json({ modo: "stripe", ...base, url: sesion.url, sessionId: sesion.id });
   } catch (e) {
     console.error("Stripe no ha creado la sesión de pago:", e instanceof Error ? e.message : e);

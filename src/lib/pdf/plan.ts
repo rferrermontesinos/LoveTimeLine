@@ -64,7 +64,7 @@ export function planImpresion(e: { mazo: Mazo; catalogo: Catalogo; iconos: Map<s
 
   for (const c of ordenarPorFecha(mazo.cartas)) {
     const datos = datosCarta(c, e.iconos.get(c.id) ?? null);
-    plan.push({ clave: `foto-${c.id}`, tipo: "foto", foto: fotoPlan(c), caras: [{ cara: "anverso", datos }, { cara: "reverso", datos }] });
+    plan.push({ clave: `foto-${c.id}`, tipo: "foto", foto: fotoPlan(c.tipo === "foto" ? c : null), caras: [{ cara: "anverso", datos }, { cara: "reverso", datos }] });
   }
 
   for (const m of [...catalogo.mecanicas].sort((a, b) => a.orden - b.orden)) {

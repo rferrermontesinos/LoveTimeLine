@@ -1,0 +1,31 @@
+{
+  "instrucciones": {
+    "titulo": "Instrucciones plegables",
+    "texto": "Una hoja de 252 × 176 mm que se pliega en 8 paneles del tamaño de una carta y cabe en la caja.",
+    "caraA": "Cara A (exterior)",
+    "caraB": "Cara B (interior)",
+    "descargar": "Descargar PDF",
+    "imprimir": "Imprimir esta página",
+    "plegado": "Cómo se pliega",
+    "plegadoTexto": "Pliega por la mitad a lo largo (la cara A queda fuera) y después en acordeón por las tres líneas verticales. El panel de portada queda delante.",
+    "portadaTitulo": "Cómo se juega",
+    "portadaSub": "Despliega para empezar",
+    "posterTitulo": "¿Cuándo fue?",
+    "posterTexto": "Una baraja para ordenar vuestros recuerdos.",
+    "dedicatoriaPara": "Para",
+    "dedicatoriaDe": "De",
+    "mazoDe": "Este mazo es de",
+    "mazoAnios": "Años",
+    "lineas": "Escribid aquí vuestro récord en «Nuestra historia»",
+    "impresion": "Imprime en A4 apaisado, a doble cara volteando por el borde corto y al 100 %. Recorta por las marcas de las esquinas; las marcas de los lados indican los pliegues.",
+    "personalizado": "Con el título y la dedicatoria de tu mazo.",
+    "generico": "Versión sin personalizar: crea un mazo para ver tu título y tu dedicatoria.",
+    "record": "Récord",
+    "fecha": "Fecha",
+    "cartas": "Cartas",
+    "quienes": "Quiénes",
+    "antes": "¿Antes?",
+    "despues": "¿Después?",
+    "panel": "Panel {n}"
+  }
+}

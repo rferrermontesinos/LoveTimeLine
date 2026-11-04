@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { almacenDisponible, borrarTodo, cargarMazo, guardarMazo, limpiarHuerfanas } from "@/lib/almacen/idb";
+import { fotosVivas } from "./derivados";
 import { ESTADO_INICIAL, reductor, type Accion, type EstadoMazo } from "./reductor";
 import type { Mazo } from "./tipos";
 
@@ -35,7 +36,7 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
       setAlmacenOk(ok);
       despachar({ tipo: "cargar", mazo });
       cargado.current = true;
-      if (mazo) void limpiarHuerfanas(new Set(mazo.cartas.map((c) => c.id)));
+      if (mazo) void limpiarHuerfanas(fotosVivas(mazo));
     })();
     return () => {
       vivo = false;

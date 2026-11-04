@@ -26,7 +26,7 @@ select pruebas.comprobar((select count(*) from public.perfiles) = 3, 'cada alta 
 -- ── A: su mazo, su carta y su foto ──
 set role authenticated;
 select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
-insert into public.mazos (id, pack_id, estilo_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'pareja', 'pareja');
+insert into public.mazos (id, pack_id, estilo_id) values ('aaaaaaaa-0000-0000-0000-000000000001', 'pequeno', 'naipe');
 insert into public.cartas (mazo_id, fecha, nombre_archivo, hash, ancho_original, alto_original)
   values ('aaaaaaaa-0000-0000-0000-000000000001', '2019-08', 'IMG_1.jpg', repeat('a', 64), 4000, 3000);
 insert into storage.objects (bucket_id, name)
@@ -49,6 +49,22 @@ do $$ begin
 exception when check_violation then raise notice 'ok: la descripción no pasa de 90 caracteres';
 end $$;
 
+insert into public.cartas (mazo_id, tipo, fecha, descripcion)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'texto', '1958-03', 'Nació el abuelo Pepe');
+select pruebas.comprobar((select count(*) from public.cartas where tipo = 'texto') = 1, 'un recuerdo sin foto se guarda con fecha y texto');
+
+do $$ begin
+  insert into public.cartas (mazo_id, tipo, fecha, descripcion) values ('aaaaaaaa-0000-0000-0000-000000000001', 'texto', '2001', '  ');
+  raise exception 'FALLA: se aceptó un recuerdo sin foto y sin texto';
+exception when check_violation then raise notice 'ok: un recuerdo sin foto necesita texto';
+end $$;
+
+do $$ begin
+  insert into public.cartas (mazo_id, tipo, fecha) values ('aaaaaaaa-0000-0000-0000-000000000001', 'foto', '2001');
+  raise exception 'FALLA: se aceptó una carta de foto sin archivo';
+exception when check_violation then raise notice 'ok: una carta de foto necesita su archivo';
+end $$;
+
 do $$ begin
   update public.perfiles set rol = 'admin' where id = '11111111-1111-1111-1111-111111111111';
   raise exception 'FALLA: un cliente se ha hecho admin';
@@ -61,9 +77,9 @@ do $$ begin
 exception when insufficient_privilege then raise notice 'ok: solo se sube a la carpeta propia';
 end $$;
 
-update public.packs set precio_cents = 1 where id = 'pareja';
+update public.packs set precio_cents = 1 where id = 'pequeno';
 reset role;
-select pruebas.comprobar((select precio_cents from public.packs where id = 'pareja') = 4900, 'un cliente no cambia precios');
+select pruebas.comprobar((select precio_cents from public.packs where id = 'pequeno') = 4900, 'un cliente no cambia precios');
 
 -- ── B: no ve ni toca nada de A ──
 set role authenticated;
@@ -71,7 +87,7 @@ select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222
 select pruebas.comprobar((select count(*) from public.mazos) = 0, 'B no ve mazos ajenos');
 select pruebas.comprobar((select count(*) from public.cartas) = 0, 'B no ve cartas ajenas');
 select pruebas.comprobar((select count(*) from storage.objects) = 0, 'B no ve fotos ajenas');
-select pruebas.comprobar((select count(*) from public.packs) = 2, 'B lee el catálogo');
+select pruebas.comprobar((select count(*) from public.packs) = 3, 'B lee el catálogo (solo los packs activos)');
 do $$ begin
   insert into public.cartas (mazo_id, fecha, nombre_archivo, hash, ancho_original, alto_original)
     values ('aaaaaaaa-0000-0000-0000-000000000001', '2020', 'intruso.jpg', repeat('d', 64), 10, 10);
@@ -82,7 +98,7 @@ reset role;
 
 -- ── Sin sesión: catálogo sí, lo demás no ──
 set role anon;
-select pruebas.comprobar((select count(*) from public.packs) = 2, 'el catálogo es público');
+select pruebas.comprobar((select count(*) from public.packs) = 3, 'el catálogo activo es público');
 select pruebas.comprobar((select count(*) from public.pedidos) = 0, 'los pedidos no son públicos');
 do $$ begin
   perform public.pedidos_a_purgar(60);
@@ -94,8 +110,8 @@ reset role;
 -- ── Servicio: pedidos y purga a los 60 días ──
 set role service_role;
 insert into public.pedidos (id, usuario_id, mazo_id, estado, modo, pack_id, cartas_foto, cartas_fisicas, total_cents, moneda, idioma, enviado_en)
-  values ('P-ABC123-0A1B2C', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001', 'enviado', 'simulado', 'pareja', 40, 47, 4900, 'EUR', 'es', now() - interval '61 days'),
-         ('P-ABC124-0A1B2D', '22222222-2222-2222-2222-222222222222', null, 'enviado', 'simulado', 'pareja', 40, 47, 4900, 'EUR', 'es', now() - interval '10 days');
+  values ('P-ABC123-0A1B2C', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001', 'enviado', 'simulado', 'pequeno', 40, 47, 4900, 'EUR', 'es', now() - interval '61 days'),
+         ('P-ABC124-0A1B2D', '22222222-2222-2222-2222-222222222222', null, 'enviado', 'simulado', 'pequeno', 40, 47, 4900, 'EUR', 'es', now() - interval '10 days');
 select pruebas.comprobar(
   (select array_agg(pedido_id) from public.pedidos_a_purgar(60)) = array['P-ABC123-0A1B2C'],
   'solo se purgan los pedidos enviados hace más de 60 días'

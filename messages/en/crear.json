@@ -1,0 +1,50 @@
+{
+  "crear": {
+    "titulo": "Make my deck",
+    "eligeTitulo": "Who is the deck for?",
+    "eligeTexto": "Pick a pack to start. You can change the style and add cards whenever you like.",
+    "eligeBoton": "Start with {pack}",
+    "reanudar": "You have a deck in progress with {fotos}.",
+    "empezarOtro": "Start another deck",
+    "empezarOtroConfirmar": "Delete the current deck and start another? Its photos will be removed from this device.",
+    "pasos": {
+      "etiqueta": "Steps",
+      "fotos": "Photos",
+      "cartas": "Cards",
+      "estilo": "Style",
+      "pedido": "Order",
+      "paso": "Step {n} of 4"
+    },
+    "barra": {
+      "siguienteCartas": "Next: cards",
+      "siguienteEstilo": "Next: style",
+      "siguientePedido": "Next: order",
+      "pagar": "Pay {total}",
+      "total": "Total",
+      "faltan": "{n, plural, one {# photo to go} other {# photos to go}}",
+      "minimoCubierto": "Minimum reached"
+    },
+    "pack": "{pack} pack",
+    "contador": "{actual} of {minimo} photos",
+    "contadorCompleto": "{actual} photos · minimum {minimo}",
+    "abriendo": "Opening your deck…"
+  },
+  "encuadre": {
+    "titulo": "Frame the photo",
+    "caraFoto": "Photo side",
+    "caraFecha": "Date side",
+    "zoom": "Zoom",
+    "restablecer": "Reset",
+    "ayuda": "Drag the photo to frame it. The dark part is trimmed when printing.",
+    "reversoAuto": "The date side follows the photo side until you change it."
+  },
+  "adornos": {
+    "titulo": "Emojis",
+    "anadir": "Add {emoji}",
+    "ayuda": "Drag them over the photo. They’re printed on the photo side.",
+    "quitarTodos": "Remove all",
+    "tamano": "Size",
+    "seleccionado": "Selected emoji",
+    "quitar": "Remove this emoji"
+  }
+}

@@ -13,7 +13,7 @@ import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo } from "@/lib/importar/procesar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaDesdeFoto, proporcionReversoDe } from "@/lib/mazo/derivados";
-import type { Carta } from "@/lib/mazo/tipos";
+import { esFoto, type Carta, type CartaFoto } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 import { SelectorFecha } from "./SelectorFecha";
 
@@ -39,7 +39,7 @@ export function PasoFotos() {
   const inputCarpeta = useRef<HTMLInputElement>(null);
   const hoy = useMemo(() => new Date(), []);
 
-  const hashes = useMemo(() => new Set(mazo?.cartas.map((c) => c.hash)), [mazo?.cartas]);
+  const hashes = useMemo(() => new Set(mazo?.cartas.filter(esFoto).map((c) => c.hash)), [mazo?.cartas]);
   const consentido = !!mazo?.consentimientoFotos;
 
   const importar = useCallback(
@@ -222,7 +222,7 @@ export function PasoFotos() {
         <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>
       ) : (
         <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-6 lg:grid-cols-8" aria-label={t("fotos.titulo")}>
-          {mazo.cartas.map((c) => (
+          {mazo.cartas.filter(esFoto).map((c) => (
             <Miniatura
               key={c.id}
               carta={c}
@@ -299,7 +299,7 @@ function Miniatura({
   seleccionada,
   alPulsar,
 }: {
-  carta: Carta;
+  carta: CartaFoto;
   locale: string;
   version: number;
   seleccionable: boolean;

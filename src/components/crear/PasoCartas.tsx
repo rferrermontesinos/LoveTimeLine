@@ -14,7 +14,7 @@ import { girarFoto } from "@/lib/importar/girar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { maxEstrellas, pppDeCarta, proporcionReversoDe, recortesIniciales } from "@/lib/mazo/derivados";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
-import type { Carta } from "@/lib/mazo/tipos";
+import type { CambiosCarta, Carta } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 import { DialogoEncuadre } from "./Encuadre";
 import { SelectorFecha } from "./SelectorFecha";
@@ -70,19 +70,21 @@ export function PasoCartas() {
   }
 
   const icono = iconos.get(carta.id) ?? null;
-  const ppp = pppDeCarta(carta);
-  const justa = ppp < PRINT.pppMinimo;
+  const foto = carta.tipo === "foto" ? carta : null;
+  const ppp = foto ? pppDeCarta(foto) : null;
+  const justa = ppp !== null && ppp < PRINT.pppMinimo;
   const estrellas = mazo.cartas.filter((c) => c.destacada).length;
   const maxE = maxEstrellas(catalogo);
   const conEstrella = mazo.mecanicas.includes("estrella");
-  const actualizar = (cambios: Partial<Carta>, deshacible = true) => despachar({ tipo: "actualizarCarta", id: carta.id, cambios, deshacible });
+  const actualizar = (cambios: CambiosCarta, deshacible = true) => despachar({ tipo: "actualizarCarta", id: carta.id, cambios, deshacible });
   const version = versiones[carta.id] ?? 0;
 
   const girar = async () => {
+    if (!foto) return;
     setGirando(true);
     const nuevo = await girarFoto(carta.id, 1);
     if (nuevo) {
-      actualizar({ ancho: nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, adornos: carta.adornos, pppConfirmado: false });
+      actualizar({ ancho: nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, adornos: foto.adornos, pppConfirmado: false });
       tocarVersion(carta.id);
     }
     setGirando(false);
@@ -128,6 +130,8 @@ export function PasoCartas() {
             </figure>
           </div>
           <div className="flex flex-wrap gap-2">
+            {foto && (
+              <>
             <Boton variante="secundario" tamano="sm" onClick={() => setEncuadre(true)}>
               ⤧ {t("cartas.encuadrar")}
             </Boton>
@@ -137,6 +141,8 @@ export function PasoCartas() {
             <Boton variante="secundario" tamano="sm" onClick={() => setEmojis(true)}>
               ☺ {t("cartas.adornos")}
             </Boton>
+              </>
+            )}
             <Boton
               variante="peligro"
               tamano="sm"
@@ -149,12 +155,13 @@ export function PasoCartas() {
               {t("cartas.borrarCarta")}
             </Boton>
           </div>
+          {foto && ppp !== null && (
           <div className="rounded-[14px] bg-blanco p-4 text-sm">
             <Micro className="text-tinta-2">{t("cartas.calidad")}</Micro>
             <p className={`mt-1 font-semibold ${justa ? "text-rojo-texto" : "text-verde-texto"}`}>{justa ? t("cartas.calidadJusta", { ppp }) : t("cartas.calidadBuena", { ppp })}</p>
             {justa && (
               <div className="mt-2">
-                {carta.pppConfirmado ? (
+                {foto.pppConfirmado ? (
                   <p>✓ {t("cartas.calidadConfirmada")}</p>
                 ) : (
                   <Boton tamano="sm" variante="secundario" onClick={() => actualizar({ pppConfirmado: true })}>
@@ -164,6 +171,7 @@ export function PasoCartas() {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Datos de la carta */}
@@ -214,13 +222,15 @@ export function PasoCartas() {
                 {t("cartas.descripcionContador", { n: [...carta.descripcion].length, max: MAX_DESCRIPCION })}
               </span>
             </div>
-            <Interruptor
-              id={`en-anverso-${carta.id}`}
-              activo={carta.descripcionEnAnverso}
-              alCambiar={(v) => actualizar({ descripcionEnAnverso: v })}
-              etiqueta={t("cartas.descripcionEnAnverso")}
-              deshabilitado={!carta.descripcion.trim()}
-            />
+            {foto && (
+              <Interruptor
+                id={`en-anverso-${carta.id}`}
+                activo={foto.descripcionEnAnverso}
+                alCambiar={(v) => actualizar({ descripcionEnAnverso: v })}
+                etiqueta={t("cartas.descripcionEnAnverso")}
+                deshabilitado={!carta.descripcion.trim()}
+              />
+            )}
             {conEstrella && (
               <Interruptor
                 id={`estrella-${carta.id}`}
@@ -267,11 +277,11 @@ export function PasoCartas() {
         </ul>
       </div>
 
-      <DialogoEncuadre key={`${carta.id}-${version}-${encuadre}`} carta={carta} abierto={encuadre} alCerrar={() => setEncuadre(false)} icono={icono} version={version} />
+      {foto && <DialogoEncuadre key={`${carta.id}-${version}-${encuadre}`} carta={foto} abierto={encuadre} alCerrar={() => setEncuadre(false)} icono={icono} version={version} />}
       <Dialogo abierto={emojis} alCerrar={() => setEmojis(false)} titulo={t("adornos.titulo")} ancho="max-w-3xl">
-        {emojis && (
+        {emojis && foto && (
           <EditorAdornos
-            carta={carta}
+            carta={foto}
             mazo={mazo}
             icono={icono}
             version={version}
@@ -300,11 +310,12 @@ function TiraItem({ carta, activa, alPulsar, version, locale }: { carta: Carta; 
         type="button"
         onClick={alPulsar}
         aria-current={activa ? "true" : undefined}
-        aria-label={`${carta.nombreArchivo}${carta.fecha ? `, ${carta.fecha.anio}` : ""}`}
+        aria-label={`${carta.tipo === "foto" ? carta.nombreArchivo : carta.descripcion}${carta.fecha ? `, ${carta.fecha.anio}` : ""}`}
         lang={locale}
         className={`relative block h-[74px] w-[53px] overflow-hidden rounded-[8px] bg-papel-3 ${activa ? "outline outline-[3px] outline-offset-2 outline-tinta" : "opacity-80 hover:opacity-100"}`}
       >
-        {url && (
+        {carta.tipo === "texto" && <span className="absolute inset-0 grid place-items-center p-1 text-center text-[9px] font-semibold leading-tight">{carta.descripcion}</span>}
+        {url && carta.tipo === "foto" && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt="" className="h-full w-full object-cover" draggable={false} />
         )}

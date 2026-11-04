@@ -2,7 +2,7 @@ import { defineRouting } from "next-intl/routing";
 
 /**
  * Idiomas de la interfaz. El prototipo activa español e inglés; añadir uno nuevo es
- * crear messages/<idioma>.json y sumarlo aquí. El idioma del mazo es independiente.
+ * crear la carpeta messages/<idioma>, sumarla en messages/index.ts y aquí. El idioma del mazo es independiente.
  */
 export const routing = defineRouting({
   locales: ["es", "en"],

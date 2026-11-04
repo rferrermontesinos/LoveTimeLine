@@ -9,11 +9,12 @@ import { Aviso, Interruptor } from "@/components/ui/Piezas";
 import { fechaLegible } from "@/domain/fechas/formato";
 import { agruparPorAnio, ordenarPorFecha } from "@/domain/mazo/ordenar";
 import { GRAVEDAD, validarMazo, type Aviso as AvisoMazo } from "@/domain/mazo/validar";
-import { formatearImporte, type LineaCotizacion } from "@/domain/precios/cotizar";
-import { textoEn, type Extra } from "@/domain/precios/tipos";
+import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from "@/domain/precios/cotizar";
+import { textoEn } from "@/domain/precios/tipos";
 import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
 import { paraValidar } from "@/lib/mazo/derivados";
+import { esFoto, esTexto } from "@/lib/mazo/tipos";
 import type { Carta, Pedido } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 
@@ -44,7 +45,7 @@ export function PasoPedido() {
   const validacion = useMemo(
     () =>
       mazo && cotizacion
-        ? validarMazo({ cartas: mazo.cartas.map(paraValidar), minimo: cotizacion.minimo, maximo: catalogo.ampliacion.maxCartasFoto, hoy, pppMinimo: PRINT.pppMinimo })
+        ? validarMazo({ cartas: mazo.cartas.map(paraValidar), minimo: cotizacion.minimo, maximo: catalogo.ampliacion.maxCartas, hoy, pppMinimo: PRINT.pppMinimo })
         : null,
     [mazo, cotizacion, catalogo, hoy],
   );
@@ -56,15 +57,14 @@ export function PasoPedido() {
   const bloqueantes = validacion.avisos.filter((a) => GRAVEDAD[a.tipo] === "bloquea");
   const puedePagar = validacion.puedePagar && cotizacion.sePuedePagar;
   const extras = catalogo.extras.filter((x) => x.activo).sort((a, b) => a.orden - b.orden);
-  const baseMazo = cotizacion.lineas.filter((l) => l.tipo === "pack" || l.tipo === "ampliacion" || l.tipo === "caja").reduce((s, l) => s + l.importeCents, 0);
-  const precioExtra = (x: Extra) => (x.precio.tipo === "fijo" ? x.precio.cents : Math.round((baseMazo * x.precio.porcentaje) / 100));
+  const base = baseMazo(cotizacion);
 
   const etiquetaLinea = (l: LineaCotizacion): string => {
     switch (l.tipo) {
       case "pack":
-        return t("linea.pack", { pack: textoEn(cotizacion.pack.nombre, locale), n: cotizacion.pack.cartas });
-      case "ampliacion":
-        return t("linea.ampliacion", { n: l.cantidad, bloque: catalogo.ampliacion.bloqueCartas });
+        return t("linea.pack", { pack: textoEn(cotizacion.packAplicado.nombre, locale), n: cotizacion.packAplicado.cartas });
+      case "cartas-extra":
+        return t("linea.cartasExtra", { n: l.cantidad, precio: dinero(cotizacion.precioCartaExtraCents) });
       case "caja":
         return t("linea.caja", { n: l.cantidad });
       case "envio":
@@ -136,7 +136,8 @@ export function PasoPedido() {
         body: JSON.stringify({
           mazoId: mazo.id,
           packId: mazo.packId,
-          cartasFoto: mazo.cartas.length,
+          cartasFoto: mazo.cartas.filter(esFoto).length,
+          cartasTexto: mazo.cartas.filter(esTexto).length,
           extras: mazo.extras,
           mecanicas: mazo.mecanicas,
           idioma: locale,
@@ -243,7 +244,7 @@ export function PasoPedido() {
                       etiqueta={
                         <span className="flex flex-wrap items-baseline justify-between gap-x-3">
                           <span>{textoEn(x.nombre, locale)}</span>
-                          <span className="tabular-nums text-tinta-2">+{dinero(precioExtra(x))}</span>
+                          <span className="tabular-nums text-tinta-2">+{dinero(precioDeExtra(x, base))}</span>
                         </span>
                       }
                       descripcion={textoEn(x.descripcion, locale)}

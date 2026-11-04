@@ -11,6 +11,8 @@ export interface SolicitudPedido {
   mazoId: string;
   packId: string;
   cartasFoto: number;
+  /** Recuerdos sin foto: se cobran igual que las cartas con foto. */
+  cartasTexto: number;
   extras: string[];
   mecanicas: string[];
   idioma: "es" | "en";
@@ -27,9 +29,12 @@ export function leerSolicitud(cuerpo: unknown): SolicitudPedido | null {
   const mecanicas = lista(c.mecanicas ?? []);
   if (typeof c.mazoId !== "string" || !ID.test(c.mazoId)) return null;
   if (typeof c.packId !== "string" || !ID.test(c.packId)) return null;
-  if (typeof c.cartasFoto !== "number" || !Number.isInteger(c.cartasFoto) || c.cartasFoto < 0 || c.cartasFoto > 2000) return null;
+  const cuenta = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 2000 ? v : null);
+  const cartasFoto = cuenta(c.cartasFoto);
+  const cartasTexto = cuenta(c.cartasTexto ?? 0);
+  if (cartasFoto === null || cartasTexto === null) return null;
   if (!extras || !mecanicas) return null;
-  return { mazoId: c.mazoId, packId: c.packId, cartasFoto: c.cartasFoto, extras, mecanicas, idioma: c.idioma === "en" ? "en" : "es" };
+  return { mazoId: c.mazoId, packId: c.packId, cartasFoto, cartasTexto, extras, mecanicas, idioma: c.idioma === "en" ? "en" : "es" };
 }
 
 export function nuevoPedidoId(ahora = Date.now()): string {
@@ -42,9 +47,11 @@ export function nombreLinea(l: LineaCotizacion, c: Cotizacion, catalogo: Catalog
   const en = idioma === "en";
   switch (l.tipo) {
     case "pack":
-      return en ? `${textoEn(c.pack.nombre, idioma)} pack · ${c.pack.cartas} photo cards` : `Pack ${textoEn(c.pack.nombre, idioma)} · ${c.pack.cartas} cartas con foto`;
-    case "ampliacion":
-      return en ? `Add-on: ${l.cantidad} × ${catalogo.ampliacion.bloqueCartas} cards` : `Ampliación: ${l.cantidad} × ${catalogo.ampliacion.bloqueCartas} cartas`;
+      return en
+        ? `${textoEn(c.packAplicado.nombre, idioma)} pack · ${c.packAplicado.cartas} cards`
+        : `Pack ${textoEn(c.packAplicado.nombre, idioma)} · ${c.packAplicado.cartas} cartas`;
+    case "cartas-extra":
+      return en ? `Extra cards × ${l.cantidad}` : `Cartas extra × ${l.cantidad}`;
     case "caja":
       return en ? `Extra box × ${l.cantidad}` : `Caja extra × ${l.cantidad}`;
     case "envio":
@@ -57,7 +64,7 @@ export function nombreLinea(l: LineaCotizacion, c: Cotizacion, catalogo: Catalog
 }
 
 export function cotizarSolicitud(catalogo: Catalogo, s: SolicitudPedido): Cotizacion {
-  return cotizar({ catalogo, packId: s.packId, cartasFoto: s.cartasFoto, extras: s.extras, mecanicas: s.mecanicas });
+  return cotizar({ catalogo, packId: s.packId, cartas: s.cartasFoto + s.cartasTexto, extras: s.extras, mecanicas: s.mecanicas });
 }
 
 export function stripe(): Stripe | null {
@@ -93,7 +100,9 @@ export async function crearSesionStripe(e: {
       pedidoId: e.pedidoId,
       mazoId: s.mazoId,
       packId: s.packId,
+      packAplicado: c.packAplicado.id,
       cartasFoto: String(s.cartasFoto),
+      cartasTexto: String(s.cartasTexto),
       cartasFisicas: String(c.cartasFisicas),
       extras: s.extras.join(","),
       mecanicas: s.mecanicas.join(","),
@@ -104,7 +113,14 @@ export async function crearSesionStripe(e: {
 }
 
 /** Guarda el pedido en Supabase si está configurado. Sin Supabase no hace nada. */
-export async function registrarPedido(e: { pedidoId: string; solicitud: SolicitudPedido; cotizacion: Cotizacion; modo: "simulado" | "stripe"; stripeSessionId?: string }) {
+export async function registrarPedido(e: {
+  pedidoId: string;
+  solicitud: SolicitudPedido;
+  cotizacion: Cotizacion;
+  catalogo: Catalogo;
+  modo: "simulado" | "stripe";
+  stripeSessionId?: string;
+}) {
   const sb = clienteSupabaseServicio();
   if (!sb) return;
   const { error } = await sb.from("pedidos").insert({
@@ -112,9 +128,13 @@ export async function registrarPedido(e: { pedidoId: string; solicitud: Solicitu
     mazo_ref: e.solicitud.mazoId,
     estado: e.modo === "simulado" ? "simulado" : "pendiente",
     modo: e.modo,
-    pack_id: e.solicitud.packId,
+    pack_id: e.cotizacion.packAplicado.id,
+    pack_elegido_id: e.cotizacion.pack.id,
     cartas_foto: e.solicitud.cartasFoto,
+    cartas_texto: e.solicitud.cartasTexto,
     cartas_fisicas: e.cotizacion.cartasFisicas,
+    lineas: e.cotizacion.lineas,
+    catalogo_version: e.catalogo.version,
     extras: e.solicitud.extras,
     mecanicas: e.solicitud.mecanicas,
     total_cents: e.cotizacion.totalCents,

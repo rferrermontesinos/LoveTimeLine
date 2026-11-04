@@ -20,7 +20,13 @@ describe("seed.sql", () => {
 
   it("guarda el precio de cada extra según su tipo", () => {
     const sql = semillaSql(semilla);
-    expect(sql).toMatch(/\('copia-extra', 1, true, 'porcentajeMazo', null, 60, null,/);
-    expect(sql).toMatch(/\('pack-retos', 2, true, 'fijo', 600, null, 12,/);
+    expect(sql).toMatch(/\('copia-extra', 1, true, 'porcentajeMazo', null, 60, null, null,/);
+    expect(sql).toMatch(/\('caja-personalizada', 4, true, 'fijo', 700, null, null, 'caja-personalizada',/);
+  });
+
+  it("deja lo retirado sin borrar, como inactivo", () => {
+    const sql = semillaSql(semilla);
+    expect(sql).toMatch(/\('pack-retos', 10, false, 'fijo', 600, null, 12, null,/);
+    expect(sql).toMatch(/\('pareja', 11, false, 40, 4900,/);
   });
 });

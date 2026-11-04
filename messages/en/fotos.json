@@ -1,0 +1,63 @@
+{
+  "fotos": {
+    "titulo": "Upload your photos",
+    "texto": "The more the better: you need at least {minimo} for your pack. JPG, PNG, HEIC or WEBP.",
+    "consentimiento": "I have permission from the people in the photos, and from their parents if they are minors, to use them in this deck.",
+    "consentimientoFalta": "Tick the permission box to add photos.",
+    "soltar": "Drop photos or a whole folder here",
+    "soltarActivo": "Drop to add them",
+    "elegirFotos": "Choose photos",
+    "elegirCarpeta": "Choose a folder",
+    "privacidad": "Photos never leave this device: we read the dates right here.",
+    "procesando": "Reading {hechas} of {total} photos…",
+    "procesadas": "{n, plural, one {# photo added} other {# photos added}}",
+    "repetidas": "{n, plural, one {# repeated photo was skipped} other {# repeated photos were skipped}}",
+    "errores": "{n, plural, one {# file couldn’t be read} other {# files couldn’t be read}}",
+    "noImagen": "{nombre} isn’t a supported image.",
+    "vacio": "No photos yet. Start with the folder of a trip or a year.",
+    "ordenar": "Sort by date",
+    "siguienteSinFecha": "Next without a date",
+    "sinFechaCuenta": "{n, plural, one {# without a date} other {# without a date}}",
+    "revisarCuenta": "{n, plural, one {# to check} other {# to check}}",
+    "seleccionar": "Select",
+    "seleccionadas": "{n, plural, one {# selected} other {# selected}}",
+    "ponerFecha": "Set date",
+    "quitarSeleccion": "Clear selection",
+    "borrarSeleccion": "Delete",
+    "editar": "Edit {nombre}",
+    "sinFecha": "No date",
+    "confianza": {
+      "alta": "Photo date",
+      "media": "Date from name",
+      "baja": "Check"
+    },
+    "estrella": "Star memory"
+  },
+  "fechas": {
+    "titulo": "Date",
+    "precision": "What do you know about the date?",
+    "dia": "Exact day",
+    "mes": "Month and year",
+    "anio": "Just the year",
+    "campoDia": "Day",
+    "campoMes": "Month",
+    "campoAnio": "Year",
+    "invalida": "That date doesn’t exist.",
+    "futura": "The date can’t be later than today.",
+    "fuente": {
+      "exif": "Taken from the photo’s data.",
+      "nombre": "Taken from the file name.",
+      "archivo": "This is the file’s date: it may be when you copied it. Please check it.",
+      "manual": "Set by hand."
+    },
+    "motivo": {
+      "fecha-del-archivo": "This is the file’s date, not the photo’s.",
+      "fecha-de-hoy": "It’s today’s date: probably when you copied the photo.",
+      "exif-y-nombre-no-coinciden": "The photo’s data and the file name don’t match.",
+      "reloj-de-camara": "Looks like a camera whose clock was never set."
+    },
+    "confirmar": "The date is right",
+    "aplicarA": "Set this date on {n, plural, one {# photo} other {# photos}}",
+    "dialogoTitulo": "Set the same date"
+  }
+}

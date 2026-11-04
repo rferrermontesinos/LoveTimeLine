@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "titulo": "{marca}: vuestra historia, en una baraja",
+    "descripcion": "Sube vuestras fotos y recibe en casa un juego de cartas para ordenar recuerdos por fecha. Para parejas y familias."
+  },
+  "nav": {
+    "inicio": "Inicio",
+    "crear": "Crear mi mazo",
+    "comoJugar": "Cómo se juega",
+    "precios": "Precios",
+    "privacidad": "Privacidad",
+    "idioma": "Idioma",
+    "cambiarIdioma": "English",
+    "prototipo": "Prototipo · modo prueba",
+    "prototipoDetalle": "Esto es un prototipo para los socios: los pagos son de prueba y las fotos no salen de tu dispositivo.",
+    "saltar": "Saltar al contenido",
+    "principal": "Principal",
+    "pie": "Pie de página"
+  },
+  "comun": {
+    "cartas": "{n, plural, one {# carta} other {# cartas}}",
+    "fotos": "{n, plural, one {# foto} other {# fotos}}",
+    "recuerdos": "{n, plural, one {# recuerdo} other {# recuerdos}}",
+    "anterior": "Anterior",
+    "siguiente": "Siguiente",
+    "cerrar": "Cerrar",
+    "cancelar": "Cancelar",
+    "aceptar": "Aceptar",
+    "borrar": "Borrar",
+    "deshacer": "Deshacer",
+    "guardar": "Guardar",
+    "listo": "Listo",
+    "volver": "Volver",
+    "gratis": "Gratis",
+    "incluido": "Incluido",
+    "desde": "desde {precio}",
+    "cargando": "Cargando…",
+    "guardadoLocal": "Guardado en este dispositivo",
+    "anverso": "Cara de la foto",
+    "reverso": "Cara de la fecha",
+    "verAnverso": "Ver la cara de la foto",
+    "verReverso": "Ver la cara de la fecha"
+  },
+  "errores": {
+    "noEncontrada": "Esta página no existe.",
+    "volverInicio": "Volver al inicio",
+    "almacen": "Tu navegador no deja guardar el mazo (¿modo privado?). Puedes seguir, pero se perderá al cerrar la pestaña."
+  },
+  "pie": {
+    "texto": "{marca} es un nombre provisional. Prototipo para pruebas de impresión.",
+    "instrucciones": "Instrucciones en PDF",
+    "fuentes": "Tipografía Bricolage Grotesque (SIL OFL 1.1)."
+  },
+  "privacidadPagina": {
+    "titulo": "Privacidad",
+    "intro": "Las fotos de tu mazo son datos personales y muchas veces salen menores. Las tratamos así:",
+    "prototipoTitulo": "En este prototipo",
+    "prototipo": "Las fotos se leen y se guardan solo en tu navegador (IndexedDB). No se suben a ningún servidor. El archivo de impresión también se genera en tu dispositivo. Puedes borrarlo todo con «Empezar otro mazo».",
+    "realTitulo": "Cuando haya pedidos reales",
+    "real": {
+      "1": "Las fotos se guardarán en servidores de la Unión Europea, en almacenamiento privado, y solo se podrán ver con enlaces firmados que caducan en minutos.",
+      "2": "Pediremos tu consentimiento explícito antes de subir fotos.",
+      "3": "Borraremos automáticamente las fotos originales y los archivos de impresión 60 días después del envío.",
+      "4": "No usamos analítica de terceros sobre tus imágenes ni las enviamos a otros servicios.",
+      "5": "Puedes pedirnos en cualquier momento que borremos tu mazo y tus datos."
+    },
+    "contacto": "Contacto: {email}"
+  }
+}

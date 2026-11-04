@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "titulo": "{marca}: your story, in a deck of cards",
+    "descripcion": "Upload your photos and get a card game at home where you put memories in order by date. For couples and families."
+  },
+  "nav": {
+    "inicio": "Home",
+    "crear": "Make my deck",
+    "comoJugar": "How to play",
+    "precios": "Prices",
+    "privacidad": "Privacy",
+    "idioma": "Language",
+    "cambiarIdioma": "Español",
+    "prototipo": "Prototype · test mode",
+    "prototipoDetalle": "This is a prototype for the partners: payments are test payments and photos never leave your device.",
+    "saltar": "Skip to content",
+    "principal": "Main",
+    "pie": "Footer"
+  },
+  "comun": {
+    "cartas": "{n, plural, one {# card} other {# cards}}",
+    "fotos": "{n, plural, one {# photo} other {# photos}}",
+    "recuerdos": "{n, plural, one {# memory} other {# memories}}",
+    "anterior": "Previous",
+    "siguiente": "Next",
+    "cerrar": "Close",
+    "cancelar": "Cancel",
+    "aceptar": "OK",
+    "borrar": "Delete",
+    "deshacer": "Undo",
+    "guardar": "Save",
+    "listo": "Done",
+    "volver": "Back",
+    "gratis": "Free",
+    "incluido": "Included",
+    "desde": "from {precio}",
+    "cargando": "Loading…",
+    "guardadoLocal": "Saved on this device",
+    "anverso": "Photo side",
+    "reverso": "Date side",
+    "verAnverso": "Show the photo side",
+    "verReverso": "Show the date side"
+  },
+  "errores": {
+    "noEncontrada": "This page doesn’t exist.",
+    "volverInicio": "Back to home",
+    "almacen": "Your browser won’t let us save the deck (private mode?). You can carry on, but it will be lost when you close the tab."
+  },
+  "pie": {
+    "texto": "{marca} is a placeholder name. Prototype for print tests.",
+    "instrucciones": "Instructions as PDF",
+    "fuentes": "Typeface Bricolage Grotesque (SIL OFL 1.1)."
+  },
+  "privacidadPagina": {
+    "titulo": "Privacy",
+    "intro": "The photos in your deck are personal data and often show children. This is how we handle them:",
+    "prototipoTitulo": "In this prototype",
+    "prototipo": "Photos are read and stored only in your browser (IndexedDB). They’re never uploaded to a server. The print file is also generated on your device. You can delete everything with “Start another deck”.",
+    "realTitulo": "When there are real orders",
+    "real": {
+      "1": "Photos will be stored on servers in the European Union, in private storage, and only viewable through signed links that expire within minutes.",
+      "2": "We’ll ask for your explicit consent before uploading photos.",
+      "3": "We’ll automatically delete original photos and print files 60 days after shipping.",
+      "4": "We don’t run third-party analytics on your images or send them to other services.",
+      "5": "You can ask us at any time to delete your deck and your data."
+    },
+    "contacto": "Contact: {email}"
+  }
+}

@@ -1,13 +1,10 @@
 import type { TextosCarta } from "./tipos";
 import { BRAND_NAME } from "@config/brand";
-import es from "../../../messages/es.json";
-import en from "../../../messages/en.json";
-
-const MENSAJES: Record<string, typeof es> = { es, en };
+import { mensajesDe } from "../../../messages";
 
 /** Textos impresos en las cartas en el idioma del mazo (independiente del de la interfaz). */
 export function textosCarta(idiomaMazo: string): TextosCarta {
-  const m = (MENSAJES[idiomaMazo] ?? es).carta;
+  const m = mensajesDe(idiomaMazo).carta;
   return {
     pregunta: m.pregunta,
     comodin: m.comodin,
@@ -25,7 +22,7 @@ export function textosCarta(idiomaMazo: string): TextosCarta {
 
 /** Textos de las 12 cartas del pack de retos en el idioma del mazo. */
 export function textosRetos(idiomaMazo: string): string[] {
-  const r = (MENSAJES[idiomaMazo] ?? es).retos as Record<string, string>;
+  const r = mensajesDe(idiomaMazo).retos as Record<string, string>;
   return Object.keys(r)
     .sort((a, b) => Number(a) - Number(b))
     .map((k) => r[k]!);
@@ -42,7 +39,7 @@ export const IDIOMAS_MAZO = ["es", "en"] as const;
 
 /** Textos del folleto de instrucciones en el idioma del mazo (independiente del de la interfaz). */
 export function textosFolleto(idiomaMazo: string) {
-  const m = MENSAJES[idiomaMazo] ?? es;
+  const m = mensajesDe(idiomaMazo);
   return { juego: m.juego, modos: m.modos, instrucciones: m.instrucciones, pregunta: m.carta.pregunta, marca: BRAND_NAME };
 }
 export type TextosFolleto = ReturnType<typeof textosFolleto>;

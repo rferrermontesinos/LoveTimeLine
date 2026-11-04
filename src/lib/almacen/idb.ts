@@ -3,6 +3,7 @@
  * se guardan aquí la copia de trabajo y la miniatura de cada una, y el mazo en JSON.
  */
 import { createStore, del, delMany, get, keys, set, setMany, type UseStore } from "idb-keyval";
+import { migrarMazo } from "@/lib/mazo/migrar";
 import type { Mazo } from "@/lib/mazo/tipos";
 
 let tienda: UseStore | null = null;
@@ -26,7 +27,8 @@ export async function almacenDisponible(): Promise<boolean> {
 
 export async function cargarMazo(): Promise<Mazo | null> {
   try {
-    return ((await get(CLAVE_MAZO, t())) as Mazo | undefined) ?? null;
+    // Un mazo guardado con una versión anterior del portal se pone al día al cargarlo.
+    return migrarMazo(await get(CLAVE_MAZO, t()));
   } catch {
     return null;
   }

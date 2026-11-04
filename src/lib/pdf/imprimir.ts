@@ -12,7 +12,7 @@ import { dibujarCara, medidasCara } from "@/lib/carta/dibujar";
 import { cargarFuentesCartas } from "@/lib/carta/fuentes";
 import { textosCarta } from "@/lib/carta/textos";
 import type { DatosCarta } from "@/lib/carta/tipos";
-import { obtenerEstilo, obtenerPlantilla, obtenerTinta, type Tono } from "@/lib/estilos";
+import { obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
 import { crearLienzo } from "@/lib/importar/lienzo";
 import type { CartaPlan } from "./plan";
 
@@ -25,7 +25,7 @@ export interface FotoParaImprimir {
 export interface EntradaPdf {
   plan: CartaPlan[];
   estiloId: string;
-  tintaId: string;
+  paletaId: string;
   tono: Tono;
   idiomaMazo: string;
   titulo: string;
@@ -47,7 +47,7 @@ export function medidasPagina() {
 export async function generarPdfMazo(e: EntradaPdf): Promise<Uint8Array> {
   const estilo = obtenerEstilo(e.estiloId);
   const plantilla = obtenerPlantilla(estilo.plantilla);
-  const tinta = obtenerTinta(estilo, e.tintaId);
+  const paleta = obtenerPaleta(estilo, e.paletaId);
   const textos = textosCarta(e.idiomaMazo);
   await cargarFuentesCartas(plantilla);
 
@@ -55,7 +55,7 @@ export async function generarPdfMazo(e: EntradaPdf): Promise<Uint8Array> {
   const { ancho: anchoPx, alto: altoPx } = medidasCara({ conSangrado: true, pxPorMm });
   const lienzo = crearLienzo(anchoPx, altoPx);
   const ctx = lienzo.ctx as CanvasRenderingContext2D;
-  const opciones = { plantilla, estilo, tinta, tono: e.tono, idioma: e.idiomaMazo, textos, conSangrado: true, pxPorMm };
+  const opciones = { plantilla, estilo, paleta, tono: e.tono, idioma: e.idiomaMazo, textos, conSangrado: true, pxPorMm };
 
   const pdf = await PDFDocument.create();
   pdf.setTitle(e.titulo || BRAND_NAME);

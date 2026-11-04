@@ -1,0 +1,30 @@
+{
+  "estilo": {
+    "titulo": "Choose the style",
+    "texto": "The style, the colour and the cover make the deck yours.",
+    "estilo": "Style",
+    "tinta": "Colour",
+    "tituloMazo": "Deck title",
+    "tituloMazoAyuda": "Shown on the cover and the box. For example: Ana and Leo.",
+    "tituloPorDefecto": "Our story",
+    "dedicatoria": "Dedication (optional)",
+    "dedicatoriaAyuda": "Printed on the back of the cover. Up to {max} characters.",
+    "portada": "Cover photo",
+    "portadaAyuda": "Tap a photo to put it on the cover and the box.",
+    "tono": "Photo tone",
+    "tonos": {
+      "original": "Original",
+      "bn": "Black and white",
+      "calido": "Warm"
+    },
+    "idiomaMazo": "Deck language",
+    "idiomaMazoAyuda": "Months, card texts and instructions.",
+    "mecanicas": "Free game extras",
+    "mecanicasAyuda": "They don’t change the price. You can remove them.",
+    "vistaPrevia": "How it looks",
+    "caja": "The box",
+    "portadaCarta": "The cover",
+    "sinFotos": "Once you add photos, you can choose the cover.",
+    "masCartas": "+{n} cards"
+  }
+}

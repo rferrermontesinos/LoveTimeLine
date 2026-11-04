@@ -42,9 +42,9 @@ export function EjemplosPrecision({ idioma }: { idioma: string }) {
   const t = useTranslations("inicio");
   const base = MUESTRAS.excursion!;
   const ejemplos = [
-    { ...base, foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: t("muestras.menorca"), estiloId: "pareja", tintaId: "rosa" },
+    { ...base, foto: "/muestras/mar.jpg", fecha: { anio: 2019, mes: 8, dia: 14 }, descripcion: t("muestras.menorca"), estiloId: "pareja", paletaId: "rosa" },
     { ...base, fecha: { anio: 2015, mes: 5 }, descripcion: t("muestras.excursion") },
-    { ...base, foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: t("muestras.jardin"), tintaId: "amarillo" },
+    { ...base, foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: t("muestras.jardin"), paletaId: "amarillo" },
   ];
   return (
     <div className="grid grid-cols-3 gap-3 sm:gap-5">

@@ -1,9 +1,9 @@
 import type { FechaCarta } from "@/domain/fechas/fecha";
 import type { Rect } from "@/domain/imagen/recorte";
-import type { Estilo, Plantilla, Tinta, Tono } from "@/lib/estilos";
+import type { Estilo, Plantilla, Paleta, Tono } from "@/lib/estilos";
 
 export type Cara = "anverso" | "reverso";
-export type TipoCarta = "foto" | "portada" | "comodin" | "en-blanco" | "reto" | "caja";
+export type TipoCarta = "foto" | "texto" | "portada" | "comodin" | "en-blanco" | "reto" | "caja";
 
 /** Emoji colocado sobre la cara de la foto. Posición y tamaño relativos a la carta terminada. */
 export interface Adorno {
@@ -38,7 +38,7 @@ export interface DatosCarta {
   titulo?: string;
   subtitulo?: string;
   dedicatoria?: string;
-  /** Texto de una carta de reto. */
+  /** Texto del recuerdo de una carta sin foto (o de una carta de reto). */
   texto?: string;
 }
 
@@ -60,7 +60,7 @@ export interface TextosCarta {
 export interface OpcionesDibujo {
   plantilla: Plantilla;
   estilo: Estilo;
-  tinta: Tinta;
+  paleta: Paleta;
   tono: Tono;
   /** Idioma del mazo (meses de la carta). */
   idioma: string;

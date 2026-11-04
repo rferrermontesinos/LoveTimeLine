@@ -1,0 +1,27 @@
+{
+  "cartas": {
+    "titulo": "Complete your cards",
+    "texto": "Check the date, add a line if you like and frame the photo. It saves itself.",
+    "posicion": "Card {actual} of {total}",
+    "descripcion": "A line about the memory (optional)",
+    "descripcionAyuda": "Shown on the date side. Up to {max} characters.",
+    "descripcionContador": "{n} / {max}",
+    "descripcionEnAnverso": "Also show it on the photo side, as a clue",
+    "estrella": "Star memory",
+    "estrellaAyuda": "Whoever places it correctly plays again. Up to {max} per deck.",
+    "estrellaMax": "You already have {max} star memories.",
+    "encuadrar": "Frame",
+    "girar": "Rotate",
+    "adornos": "Emojis",
+    "borrarCarta": "Delete card",
+    "borrada": "Card deleted.",
+    "calidad": "Print quality",
+    "calidadBuena": "Good ({ppp} ppi)",
+    "calidadJusta": "Fair ({ppp} ppi): it may look a bit blurry",
+    "calidadConfirmar": "Print it anyway",
+    "calidadConfirmada": "Confirmed: it will print like this",
+    "sinCartas": "Add photos in step 1 first.",
+    "irAFotos": "Go to photos",
+    "atajos": "Shortcuts: ← and → to move between cards."
+  }
+}

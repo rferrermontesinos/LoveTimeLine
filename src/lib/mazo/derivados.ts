@@ -9,7 +9,8 @@ import type { Cara, DatosCarta } from "@/lib/carta/tipos";
 import { obtenerPlantilla, obtenerEstilo } from "@/lib/estilos";
 import type { FotoImportada } from "@/lib/importar/procesar";
 import { textoRecuerdos } from "@/lib/carta/textos";
-import type { Carta, Mazo } from "./tipos";
+import { esFoto, type Carta, type CartaFoto, type CartaTexto, type Mazo } from "./tipos";
+import type { FechaCarta } from "@/domain/fechas/fecha";
 
 const ANCHO_FOTO_MM = PRINT.carta.anchoMm + 2 * PRINT.sangradoMm;
 
@@ -23,8 +24,9 @@ export function recortesIniciales(ancho: number, alto: number, propReverso: numb
   return { recorteAnverso, recorteReverso: recorteReversoDesdeAnverso(recorteAnverso, propReverso, ancho, alto) };
 }
 
-export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: number): Carta {
+export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: number): CartaFoto {
   return {
+    tipo: "foto",
     id: f.id,
     nombreArchivo: f.nombreArchivo,
     tipoArchivo: f.tipoArchivo,
@@ -49,20 +51,43 @@ export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: num
   };
 }
 
+/** Recuerdo sin foto: fecha y texto con el estilo del mazo. Se cobra como una carta con foto. */
+export function nuevaCartaTexto(id: string, descripcion: string, fecha: FechaCarta | null, ahora: number): CartaTexto {
+  return {
+    tipo: "texto",
+    id,
+    fecha,
+    fuente: fecha ? "manual" : null,
+    confianza: fecha ? "alta" : null,
+    revisar: false,
+    descripcion,
+    destacada: false,
+    anadidaEn: ahora,
+  };
+}
+
+/** Ids con foto guardada en el navegador: las cartas con foto y la foto propia de la caja. */
+export function fotosVivas(mazo: Pick<Mazo, "cartas" | "caja">): Set<string> {
+  const ids = new Set(mazo.cartas.filter(esFoto).map((c) => c.id));
+  if (mazo.caja?.origen === "propia") ids.add(mazo.caja.id);
+  return ids;
+}
+
 /** Resolución efectiva de impresión: la peor de las dos caras. */
-export function pppDeCarta(c: Pick<Carta, "recorteAnverso" | "recorteReverso">): number {
+export function pppDeCarta(c: Pick<CartaFoto, "recorteAnverso" | "recorteReverso">): number {
   return Math.round(Math.min(pppEfectivo(c.recorteAnverso, ANCHO_FOTO_MM), pppEfectivo(c.recorteReverso, ANCHO_FOTO_MM)));
 }
 
 export function paraValidar(c: Carta): CartaParaValidar {
+  const foto = esFoto(c);
   return {
     id: c.id,
     fecha: c.fecha,
     revisar: c.revisar,
-    hash: c.hash,
+    hash: foto ? c.hash : null,
     descripcion: c.descripcion,
-    ppp: pppDeCarta(c),
-    pppConfirmado: c.pppConfirmado,
+    ppp: foto ? pppDeCarta(c) : null,
+    pppConfirmado: foto ? c.pppConfirmado : true,
   };
 }
 
@@ -83,8 +108,10 @@ export function maxEstrellas(catalogo: Catalogo): number {
   return catalogo.mecanicas.find((m) => m.id === "estrella")?.maxCartas ?? 5;
 }
 
-export function cartaPortada(mazo: Mazo): Carta | null {
-  return mazo.cartas.find((c) => c.id === mazo.portadaId) ?? mazo.cartas.find((c) => c.destacada) ?? mazo.cartas[0] ?? null;
+/** Foto de la portada: la elegida, si no la primera estrella con foto, si no la primera con foto. */
+export function cartaPortada(mazo: Pick<Mazo, "cartas" | "portadaId">): CartaFoto | null {
+  const fotos = mazo.cartas.filter(esFoto);
+  return fotos.find((c) => c.id === mazo.portadaId) ?? fotos.find((c) => c.destacada) ?? fotos[0] ?? null;
 }
 
 /** «2012–2026 · 43 recuerdos» en el idioma del mazo. */
@@ -102,8 +129,9 @@ export function aniosPortada(mazo: Mazo): string {
   return rango[0] === rango[1] ? String(rango[0]) : `${rango[0]}–${rango[1]}`;
 }
 
-/** Datos de dibujo de una carta de foto (sin la imagen, que se añade al dibujar). */
+/** Datos de dibujo de una carta de recuerdo (sin la imagen, que se añade al dibujar). */
 export function datosCarta(c: Carta, icono: string | null): Omit<DatosCarta, "foto"> {
+  if (c.tipo === "texto") return { tipo: "texto", fecha: c.fecha, texto: c.descripcion, icono };
   return {
     tipo: "foto",
     fecha: c.fecha,

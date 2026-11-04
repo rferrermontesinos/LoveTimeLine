@@ -86,7 +86,7 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
       const bytes = await generarPdfMazo({
         plan,
         estiloId: mazo.estiloId,
-        tintaId: mazo.tintaId,
+        paletaId: mazo.paletaId,
         tono: mazo.tono,
         idiomaMazo: mazo.idiomaMazo,
         titulo: mazo.titulo,

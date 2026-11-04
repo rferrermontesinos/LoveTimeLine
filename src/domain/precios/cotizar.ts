@@ -1,4 +1,4 @@
-import type { Catalogo, Pack } from "./tipos";
+import type { Catalogo, Extra, Mecanica, Pack } from "./tipos";
 
 export class ErrorCotizacion extends Error {
   constructor(
@@ -12,57 +12,132 @@ export class ErrorCotizacion extends Error {
 
 export interface EntradaCotizacion {
   catalogo: Catalogo;
+  /** Pack elegido: marca el mínimo de cartas para pagar. */
   packId: string;
-  /** Cartas con foto del mazo. */
-  cartasFoto: number;
+  /** Cartas de recuerdo del mazo, con foto o de texto: se cobran igual. */
+  cartas: number;
   extras?: string[];
   mecanicas?: string[];
 }
 
-export type TipoLinea = "pack" | "ampliacion" | "caja" | "extra" | "mecanica" | "envio";
+export type TipoLinea = "pack" | "cartas-extra" | "caja" | "extra" | "mecanica" | "envio";
 
 export interface LineaCotizacion {
   tipo: TipoLinea;
-  /** Id del pack, extra o mecánica; «ampliacion», «caja» o «envio» en el resto. */
+  /** Id del pack, extra o mecánica; «cartas-extra», «caja» o «envio» en el resto. */
   id: string;
   cantidad: number;
   importeCents: number;
 }
 
+/**
+ * Avisos de oferta, calculados con el mismo catálogo que el precio:
+ * · «pack-aplicado»: con estas cartas ya se cobra un pack mayor, porque sale más barato.
+ * · «subir»: con unas pocas cartas más se pasa a un pack mayor y sale a cuenta
+ *   (diferenciaCents ≤ 0 es pagar lo mismo o menos y tener más cartas).
+ * · «bajar»: faltan cartas para el pack elegido, pero un pack menor ya está cubierto.
+ */
+export type Oferta =
+  | { tipo: "pack-aplicado"; pack: Pack; ahorroCents: number }
+  | { tipo: "subir"; pack: Pack; cartasMas: number; diferenciaCents: number; ahorroCents: number }
+  | { tipo: "bajar"; pack: Pack; totalCents: number };
+
 export interface Cotizacion {
   moneda: string;
+  /** Pack elegido por el cliente. */
   pack: Pack;
-  cartasFoto: number;
-  /** Mínimo jugable: las cartas del pack. */
+  /** Pack que se cobra: el elegido o uno mayor si con estas cartas sale más barato. */
+  packAplicado: Pack;
+  /** Cartas de recuerdo (con foto y de texto). */
+  cartas: number;
+  /** Mínimo para pagar: las cartas del pack elegido. */
   minimo: number;
   faltan: number;
-  bloquesAmpliacion: number;
-  /** Cartas con foto que caben en lo pagado. */
-  plazas: number;
-  /** Plazas pagadas en la última ampliación que aún no tienen foto. */
-  huecosLibres: number;
-  /** Cartas impresas: fotos + portada + cartas de mecánicas y extras. */
+  /** Cartas que pasan de las incluidas en el pack aplicado. */
+  cartasExtra: number;
+  precioCartaExtraCents: number;
+  /** Cartas impresas: recuerdos + portada + cartas de mecánicas y extras. */
   cartasFisicas: number;
   cajas: number;
   lineas: LineaCotizacion[];
   totalCents: number;
   sePuedePagar: boolean;
   excedeMaximo: boolean;
+  ofertas: Oferta[];
 }
 
 /** Carta de portada con el título y la dedicatoria: va siempre incluida. */
 export const CARTAS_PORTADA = 1;
 
-/**
- * Calcula el precio de un mazo con los datos del catálogo. Todo en céntimos.
- * El pack incluye un número de cartas (mínimo jugable); las que pasan se cobran por bloques.
- */
-export function cotizar(e: EntradaCotizacion): Cotizacion {
-  const { catalogo } = e;
-  const pack = catalogo.packs.find((p) => p.id === e.packId && p.activo);
-  if (!pack) throw new ErrorCotizacion("pack-desconocido", e.packId);
-  if (!Number.isInteger(e.cartasFoto) || e.cartasFoto < 0) throw new ErrorCotizacion("cartas-invalidas", String(e.cartasFoto));
+/** Packs activos de menor a mayor número de cartas. */
+export function packsActivos(catalogo: Catalogo): Pack[] {
+  return catalogo.packs.filter((p) => p.activo).sort((a, b) => a.cartas - b.cartas || a.orden - b.orden);
+}
 
+/** Pack con el que empieza un mazo nuevo: el primero activo según el orden del catálogo. */
+export function packPorDefecto(catalogo: Catalogo): Pack | null {
+  return catalogo.packs.filter((p) => p.activo).sort((a, b) => a.orden - b.orden)[0] ?? null;
+}
+
+interface Seleccion {
+  extras: Extra[];
+  mecanicas: Mecanica[];
+}
+
+/** Precio de un mazo de n cartas cobrado con un pack concreto, sin ofertas. */
+function cotizarCon(catalogo: Catalogo, elegido: Pack, aplicado: Pack, n: number, sel: Seleccion): Omit<Cotizacion, "ofertas"> {
+  const faltan = Math.max(0, elegido.cartas - n);
+  const cartasExtra = Math.max(0, n - aplicado.cartas);
+
+  const cartasMecanicas = sel.mecanicas.reduce((s, m) => s + (m.tipo === "cartas" ? (m.cartasFisicas ?? 0) : 0), 0);
+  const cartasExtras = sel.extras.reduce((s, x) => s + (x.cartasFisicas ?? 0), 0);
+  const cartasFisicas = Math.max(n, aplicado.cartas) + CARTAS_PORTADA + cartasMecanicas + cartasExtras;
+  const cajas = Math.max(1, Math.ceil(cartasFisicas / catalogo.caja.capacidadCartas));
+
+  const lineas: LineaCotizacion[] = [{ tipo: "pack", id: aplicado.id, cantidad: 1, importeCents: aplicado.precioCents }];
+  if (cartasExtra > 0) {
+    lineas.push({ tipo: "cartas-extra", id: "cartas-extra", cantidad: cartasExtra, importeCents: cartasExtra * aplicado.precioCartaExtraCents });
+  }
+  if (cajas > 1) {
+    lineas.push({ tipo: "caja", id: "caja", cantidad: cajas - 1, importeCents: (cajas - 1) * catalogo.caja.precioCajaExtraCents });
+  }
+  const baseMazo = lineas.reduce((s, l) => s + l.importeCents, 0);
+  for (const m of sel.mecanicas) lineas.push({ tipo: "mecanica", id: m.id, cantidad: 1, importeCents: m.precioCents });
+  for (const x of sel.extras) lineas.push({ tipo: "extra", id: x.id, cantidad: 1, importeCents: precioDeExtra(x, baseMazo) });
+  lineas.push({ tipo: "envio", id: "envio", cantidad: 1, importeCents: 0 });
+
+  const totalCents = lineas.reduce((s, l) => s + l.importeCents, 0);
+  const excedeMaximo = n > catalogo.ampliacion.maxCartas;
+  return {
+    moneda: aplicado.moneda,
+    pack: elegido,
+    packAplicado: aplicado,
+    cartas: n,
+    minimo: elegido.cartas,
+    faltan,
+    cartasExtra,
+    precioCartaExtraCents: aplicado.precioCartaExtraCents,
+    cartasFisicas,
+    cajas,
+    lineas,
+    totalCents,
+    sePuedePagar: faltan === 0 && !excedeMaximo,
+    excedeMaximo,
+  };
+}
+
+/** Importe de un extra: fijo o un porcentaje del mazo (pack, cartas extra y cajas). */
+export function precioDeExtra(x: Extra, baseMazoCents: number): number {
+  return x.precio.tipo === "fijo" ? x.precio.cents : Math.round((baseMazoCents * x.precio.porcentaje) / 100);
+}
+
+/** Base del mazo de una cotización: lo que se usa para los extras en porcentaje. */
+export function baseMazo(c: Pick<Cotizacion, "lineas">): number {
+  return c.lineas.filter((l) => l.tipo === "pack" || l.tipo === "cartas-extra" || l.tipo === "caja").reduce((s, l) => s + l.importeCents, 0);
+}
+
+function seleccion(e: EntradaCotizacion): Seleccion {
+  const { catalogo } = e;
   const extras = [...new Set(e.extras ?? [])].map((id) => {
     const x = catalogo.extras.find((c) => c.id === id && c.activo);
     if (!x) throw new ErrorCotizacion("extra-desconocido", id);
@@ -73,52 +148,68 @@ export function cotizar(e: EntradaCotizacion): Cotizacion {
     if (!m) throw new ErrorCotizacion("mecanica-desconocida", id);
     return m;
   });
+  return { extras, mecanicas };
+}
 
-  const { bloqueCartas, precioBloqueCents, maxCartasFoto } = catalogo.ampliacion;
-  const faltan = Math.max(0, pack.cartas - e.cartasFoto);
-  const sobrantes = Math.max(0, e.cartasFoto - pack.cartas);
-  const bloquesAmpliacion = Math.ceil(sobrantes / bloqueCartas);
-  const plazas = pack.cartas + bloquesAmpliacion * bloqueCartas;
-  const huecosLibres = e.cartasFoto >= pack.cartas ? plazas - e.cartasFoto : 0;
+/**
+ * Calcula el precio de un mazo con los datos del catálogo. Todo en céntimos.
+ * · El pack elegido marca el mínimo de cartas para pagar.
+ * · Si con las cartas que hay ya se cubre un pack mayor y sale más barato, se cobra ese
+ *   (el cliente nunca paga más por tener más cartas incluidas).
+ * · Las cartas que pasan de las incluidas se cobran una a una al precio del pack aplicado.
+ */
+export function cotizar(e: EntradaCotizacion): Cotizacion {
+  const { catalogo } = e;
+  const elegido = catalogo.packs.find((p) => p.id === e.packId && p.activo);
+  if (!elegido) throw new ErrorCotizacion("pack-desconocido", e.packId);
+  if (!Number.isInteger(e.cartas) || e.cartas < 0) throw new ErrorCotizacion("cartas-invalidas", String(e.cartas));
+  const sel = seleccion(e);
+  const n = e.cartas;
 
-  const cartasMecanicas = mecanicas.reduce((s, m) => s + (m.tipo === "cartas" ? (m.cartasFisicas ?? 0) : 0), 0);
-  const cartasExtras = extras.reduce((s, x) => s + (x.cartasFisicas ?? 0), 0);
-  const cartasFisicas = Math.max(e.cartasFoto, pack.cartas) + CARTAS_PORTADA + cartasMecanicas + cartasExtras;
-  const cajas = Math.max(1, Math.ceil(cartasFisicas / catalogo.caja.capacidadCartas));
-
-  const lineas: LineaCotizacion[] = [{ tipo: "pack", id: pack.id, cantidad: 1, importeCents: pack.precioCents }];
-  if (bloquesAmpliacion > 0) {
-    lineas.push({ tipo: "ampliacion", id: "ampliacion", cantidad: bloquesAmpliacion, importeCents: bloquesAmpliacion * precioBloqueCents });
+  // Packs que se pueden cobrar: el elegido y los mayores que ya están cubiertos.
+  const candidatos = packsActivos(catalogo).filter((p) => p.id === elegido.id || (p.cartas > elegido.cartas && p.cartas <= n));
+  let mejor = cotizarCon(catalogo, elegido, elegido, n, sel);
+  for (const p of candidatos) {
+    if (p.id === elegido.id) continue;
+    const c = cotizarCon(catalogo, elegido, p, n, sel);
+    if (c.totalCents < mejor.totalCents) mejor = c;
   }
-  if (cajas > 1) {
-    lineas.push({ tipo: "caja", id: "caja", cantidad: cajas - 1, importeCents: (cajas - 1) * catalogo.caja.precioCajaExtraCents });
-  }
-  const baseMazo = lineas.reduce((s, l) => s + l.importeCents, 0);
-  for (const m of mecanicas) lineas.push({ tipo: "mecanica", id: m.id, cantidad: 1, importeCents: m.precioCents });
-  for (const x of extras) {
-    const importe = x.precio.tipo === "fijo" ? x.precio.cents : Math.round((baseMazo * x.precio.porcentaje) / 100);
-    lineas.push({ tipo: "extra", id: x.id, cantidad: 1, importeCents: importe });
-  }
-  lineas.push({ tipo: "envio", id: "envio", cantidad: 1, importeCents: 0 });
+  return { ...mejor, ofertas: ofertas(catalogo, elegido, mejor, sel) };
+}
 
-  const totalCents = lineas.reduce((s, l) => s + l.importeCents, 0);
-  const excedeMaximo = e.cartasFoto > maxCartasFoto;
-  return {
-    moneda: pack.moneda,
-    pack,
-    cartasFoto: e.cartasFoto,
-    minimo: pack.cartas,
-    faltan,
-    bloquesAmpliacion,
-    plazas,
-    huecosLibres,
-    cartasFisicas,
-    cajas,
-    lineas,
-    totalCents,
-    sePuedePagar: faltan === 0 && !excedeMaximo,
-    excedeMaximo,
-  };
+function ofertas(catalogo: Catalogo, elegido: Pack, actual: Omit<Cotizacion, "ofertas">, sel: Seleccion): Oferta[] {
+  const lista: Oferta[] = [];
+  const n = actual.cartas;
+  const packs = packsActivos(catalogo);
+
+  if (actual.packAplicado.id !== elegido.id) {
+    const conElegido = cotizarCon(catalogo, elegido, elegido, n, sel);
+    lista.push({ tipo: "pack-aplicado", pack: actual.packAplicado, ahorroCents: conElegido.totalCents - actual.totalCents });
+  }
+
+  if (actual.faltan > 0) {
+    // Un pack menor que ya está cubierto con las cartas que hay.
+    const menor = packs.filter((p) => p.cartas < elegido.cartas && p.cartas <= n).at(-1);
+    if (menor) lista.push({ tipo: "bajar", pack: menor, totalCents: cotizarCon(catalogo, menor, menor, n, sel).totalCents });
+    return lista;
+  }
+
+  // El siguiente pack mayor que el aplicado: ¿sale a cuenta llegar a él?
+  const siguiente = packs.find((p) => p.cartas > Math.max(n, actual.packAplicado.cartas));
+  if (siguiente && n < catalogo.ampliacion.maxCartas) {
+    const cartasMas = siguiente.cartas - n;
+    const conSiguiente = cotizarCon(catalogo, siguiente, siguiente, siguiente.cartas, sel);
+    const diferenciaCents = conSiguiente.totalCents - actual.totalCents;
+    // Lo que costaría sumar esas cartas una a una con el pack de ahora.
+    const sueltas = cotizarCon(catalogo, elegido, actual.packAplicado, siguiente.cartas, sel).totalCents - actual.totalCents;
+    const ahorroCents = sueltas - diferenciaCents;
+    const cerca = cartasMas <= catalogo.ampliacion.ofertaMaxCartas;
+    const aMitadDePrecio = diferenciaCents * 2 <= sueltas;
+    if (ahorroCents > 0 && (diferenciaCents <= 0 || (cerca && aMitadDePrecio))) {
+      lista.push({ tipo: "subir", pack: siguiente, cartasMas, diferenciaCents, ahorroCents });
+    }
+  }
+  return lista;
 }
 
 /** Precio «desde» de un pack, para la portada. */
@@ -137,4 +228,21 @@ export function formatearImporte(cents: number, moneda: string, idioma: string):
     minimumFractionDigits: entero ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(cents / 100);
+}
+
+/**
+ * Deja la selección de un mazo guardado en lo que el catálogo ofrece hoy: un pack activo y
+ * solo extras y mecánicas activos. Sirve para borradores antiguos y para no mandar al pago
+ * ids que el servidor rechazaría.
+ */
+export function normalizarSeleccion(
+  sel: { packId: string; extras: string[]; mecanicas: string[] },
+  catalogo: Catalogo,
+): { packId: string; extras: string[]; mecanicas: string[]; cambiado: boolean } {
+  const packActivo = catalogo.packs.some((p) => p.id === sel.packId && p.activo);
+  const packId = packActivo ? sel.packId : (packPorDefecto(catalogo)?.id ?? sel.packId);
+  const extras = [...new Set(sel.extras)].filter((id) => catalogo.extras.some((x) => x.id === id && x.activo));
+  const mecanicas = [...new Set(sel.mecanicas)].filter((id) => catalogo.mecanicas.some((m) => m.id === id && m.activo));
+  const cambiado = packId !== sel.packId || extras.length !== sel.extras.length || mecanicas.length !== sel.mecanicas.length;
+  return { packId, extras, mecanicas, cambiado };
 }

@@ -46,7 +46,7 @@ export function CartaPortada({
       cara={cara}
       datos={datos}
       estiloId={mazo.estiloId}
-      tintaId={mazo.tintaId}
+      paletaId={mazo.paletaId}
       tono={mazo.tono}
       idiomaMazo={mazo.idiomaMazo}
       ancho={ancho}

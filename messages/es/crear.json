@@ -1,0 +1,50 @@
+{
+  "crear": {
+    "titulo": "Crear mi mazo",
+    "eligeTitulo": "¿Para quién es el mazo?",
+    "eligeTexto": "Elige un pack para empezar. Podrás cambiar el estilo y añadir cartas cuando quieras.",
+    "eligeBoton": "Empezar con {pack}",
+    "reanudar": "Tienes un mazo a medias con {fotos}.",
+    "empezarOtro": "Empezar otro mazo",
+    "empezarOtroConfirmar": "¿Borrar el mazo actual y empezar otro? Se borrarán sus fotos de este dispositivo.",
+    "pasos": {
+      "etiqueta": "Pasos",
+      "fotos": "Fotos",
+      "cartas": "Cartas",
+      "estilo": "Estilo",
+      "pedido": "Pedido",
+      "paso": "Paso {n} de 4"
+    },
+    "barra": {
+      "siguienteCartas": "Siguiente: cartas",
+      "siguienteEstilo": "Siguiente: estilo",
+      "siguientePedido": "Siguiente: pedido",
+      "pagar": "Pagar {total}",
+      "total": "Total",
+      "faltan": "Faltan {n, plural, one {# foto} other {# fotos}}",
+      "minimoCubierto": "Mínimo cubierto"
+    },
+    "pack": "Pack {pack}",
+    "contador": "{actual} de {minimo} fotos",
+    "contadorCompleto": "{actual} fotos · mínimo {minimo}",
+    "abriendo": "Abriendo tu mazo…"
+  },
+  "encuadre": {
+    "titulo": "Encuadrar la foto",
+    "caraFoto": "Cara de la foto",
+    "caraFecha": "Cara de la fecha",
+    "zoom": "Zoom",
+    "restablecer": "Restablecer",
+    "ayuda": "Arrastra la foto para encuadrarla. La parte oscura se corta al imprimir.",
+    "reversoAuto": "La cara de la fecha sigue a la de la foto hasta que la toques."
+  },
+  "adornos": {
+    "titulo": "Emojis",
+    "anadir": "Añadir {emoji}",
+    "ayuda": "Arrástralos sobre la foto. Se imprimen en la cara de la foto.",
+    "quitarTodos": "Quitar todos",
+    "tamano": "Tamaño",
+    "seleccionado": "Emoji seleccionado",
+    "quitar": "Quitar este emoji"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "pedido": {
+    "titulo": "Revisa y haz el pedido",
+    "lineaTemporal": "Vuestra línea del tiempo",
+    "lineaTemporalAyuda": "Así quedarían las cartas ordenadas. Toca una para editarla.",
+    "comprobaciones": "Comprobaciones",
+    "todoBien": "Todo listo para imprimir.",
+    "extras": "Extras",
+    "resumen": "Resumen",
+    "linea": {
+      "pack": "Pack {pack} ({n} cartas)",
+      "cartasExtra": "{n, plural, one {# carta extra} other {# cartas extra}} ({precio} cada una)",
+      "caja": "{n, plural, one {Caja extra} other {# cajas extra}}",
+      "envio": "Envío en España"
+    },
+    "cartasImpresas": "Se imprimen {n} cartas: fotos, portada y extras de juego.",
+    "confirmacion": "He revisado fotos, fechas y textos: se imprimirá tal cual.",
+    "pagarPrueba": "Pagar {total} (prueba)",
+    "pagando": "Preparando el pago…",
+    "errorPago": "No se ha podido preparar el pago. Inténtalo de nuevo.",
+    "modoPrueba": "Modo prueba: no se cobra nada. Con Stripe en modo test puedes usar la tarjeta 4242 4242 4242 4242.",
+    "irACarta": "Ver",
+    "avisos": {
+      "faltan-cartas": "{n, plural, one {Falta # foto} other {Faltan # fotos}} para el mínimo del pack ({minimo}).",
+      "excede-maximo": "El mazo pasa del máximo de {max} cartas.",
+      "sin-fecha": "{n, plural, one {# carta no tiene fecha} other {# cartas no tienen fecha}}.",
+      "fecha-futura": "{n, plural, one {# carta tiene} other {# cartas tienen}} una fecha posterior a hoy.",
+      "descripcion-larga": "{n, plural, one {# frase pasa} other {# frases pasan}} de 90 caracteres.",
+      "baja-resolucion": "{n, plural, one {# foto puede verse borrosa} other {# fotos pueden verse borrosas}} al imprimir.",
+      "revisar-fechas": "{n, plural, one {# fecha conviene revisarla} other {# fechas conviene revisarlas}}.",
+      "fechas-duplicadas": "{n, plural, one {Hay # fecha repetida} other {Hay # fechas repetidas}}: en el juego valdrá cualquier orden entre esas cartas.",
+      "fotos-duplicadas": "{n, plural, one {Hay # foto repetida} other {Hay # fotos repetidas}}."
+    },
+    "confirmarBaja": "Imprimir igualmente",
+    "anadirFotos": "Añadir fotos",
+    "sinFecha": "Sin fecha",
+    "yaPedido": "Ya has hecho el pedido de este mazo. Puedes seguir retocándolo y volver a descargar el archivo.",
+    "verPedido": "Ver el pedido",
+    "bloquea": "Antes de pagar, resuelve lo que está marcado en rojo.",
+    "faltaConfirmar": "Marca la casilla de revisión para pagar.",
+    "pagoCancelado": "Has cancelado el pago. Tu mazo sigue aquí, tal cual.",
+    "total": "Total"
+  }
+}

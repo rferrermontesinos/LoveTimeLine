@@ -1,0 +1,25 @@
+{
+  "id": "naipe",
+  "version": 2,
+  "plantilla": "naipe",
+  "nombre": { "es": "Naipe", "en": "Naipe" },
+  "descripcion": {
+    "es": "Carta fotográfica con pestañas de color en las esquinas. El cliente elige la paleta.",
+    "en": "Photographic playing card with coloured corner tabs. The customer picks the palette."
+  },
+  "paletaPorDefecto": "rosa",
+  "paletas": [
+    { "id": "rosa", "nombre": { "es": "Rosa", "en": "Pink" }, "fondo": "#F7739E", "acento": "#E8402F", "texto": "#141414" },
+    { "id": "rojo", "nombre": { "es": "Rojo", "en": "Red" }, "fondo": "#E8402F", "acento": "#FFC93C", "texto": "#141414" },
+    { "id": "amarillo", "nombre": { "es": "Amarillo", "en": "Yellow" }, "fondo": "#FFC93C", "acento": "#22A861", "texto": "#141414" },
+    { "id": "verde", "nombre": { "es": "Verde", "en": "Green" }, "fondo": "#22A861", "acento": "#FFC93C", "texto": "#141414" },
+    { "id": "cobalto", "nombre": { "es": "Cobalto", "en": "Cobalt" }, "fondo": "#2E56E6", "acento": "#FFC93C", "texto": "#F5F0E6" },
+    { "id": "noche", "nombre": { "es": "Noche", "en": "Night" }, "fondo": "#141414", "acento": "#F7739E", "texto": "#F5F0E6" }
+  ],
+  "colores": {
+    "tinta": "#141414",
+    "papel": "#F5F0E6",
+    "celdaInactiva": "rgba(245, 240, 230, 0.7)",
+    "velo": "20, 20, 20"
+  }
+}

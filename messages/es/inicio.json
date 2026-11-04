@@ -1,0 +1,80 @@
+{
+  "inicio": {
+    "heroAntetitulo": "Un juego de cartas con vuestras fotos",
+    "heroTitulo": "Vuestra historia, en una baraja.",
+    "heroTexto": "Sube vuestras fotos, nosotros leemos las fechas y te mandamos a casa un juego para ordenar recuerdos. ¿Fue antes el viaje a Menorca o la primera cena en casa?",
+    "heroCta": "Crear mi mazo",
+    "heroSecundario": "Cómo se juega",
+    "heroPrecio": "Desde {precio} · envío incluido en España",
+    "abanicoAlt": "Tres cartas de ejemplo en abanico: una con la foto y la pregunta, otra con la fecha 14 de agosto de 2019.",
+    "comoTitulo": "Tres pasos y a jugar",
+    "como": {
+      "1": {
+        "titulo": "Sube las fotos",
+        "texto": "Arrastra una carpeta o elige de la galería. La fecha sale sola de la foto o del nombre del archivo; tú solo revisas las que no la tengan."
+      },
+      "2": {
+        "titulo": "Dale tu toque",
+        "texto": "Encuadra, añade una frase si quieres y elige el estilo, el color y una dedicatoria para la portada."
+      },
+      "3": {
+        "titulo": "Recíbelo y jugad",
+        "texto": "Te llega una baraja impresa, con su caja y unas instrucciones que se pliegan al tamaño de una carta."
+      }
+    },
+    "cartasTitulo": "Dos caras, una pregunta",
+    "cartasTexto": "Delante, la foto y la pregunta: ¿cuándo fue? Detrás, la respuesta: el año en grande y una franja de 12 meses que marca el mes. Si de una foto solo sabes el año, también vale.",
+    "cartasPrecision": "Día, mes o solo año: cada carta lleva la fecha que conozcas.",
+    "voltear": "Dar la vuelta a la carta",
+    "modosTitulo": "Para que no gane siempre quien hizo el mazo",
+    "modosTexto": "Quien prepara el mazo conoce las fechas. Por eso el juego trae formas de jugar en las que eso suma en vez de restar.",
+    "mecanicasTitulo": "Extras de juego, sin coste",
+    "mecanicasTexto": "Se imprimen en el hueco de la esquina o como cartas especiales. Los activas o los quitas con un toque.",
+    "preciosTitulo": "Precios claros",
+    "preciosTexto": "Eliges un pack, que es el mínimo para jugar. Si te sobran fotos, las añades de 10 en 10.",
+    "packCartas": "{n} cartas con foto",
+    "packIncluye": "Caja, portada con dedicatoria, instrucciones y envío en España",
+    "ampliacion": "Carta extra: {precio}",
+    "extrasTitulo": "Extras opcionales",
+    "privacidadTitulo": "Tus fotos son tuyas",
+    "privacidad": {
+      "1": "En este prototipo, las fotos no salen de tu dispositivo: las fechas se leen aquí mismo.",
+      "2": "Cuando abramos los pedidos reales, se guardarán en servidores de la Unión Europea, cifradas y privadas.",
+      "3": "Borramos las fotos y los archivos de impresión 60 días después del envío.",
+      "4": "Sin analítica de terceros sobre tus imágenes. Nunca las usamos para nada más."
+    },
+    "faqTitulo": "Preguntas",
+    "faq": {
+      "1": {
+        "p": "¿Cuánto se tarda en hacer un mazo?",
+        "r": "Unos 15 minutos para 40 fotos: la mayoría ya trae la fecha y solo tienes que revisar las dudosas."
+      },
+      "2": {
+        "p": "¿Y si no sé la fecha exacta de una foto?",
+        "r": "Pon solo el mes o solo el año. En el juego, una carta con solo el año vale en cualquier punto de ese año."
+      },
+      "3": {
+        "p": "¿Qué pasa si quien hace el mazo ya sabe todas las fechas?",
+        "r": "Puede jugar de Guardián de la memoria, jugar en equipo con los demás o jugar con desventaja. Lo explicamos en «Cómo se juega»."
+      },
+      "4": {
+        "p": "¿Qué tamaño tienen las cartas?",
+        "r": "El de una baraja de póker, 63 × 88 mm, con esquinas redondeadas."
+      },
+      "5": {
+        "p": "¿En qué idiomas?",
+        "r": "La web está en español e inglés, y el mazo puede ir en cualquiera de los dos: meses, textos e instrucciones."
+      }
+    },
+    "ctaTitulo": "¿Empezamos con unas fotos?",
+    "ctaTexto": "Tu mazo se guarda solo en este dispositivo mientras lo haces. Puedes dejarlo y seguir otro día.",
+    "muestras": {
+      "menorca": "Nuestro primer viaje juntos, Menorca",
+      "aniversario": "Cena de aniversario",
+      "excursion": "La primera excursión con los abuelos",
+      "jardin": "El jardín de la casa del pueblo",
+      "nieve": "Primera vez en la nieve"
+    },
+    "ejemplosPrecision": "Tres cartas, tres precisiones: día exacto, mes y año, solo el año."
+  }
+}

@@ -9,11 +9,11 @@ import { Chip, Interruptor, Micro } from "@/components/ui/Piezas";
 import { MAX_DEDICATORIA, MAX_TITULO } from "@/domain/mazo/validar";
 import { textoEn } from "@/domain/precios/tipos";
 import { IDIOMAS_MAZO } from "@/lib/carta/textos";
-import { ESTILOS, TONOS, obtenerEstilo, obtenerPlantilla, obtenerTinta, type Tono } from "@/lib/estilos";
+import { ESTILOS, TONOS, obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaPortada } from "@/lib/mazo/derivados";
-import type { CampoMazo, Carta, Mazo } from "@/lib/mazo/tipos";
+import { esFoto, type CampoMazo, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
 
 /** Paso 3: estilo, color, portada, dedicatoria, tono, idioma y mecánicas gratis, con la vista previa al lado. */
@@ -28,7 +28,7 @@ export function PasoEstilo() {
 
   if (!mazo) return null;
   const estilo = obtenerEstilo(mazo.estiloId);
-  const tinta = obtenerTinta(estilo, mazo.tintaId);
+  const paleta = obtenerPaleta(estilo, mazo.paletaId);
   const plantilla = obtenerPlantilla(estilo.plantilla);
   const cambiar = <C extends CampoMazo>(campo: C, valor: Mazo[C]) => despachar({ tipo: "cambiar", campo, valor });
   const portada = cartaPortada(mazo);
@@ -78,13 +78,13 @@ export function PasoEstilo() {
                     <span
                       className={`relative flex h-full flex-col gap-2 overflow-hidden rounded-[16px] border-2 bg-blanco p-4 pl-[4.5rem] transition-colors ${activo ? "border-tinta" : "border-transparent hover:border-linea"}`}
                     >
-                      <span aria-hidden="true" className="tipo-titular absolute left-0 top-0 flex h-[60px] w-[44px] items-start rounded-[0_0_14px_0] pl-2.5 pt-2 text-[28px] leading-[0.85]" style={{ background: obtenerTinta(e, null).fondo, color: obtenerTinta(e, null).texto }}>
+                      <span aria-hidden="true" className="tipo-titular absolute left-0 top-0 flex h-[60px] w-[44px] items-start rounded-[0_0_14px_0] pl-2.5 pt-2 text-[28px] leading-[0.85]" style={{ background: obtenerPaleta(e, null).fondo, color: obtenerPaleta(e, null).texto }}>
                         ?
                       </span>
                       <span className="font-bold">{textoEn(e.nombre, locale)}</span>
                       <span className="text-sm text-tinta-2">{textoEn(e.descripcion, locale)}</span>
                       <span aria-hidden="true" className="mt-auto flex gap-1.5 pt-1">
-                        {e.tintas.map((ti) => (
+                        {e.paletas.map((ti) => (
                           <span key={ti.id} className="h-4 w-4 rounded-full ring-1 ring-tinta/15" style={{ background: ti.fondo }} />
                         ))}
                       </span>
@@ -98,17 +98,17 @@ export function PasoEstilo() {
 
           <Bloque titulo={t("tinta")}>
             <div role="radiogroup" aria-label={t("tinta")} className="flex flex-wrap gap-4">
-              {estilo.tintas.map((ti) => {
-                const activo = ti.id === tinta.id;
+              {estilo.paletas.map((ti) => {
+                const activo = ti.id === paleta.id;
                 return (
-                  <Opcion key={ti.id} nombre={`${id}-tinta`} activo={activo} alElegir={() => cambiar("tintaId", ti.id)} etiqueta={textoEn(ti.nombre, locale)}>
+                  <Opcion key={ti.id} nombre={`${id}-tinta`} activo={activo} alElegir={() => cambiar("paletaId", ti.id)} etiqueta={textoEn(ti.nombre, locale)}>
                     <span className="flex w-20 flex-col items-center gap-2">
                       <span
                         aria-hidden="true"
                         className={`relative block h-16 w-16 overflow-hidden rounded-full ring-offset-2 ring-offset-papel transition-shadow ${activo ? "ring-[3px] ring-tinta" : "ring-1 ring-tinta/15"}`}
                         style={{ background: ti.fondo }}
                       >
-                        <span className="absolute inset-x-0 bottom-[22%] flex h-2.5 gap-[2px] px-2" style={{ background: ti.franja }} />
+                        <span className="absolute inset-x-0 bottom-[22%] flex h-2.5 gap-[2px] px-2" style={{ background: ti.acento }} />
                         <span className="tipo-titular absolute left-3 top-2 text-xl leading-none" style={{ color: ti.texto }}>
                           19
                         </span>
@@ -166,7 +166,7 @@ export function PasoEstilo() {
           <Bloque titulo={t("portada")} ayuda={mazo.cartas.length ? t("portadaAyuda") : t("sinFotos")}>
             {mazo.cartas.length > 0 && (
               <div role="radiogroup" aria-label={t("portada")} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 pt-1 sm:mx-0 sm:px-1">
-                {mazo.cartas.map((c) => (
+                {mazo.cartas.filter(esFoto).map((c) => (
                   <MiniPortada
                     key={c.id}
                     carta={c}
@@ -304,7 +304,7 @@ function Figura({ etiqueta, children }: { etiqueta: string; children: ReactNode 
   );
 }
 
-function MiniPortada({ carta, nombre, activa, alElegir, version, filtro }: { carta: Carta; nombre: string; activa: boolean; alElegir: () => void; version: number; filtro: string }) {
+function MiniPortada({ carta, nombre, activa, alElegir, version, filtro }: { carta: CartaFoto; nombre: string; activa: boolean; alElegir: () => void; version: number; filtro: string }) {
   const url = useUrlFoto(carta.id, "mini", version);
   return (
     <Opcion nombre={nombre} activo={activa} alElegir={alElegir} etiqueta={carta.descripcion || carta.nombreArchivo}>
@@ -319,7 +319,7 @@ function MiniPortada({ carta, nombre, activa, alElegir, version, filtro }: { car
   );
 }
 
-function OpcionTono({ nombre, activo, alElegir, etiqueta, carta, version, filtro }: { nombre: string; activo: boolean; alElegir: () => void; etiqueta: string; carta: Carta | null; version: number; filtro: string }) {
+function OpcionTono({ nombre, activo, alElegir, etiqueta, carta, version, filtro }: { nombre: string; activo: boolean; alElegir: () => void; etiqueta: string; carta: CartaFoto | null; version: number; filtro: string }) {
   const url = useUrlFoto(carta?.id ?? null, "mini", version);
   return (
     <Opcion nombre={nombre} activo={activo} alElegir={alElegir} etiqueta={etiqueta}>

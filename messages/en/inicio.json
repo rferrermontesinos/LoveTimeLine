@@ -1,0 +1,80 @@
+{
+  "inicio": {
+    "heroAntetitulo": "A card game made with your photos",
+    "heroTitulo": "Your story, in a deck of cards.",
+    "heroTexto": "Upload your photos, we read the dates and send you a game where you put memories in order. Was the trip to Menorca before or after your first dinner at home?",
+    "heroCta": "Make my deck",
+    "heroSecundario": "How to play",
+    "heroPrecio": "From {precio} · free shipping in Spain",
+    "abanicoAlt": "Three sample cards fanned out: one with the photo and the question, another with the date 14 August 2019.",
+    "comoTitulo": "Three steps, then play",
+    "como": {
+      "1": {
+        "titulo": "Upload your photos",
+        "texto": "Drop a folder or pick from your gallery. The date comes from the photo or the file name; you only check the ones without one."
+      },
+      "2": {
+        "titulo": "Make it yours",
+        "texto": "Frame each photo, add a line if you like, and choose the style, the colour and a dedication for the cover."
+      },
+      "3": {
+        "titulo": "Get it and play",
+        "texto": "You receive a printed deck with its box and instructions that fold down to the size of a card."
+      }
+    },
+    "cartasTitulo": "Two sides, one question",
+    "cartasTexto": "On the front, the photo and the question: when was it? On the back, the answer: the year in big type and a 12-month strip that marks the month. If you only know the year of a photo, that works too.",
+    "cartasPrecision": "Day, month or just the year: each card carries the date you know.",
+    "voltear": "Flip the card",
+    "modosTitulo": "So the deck maker doesn’t always win",
+    "modosTexto": "Whoever makes the deck knows the dates. That’s why the game comes with ways to play where that helps instead of spoiling it.",
+    "mecanicasTitulo": "Free game extras",
+    "mecanicasTexto": "They’re printed in the corner slot or as special cards. Turn them on or off with one tap.",
+    "preciosTitulo": "Clear prices",
+    "preciosTexto": "Pick a pack, which is the minimum to play. If you have more photos, add them 10 at a time.",
+    "packCartas": "{n} photo cards",
+    "packIncluye": "Box, cover card with dedication, instructions and shipping in Spain",
+    "ampliacion": "Extra card: {precio}",
+    "extrasTitulo": "Optional extras",
+    "privacidadTitulo": "Your photos are yours",
+    "privacidad": {
+      "1": "In this prototype, photos never leave your device: dates are read right here.",
+      "2": "When real orders open, they’ll be stored on servers in the European Union, encrypted and private.",
+      "3": "We delete photos and print files 60 days after shipping.",
+      "4": "No third-party analytics on your images. We never use them for anything else."
+    },
+    "faqTitulo": "Questions",
+    "faq": {
+      "1": {
+        "p": "How long does it take to make a deck?",
+        "r": "About 15 minutes for 40 photos: most already carry their date and you only check the doubtful ones."
+      },
+      "2": {
+        "p": "What if I don’t know the exact date of a photo?",
+        "r": "Set just the month or just the year. In the game, a year-only card fits anywhere in that year."
+      },
+      "3": {
+        "p": "What if the deck maker already knows every date?",
+        "r": "They can play as the Memory Keeper, play as a team with everyone else, or play with a handicap. See “How to play”."
+      },
+      "4": {
+        "p": "How big are the cards?",
+        "r": "Standard poker size, 63 × 88 mm, with rounded corners."
+      },
+      "5": {
+        "p": "Which languages?",
+        "r": "The site is in Spanish and English, and the deck can be in either: months, card texts and instructions."
+      }
+    },
+    "ctaTitulo": "Shall we start with a few photos?",
+    "ctaTexto": "Your deck is saved only on this device while you make it. You can leave and come back another day.",
+    "muestras": {
+      "menorca": "Our first trip together, Menorca",
+      "aniversario": "Anniversary dinner",
+      "excursion": "First hike with the grandparents",
+      "jardin": "The garden at the village house",
+      "nieve": "First time in the snow"
+    },
+    "ejemplosPrecision": "Three cards, three precisions: exact day, month and year, year only."
+  }
+}

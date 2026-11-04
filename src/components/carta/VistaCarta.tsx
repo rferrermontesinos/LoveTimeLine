@@ -9,7 +9,7 @@ import { datosCarta } from "@/lib/mazo/derivados";
 import type { Carta, Mazo } from "@/lib/mazo/tipos";
 import { CartaCanvas } from "./CartaCanvas";
 
-/** Una carta de foto del mazo, con su imagen cargada desde el almacén local. */
+/** Una carta de recuerdo del mazo; si es de foto, con su imagen cargada desde el almacén local. */
 export function VistaCarta({
   carta,
   mazo,
@@ -31,13 +31,16 @@ export function VistaCarta({
   className?: string;
   version?: number;
 }) {
-  const img = useFoto(carta.id, calidad, version);
+  const img = useFoto(carta.tipo === "foto" ? carta.id : null, calidad, version);
   const t = useTranslations("comun");
   const locale = useLocale();
   const datos = useMemo<DatosCarta>(
     () => ({
       ...datosCarta(carta, icono),
-      foto: img ? { imagen: img.imagen, escala: img.ancho / carta.ancho, recorteAnverso: carta.recorteAnverso, recorteReverso: carta.recorteReverso } : null,
+      foto:
+        img && carta.tipo === "foto"
+          ? { imagen: img.imagen, escala: img.ancho / carta.ancho, recorteAnverso: carta.recorteAnverso, recorteReverso: carta.recorteReverso }
+          : null,
     }),
     [carta, icono, img],
   );
@@ -48,7 +51,7 @@ export function VistaCarta({
       cara={cara}
       datos={datos}
       estiloId={mazo.estiloId}
-      tintaId={mazo.tintaId}
+      paletaId={mazo.paletaId}
       tono={mazo.tono}
       idiomaMazo={mazo.idiomaMazo}
       ancho={ancho}

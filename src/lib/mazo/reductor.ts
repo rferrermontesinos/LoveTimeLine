@@ -1,7 +1,7 @@
 import { conPrecision, type FechaCarta } from "@/domain/fechas/fecha";
 import { ordenarPorFecha } from "@/domain/mazo/ordenar";
-import { obtenerEstilo, obtenerTinta } from "@/lib/estilos";
-import type { CampoMazo, Carta, Mazo, Pedido } from "./tipos";
+import { ESTILO_POR_DEFECTO, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
+import { VERSION_MAZO, type CambiosCarta, type CampoMazo, type Carta, type FotoCaja, type Mazo, type Pedido } from "./tipos";
 
 export interface EstadoMazo {
   estado: "cargando" | "listo";
@@ -17,21 +17,24 @@ export type Accion =
       id: string;
       ahora: number;
       packId: string;
-      estiloId: string;
       idiomaMazo: string;
       mecanicas: string[];
       titulo: string;
     }
   | { tipo: "consentir"; ahora: number }
   | { tipo: "anadirCartas"; cartas: Carta[] }
-  | { tipo: "actualizarCarta"; id: string; cambios: Partial<Carta>; deshacible?: boolean }
-  | { tipo: "actualizarCartas"; ids: string[]; cambios: Partial<Carta> }
+  | { tipo: "actualizarCarta"; id: string; cambios: CambiosCarta; deshacible?: boolean }
+  | { tipo: "actualizarCartas"; ids: string[]; cambios: CambiosCarta }
   | { tipo: "puntoDeshacer" }
   | { tipo: "borrarCartas"; ids: string[] }
   | { tipo: "ponerFecha"; ids: string[]; fecha: FechaCarta }
   | { tipo: "confirmarFecha"; id: string }
   | { tipo: "ordenarPorFecha" }
   | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
+  /** Foto de la caja personalizada (null: la de la portada). */
+  | { tipo: "ponerCaja"; caja: FotoCaja | null }
+  /** Ajusta pack, extras y mecánicas a lo que ofrece el catálogo (borradores antiguos). No se deshace. */
+  | { tipo: "normalizarSeleccion"; packId: string; extras: string[]; mecanicas: string[] }
   | { tipo: "registrarPedido"; pedido: Pedido }
   | { tipo: "pedidoPagado" }
   | { tipo: "deshacer" }
@@ -40,6 +43,15 @@ export type Accion =
 const MAX_HISTORIAL = 40;
 
 export const ESTADO_INICIAL: EstadoMazo = { estado: "cargando", mazo: null, pasado: [] };
+
+/** Campos que tiene toda carta; en las de texto no se aplica nada más. */
+const CAMPOS_COMUNES = new Set(["fecha", "fuente", "confianza", "revisar", "motivo", "sugerencias", "descripcion", "destacada", "anadidaEn"]);
+
+export function aplicarCambios(c: Carta, cambios: CambiosCarta): Carta {
+  if (c.tipo === "foto") return { ...c, ...cambios };
+  const comunes = Object.fromEntries(Object.entries(cambios).filter(([k]) => CAMPOS_COMUNES.has(k)));
+  return { ...c, ...comunes };
+}
 
 function conHistorial(e: EstadoMazo, nuevo: Mazo, deshacible = true): EstadoMazo {
   const mazo = { ...nuevo, actualizadoEn: Date.now() };
@@ -51,18 +63,19 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
   if (a.tipo === "cargar") return { estado: "listo", mazo: a.mazo, pasado: [] };
   if (a.tipo === "reiniciar") return { estado: "listo", mazo: null, pasado: [] };
   if (a.tipo === "crear") {
-    const estilo = obtenerEstilo(a.estiloId);
+    const estilo = ESTILO_POR_DEFECTO;
     const mazo: Mazo = {
-      version: 1,
+      version: VERSION_MAZO,
       id: a.id,
       creadoEn: a.ahora,
       actualizadoEn: a.ahora,
       packId: a.packId,
       estiloId: estilo.id,
-      tintaId: obtenerTinta(estilo, null).id,
+      paletaId: obtenerPaleta(estilo, null).id,
       titulo: a.titulo,
       dedicatoria: "",
       portadaId: null,
+      caja: null,
       tono: "original",
       idiomaMazo: a.idiomaMazo,
       mecanicas: a.mecanicas,
@@ -85,12 +98,12 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
     case "actualizarCarta":
       return conHistorial(
         e,
-        { ...m, cartas: m.cartas.map((c) => (c.id === a.id ? { ...c, ...a.cambios } : c)) },
+        { ...m, cartas: m.cartas.map((c) => (c.id === a.id ? aplicarCambios(c, a.cambios) : c)) },
         a.deshacible !== false,
       );
     case "actualizarCartas": {
       const ids = new Set(a.ids);
-      return conHistorial(e, { ...m, cartas: m.cartas.map((c) => (ids.has(c.id) ? { ...c, ...a.cambios } : c)) });
+      return conHistorial(e, { ...m, cartas: m.cartas.map((c) => (ids.has(c.id) ? aplicarCambios(c, a.cambios) : c)) });
     }
     case "puntoDeshacer":
       return { ...e, pasado: [...e.pasado, m].slice(-MAX_HISTORIAL) };
@@ -100,6 +113,7 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         ...m,
         cartas: m.cartas.filter((c) => !ids.has(c.id)),
         portadaId: m.portadaId && ids.has(m.portadaId) ? null : m.portadaId,
+        caja: m.caja?.origen === "carta" && ids.has(m.caja.cartaId) ? null : m.caja,
       });
     }
     case "ponerFecha": {
@@ -107,7 +121,7 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       return conHistorial(e, {
         ...m,
         cartas: m.cartas.map((c) =>
-          ids.has(c.id) ? { ...c, fecha: a.fecha, fuente: "manual", confianza: "alta", revisar: false, motivo: undefined } : c,
+          ids.has(c.id) ? { ...c, fecha: a.fecha, fuente: "manual", confianza: "alta", revisar: false, motivo: undefined, sugerencias: [] } : c,
         ),
       });
     }
@@ -120,9 +134,19 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       return conHistorial(e, { ...m, cartas: ordenarPorFecha(m.cartas) });
     case "cambiar": {
       const nuevo = { ...m, [a.campo]: a.valor } as Mazo;
-      if (a.campo === "estiloId") nuevo.tintaId = obtenerTinta(obtenerEstilo(String(a.valor)), m.tintaId).id;
+      // Estilo y paleta siempre existentes: si no, vuelven a los de por defecto.
+      if (a.campo === "estiloId") {
+        const estilo = obtenerEstilo(String(a.valor));
+        nuevo.estiloId = estilo.id;
+        nuevo.paletaId = obtenerPaleta(estilo, m.paletaId).id;
+      }
+      if (a.campo === "paletaId") nuevo.paletaId = obtenerPaleta(obtenerEstilo(m.estiloId), String(a.valor)).id;
       return conHistorial(e, nuevo, a.campo !== "paso" && a.campo !== "titulo" && a.campo !== "dedicatoria");
     }
+    case "ponerCaja":
+      return conHistorial(e, { ...m, caja: a.caja });
+    case "normalizarSeleccion":
+      return conHistorial(e, { ...m, packId: a.packId, extras: a.extras, mecanicas: a.mecanicas }, false);
     case "registrarPedido":
       return conHistorial(e, { ...m, pedido: a.pedido }, false);
     case "pedidoPagado":

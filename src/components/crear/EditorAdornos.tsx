@@ -11,7 +11,7 @@ import type { Adorno, DatosCarta } from "@/lib/carta/tipos";
 import { useFoto } from "@/lib/fotos/useFoto";
 import { nuevoId } from "@/lib/importar/procesar";
 import { datosCarta } from "@/lib/mazo/derivados";
-import type { Carta, Mazo } from "@/lib/mazo/tipos";
+import type { CartaFoto, Mazo } from "@/lib/mazo/tipos";
 
 const EMOJIS = ["❤️", "🎉", "⭐", "😂", "🥂", "🎂", "🏖️", "✈️", "🐶", "🌸", "☀️", "👶", "💍", "🏠", "🎄", "📸"];
 const FUENTE_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
@@ -30,7 +30,7 @@ export default function EditorAdornos({
   alGuardar,
   alCancelar,
 }: {
-  carta: Carta;
+  carta: CartaFoto;
   mazo: Mazo;
   icono: string | null;
   version: number;
@@ -70,7 +70,7 @@ export default function EditorAdornos({
   return (
     <div className="grid gap-5 md:grid-cols-[auto_1fr]">
       <div className="relative mx-auto" style={{ width: ANCHO, height: ALTO }}>
-        <CartaCanvas cara="anverso" datos={fondo} estiloId={mazo.estiloId} tintaId={mazo.tintaId} tono={mazo.tono} idiomaMazo={mazo.idiomaMazo} ancho={ANCHO} etiqueta={t("comun.anverso")} />
+        <CartaCanvas cara="anverso" datos={fondo} estiloId={mazo.estiloId} paletaId={mazo.paletaId} tono={mazo.tono} idiomaMazo={mazo.idiomaMazo} ancho={ANCHO} etiqueta={t("comun.anverso")} />
         <Stage
           width={ANCHO}
           height={ALTO}

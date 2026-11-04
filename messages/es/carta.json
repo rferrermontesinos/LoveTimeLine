@@ -1,0 +1,29 @@
+{
+  "carta": {
+    "pregunta": "¿Cuándo fue?",
+    "comodin": "Comodín",
+    "comodinRegla": "Pide una pista a quien hizo el mazo o cambia una carta de tu mano por la primera del mazo. Luego, descártalo.",
+    "enBlancoFoto": "Pega una foto o dibuja aquí",
+    "enBlancoFrase": "¿Qué pasó?",
+    "enBlancoFecha": "Año · mes · día",
+    "reto": "Reto",
+    "portadaRecuerdos": "{n, plural, one {# recuerdo} other {# recuerdos}}",
+    "portadaReverso": "Para jugar, mira las instrucciones de la caja.",
+    "dedicatoriaPorDefecto": "Para seguir sumando recuerdos.",
+    "cajaTexto": "Un juego para ordenar vuestros recuerdos. Coloca cada carta antes o después de las que ya están en la mesa y dale la vuelta: ¿acertaste?"
+  },
+  "retos": {
+    "1": "Imita cómo os conocisteis. El resto adivina el año.",
+    "2": "Tararea la canción de ese verano. Si alguien la acierta, roba una carta menos.",
+    "3": "Di tres palabras que resuman este año.",
+    "4": "Cuenta un recuerdo que no sale en ninguna carta.",
+    "5": "¿Quién hizo esta foto? Si lo aciertas, juega otra vez.",
+    "6": "Pon una carta de tu mano sin mirarla. Si encaja, se queda.",
+    "7": "Elige a alguien: os intercambiáis una carta.",
+    "8": "Recrea la pose de la última carta jugada.",
+    "9": "Di el nombre de un sitio que salga en el mazo antes de 5 segundos.",
+    "10": "Todos señalan a la vez quién es más nostálgico. Esa persona roba una carta.",
+    "11": "Ordena tus cartas de la mano en voz alta, sin mirarlas.",
+    "12": "Brindis: cuenta por qué este recuerdo merece una estrella."
+  }
+}

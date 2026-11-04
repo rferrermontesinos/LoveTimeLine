@@ -1,0 +1,58 @@
+{
+  "juego": {
+    "titulo": "How to play",
+    "intro": "A game of putting memories in order. Each card has the photo on the front and the date on the back. The winner is the first to place all their cards correctly on the memory line.",
+    "componentes": "What’s in the box",
+    "componentesTexto": "The cards with your photos, a cover card, the wild cards and blank cards (if you chose them) and this leaflet.",
+    "preparacion": "Setup",
+    "preparacionTexto": "Shuffle and deal 4 cards to each player (3 if there are more than 5 of you), photo side up, without looking at the date. Place one card in the middle, date side up: it starts the memory line.",
+    "turno": "On your turn",
+    "turnoTexto": "Pick a card from your hand and place it on the memory line: before, after or between two cards. Flip it. If the date fits, it stays. If not, discard it and draw another.",
+    "fechas": "Year-only and month dates",
+    "fechasTexto": "A card with just the year fits anywhere in that year. One with month and year fits on any day of that month.",
+    "final": "Who wins",
+    "finalTexto": "The first player to run out of cards. If several finish in the same round, play one more round with one card each.",
+    "mecanicasTitulo": "Corner icons",
+    "estrella": "Star memory: place it correctly and you play again.",
+    "cuentalo": "Tell it: before flipping it, tell the memory. If you miss but the group likes the story, you don’t draw a card.",
+    "comodin": "Wild card: at the start of the second round, whoever has the most cards takes one. Use it to ask for a clue or swap a card.",
+    "enBlanco": "Blank cards: when a memory comes up that wasn’t in the deck, write it down with its date and it joins the next game.",
+    "modosTitulo": "Ways to play",
+    "modosTexto": "Whoever makes the deck knows the dates. These variants make that part of the game.",
+    "modos": {
+      "clasico": "The rules above. If the deck maker plays, they start with one extra card.",
+      "guardian": "The deck maker doesn’t compete. They present each card, rule on “Tell it”, give the wild-card clues and tell the story when it’s flipped. Perfect for a gift: the game is the present.",
+      "cooperativo": "One memory line for the whole group and 3 lives. Take turns placing and talk it over. The deck maker doesn’t place cards: they can only say “earlier” or “later” once per card. Goal: 15 cards on the line, then beat your record.",
+      "duelo": "For two. The deck maker starts with 6 cards and doesn’t use wild cards; the other player starts with 4 and can ask for a one-word clue each turn.",
+      "generaciones": "For families. Make teams that mix ages: older players know the old dates and younger ones the recent ones. Teams take turns and can talk it over."
+    },
+    "consejo": "Tip: play the first game as Memory Keeper. The second, everyone against the deck."
+  },
+  "modos": {
+    "clasico": {
+      "nombre": "Classic",
+      "jugadores": "2–6",
+      "resumen": "Everyone has a hand: place your cards on the memory line before anyone else."
+    },
+    "guardian": {
+      "nombre": "Memory Keeper",
+      "jugadores": "3–8",
+      "resumen": "The deck maker doesn’t compete: they host, give clues and tell the story behind each card."
+    },
+    "cooperativo": {
+      "nombre": "Our story",
+      "jugadores": "2+, as a team",
+      "resumen": "Everyone against the deck, with 3 lives. The deck maker can only say “earlier” or “later”."
+    },
+    "duelo": {
+      "nombre": "Handicap duel",
+      "jugadores": "2",
+      "resumen": "For two: the deck maker starts with 2 more cards and the other player can ask for clues."
+    },
+    "generaciones": {
+      "nombre": "Generations",
+      "jugadores": "4+, in teams",
+      "resumen": "Grandparents with grandkids, parents with kids: each knows an era and the team decides."
+    }
+  }
+}

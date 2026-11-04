@@ -1,0 +1,44 @@
+{
+  "pedido": {
+    "titulo": "Review and order",
+    "lineaTemporal": "Your memory line",
+    "lineaTemporalAyuda": "This is how the cards would line up. Tap one to edit it.",
+    "comprobaciones": "Checks",
+    "todoBien": "Everything is ready to print.",
+    "extras": "Extras",
+    "resumen": "Summary",
+    "linea": {
+      "pack": "{pack} pack ({n} cards)",
+      "cartasExtra": "{n, plural, one {# extra card} other {# extra cards}} ({precio} each)",
+      "caja": "{n, plural, one {Extra box} other {# extra boxes}}",
+      "envio": "Shipping in Spain"
+    },
+    "cartasImpresas": "{n} cards will be printed: photos, cover and game extras.",
+    "confirmacion": "I’ve checked photos, dates and texts: it will be printed as is.",
+    "pagarPrueba": "Pay {total} (test)",
+    "pagando": "Preparing the payment…",
+    "errorPago": "We couldn’t prepare the payment. Please try again.",
+    "modoPrueba": "Test mode: nothing is charged. With Stripe in test mode you can use the card 4242 4242 4242 4242.",
+    "irACarta": "View",
+    "avisos": {
+      "faltan-cartas": "{n, plural, one {# photo missing} other {# photos missing}} to reach the pack minimum ({minimo}).",
+      "excede-maximo": "The deck goes over the maximum of {max} cards.",
+      "sin-fecha": "{n, plural, one {# card has no date} other {# cards have no date}}.",
+      "fecha-futura": "{n, plural, one {# card has} other {# cards have}} a date later than today.",
+      "descripcion-larga": "{n, plural, one {# line is} other {# lines are}} longer than 90 characters.",
+      "baja-resolucion": "{n, plural, one {# photo may look blurry} other {# photos may look blurry}} when printed.",
+      "revisar-fechas": "{n, plural, one {# date is worth checking} other {# dates are worth checking}}.",
+      "fechas-duplicadas": "{n, plural, one {There is # repeated date} other {There are # repeated dates}}: in the game, any order between those cards counts.",
+      "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}."
+    },
+    "confirmarBaja": "Print anyway",
+    "anadirFotos": "Add photos",
+    "sinFecha": "No date",
+    "yaPedido": "You’ve already ordered this deck. You can keep editing it and download the file again.",
+    "verPedido": "See the order",
+    "bloquea": "Before paying, fix what’s marked in red.",
+    "faltaConfirmar": "Tick the review box to pay.",
+    "pagoCancelado": "You cancelled the payment. Your deck is still here, just as it was.",
+    "total": "Total"
+  }
+}

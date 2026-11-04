@@ -194,11 +194,11 @@ function pestana(lz: Lienzo, valor: string, tamanoValor: number, icono: string |
   ctx.arcTo(x1, y1, x1 - r, y1, r);
   ctx.lineTo(x0, y1);
   ctx.closePath();
-  ctx.fillStyle = op.tinta.fondo;
+  ctx.fillStyle = op.paleta.fondo;
   ctx.fill();
 
   fuente(lz, "titular", tamanoValor);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   ctx.textAlign = "left";
   ctx.fillText(valor, lz.X(p.margenIzquierdo), lz.X(lineaBase(p.margenSuperior, tamanoValor, 0.85)));
 
@@ -215,7 +215,7 @@ function hueco(lz: Lienzo, x: number, y: number, diametro: number, icono: string
     ctx.arc(cx, cy, radio, 0, Math.PI * 2);
     ctx.fillStyle = op.estilo.colores.tinta;
     ctx.fill();
-    dibujarIcono(lz, icono, cx, cy, radio * 1.3, op.tinta.fondo === op.estilo.colores.tinta ? op.estilo.colores.papel : op.tinta.fondo);
+    dibujarIcono(lz, icono, cx, cy, radio * 1.3, op.paleta.fondo === op.estilo.colores.tinta ? op.estilo.colores.papel : op.paleta.fondo);
   } else if (op.plantilla.pestana.hueco.visibleSinMecanica) {
     ctx.beginPath();
     ctx.arc(cx, cy, radio - lz.L(op.plantilla.pestana.hueco.trazo) / 2, 0, Math.PI * 2);
@@ -410,11 +410,11 @@ function anversoFoto(lz: Lienzo, d: DatosCarta) {
 function reversoFoto(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
   const r = op.plantilla.reverso;
-  rellenarTodo(lz, op.tinta.fondo);
+  rellenarTodo(lz, op.paleta.fondo);
   foto(lz, d, "reverso", -B, -B, W + 2 * B, r.altoFoto + B);
 
   const fecha = d.fecha ?? null;
-  regla(lz, r.altoFoto, fecha?.mes ?? null, op.tinta.franja, !!fecha && fecha.mes === undefined, !fecha);
+  regla(lz, r.altoFoto, fecha?.mes ?? null, op.paleta.acento, !!fecha && fecha.mes === undefined, !fecha);
   const textoFecha = fecha ? textoFechaCarta(fecha, op.idioma) : { anio: "····", linea: "" };
   pestana(lz, textoFecha.anio, op.plantilla.pestana.tamanoValorReverso, d.icono, false);
 
@@ -422,7 +422,7 @@ function reversoFoto(lz: Lienzo, d: DatosCarta) {
   if (desc) {
     const s = r.descripcion.tamano;
     fuente(lz, "texto", s);
-    ctx.fillStyle = op.tinta.texto;
+    ctx.fillStyle = op.paleta.texto;
     ctx.textAlign = "left";
     const lineas = partirLineas(ctx, desc, lz.L(W - 2 * r.descripcion.lateral), r.descripcion.lineasMaximas);
     lineas.forEach((linea, i) => {
@@ -433,7 +433,7 @@ function reversoFoto(lz: Lienzo, d: DatosCarta) {
   // Año grande abajo a la izquierda y día+mes a la derecha, en una línea.
   const sa = r.anio.tamano;
   fuente(lz, "titular", sa);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   ctx.textAlign = "left";
   const baseAnio = H - r.anio.abajo - 0.8 * sa + (0.8 * sa - (ASC + DESC) * sa) / 2 + ASC * sa;
   textoEspaciado(lz, textoFecha.anio, lz.X(r.anio.izquierda), lz.X(baseAnio), r.anio.espaciado, sa);
@@ -455,13 +455,13 @@ function anversoPortada(lz: Lienzo, d: DatosCarta) {
   const banda = 30;
   // La foto de la portada es apaisada: parte del recorte del reverso, que es el más parecido.
   foto(lz, d, "reverso", -B, -B, W + 2 * B, H - banda + B);
-  ctx.fillStyle = op.tinta.fondo;
+  ctx.fillStyle = op.paleta.fondo;
   ctx.fillRect(lz.X(-B), lz.X(H - banda), lz.L(W + 2 * B), lz.L(banda + B));
-  regla(lz, H - banda, null, op.tinta.franja, true);
+  regla(lz, H - banda, null, op.paleta.acento, true);
 
   const titulo = (d.titulo ?? "").trim();
   fuente(lz, "titular", 9.5);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   ctx.textAlign = "left";
   const lineas = partirLineas(ctx, titulo, lz.L(W - 8), 2);
   const tam = lineas.length > 1 ? 8 : 9.5;
@@ -478,7 +478,7 @@ function anversoPortada(lz: Lienzo, d: DatosCarta) {
 
 function reversoPortada(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.fondo);
+  rellenarTodo(lz, op.paleta.fondo);
   // Tarjeta de papel con la dedicatoria.
   ctx.fillStyle = op.estilo.colores.papel;
   ctx.beginPath();
@@ -491,9 +491,9 @@ function reversoPortada(lz: Lienzo, d: DatosCarta) {
   const lineas = partirLineas(ctx, (d.dedicatoria ?? "").trim() || op.textos.dedicatoriaPorDefecto, lz.L(W - 16), 8);
   lineas.forEach((l, i) => ctx.fillText(l, lz.X(8), lz.X(lineaBase(10, s, 1.35) + i * 1.35 * s)));
 
-  regla(lz, 60, null, op.tinta.franja, true);
+  regla(lz, 60, null, op.paleta.acento, true);
   fuente(lz, "micro", 2);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   const lineasJuego = partirLineas(ctx, op.textos.portadaReverso.toLocaleUpperCase(op.idioma), lz.L(W - 8), 2);
   lineasJuego.forEach((l, i) => textoEspaciado(lz, l, lz.X(4), lz.X(67.5 + i * 2.8), 0.1, 2));
 
@@ -507,10 +507,10 @@ function reversoPortada(lz: Lienzo, d: DatosCarta) {
 
 function traseraCaja(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.fondo);
-  regla(lz, 12, null, op.tinta.franja, true);
+  rellenarTodo(lz, op.paleta.fondo);
+  regla(lz, 12, null, op.paleta.acento, true);
   fuente(lz, "micro", 2.4);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   textoEspaciado(lz, op.textos.marca.toLocaleUpperCase(op.idioma), lz.X(4), lz.X(8), 0.14, 2.4);
   fuente(lz, "titular", 9);
   ctx.textAlign = "left";
@@ -528,9 +528,9 @@ function traseraCaja(lz: Lienzo, d: DatosCarta) {
 function anversoComodin(lz: Lienzo) {
   const { ctx, op } = lz;
   rellenarTodo(lz, op.estilo.colores.tinta);
-  dibujarIcono(lz, "estrella", lz.X(W / 2), lz.X(H / 2 - 6), lz.L(26), op.tinta.fondo);
+  dibujarIcono(lz, "estrella", lz.X(W / 2), lz.X(H / 2 - 6), lz.L(26), op.paleta.fondo);
   fuente(lz, "titular", 9);
-  ctx.fillStyle = op.tinta.fondo;
+  ctx.fillStyle = op.paleta.fondo;
   ctx.textAlign = "center";
   ctx.fillText(op.textos.comodin.toLocaleUpperCase(op.idioma), lz.X(W / 2), lz.X(H / 2 + 16));
   pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, null, false);
@@ -539,14 +539,14 @@ function anversoComodin(lz: Lienzo) {
 
 function reversoComodin(lz: Lienzo) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.fondo);
+  rellenarTodo(lz, op.paleta.fondo);
   ctx.fillStyle = op.estilo.colores.tinta;
   ctx.fillRect(lz.X(-B), lz.X(-B), lz.L(W + 2 * B), lz.L(55 + B));
-  dibujarIcono(lz, "estrella", lz.X(W / 2), lz.X(28), lz.L(30), op.tinta.fondo);
-  regla(lz, 55, null, op.tinta.franja, false, true);
+  dibujarIcono(lz, "estrella", lz.X(W / 2), lz.X(28), lz.L(30), op.paleta.fondo);
+  regla(lz, 55, null, op.paleta.acento, false, true);
   pestana(lz, "★", op.plantilla.pestana.tamanoValorReverso, null, false);
   fuente(lz, "titular", 7);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   ctx.textAlign = "left";
   ctx.fillText(op.textos.comodin, lz.X(4), lz.X(66));
   fuente(lz, "texto", 2.6);
@@ -574,13 +574,13 @@ function anversoEnBlanco(lz: Lienzo) {
 
 function reversoEnBlanco(lz: Lienzo) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.fondo);
+  rellenarTodo(lz, op.paleta.fondo);
   ctx.fillStyle = op.estilo.colores.papel;
   ctx.fillRect(lz.X(-B), lz.X(-B), lz.L(W + 2 * B), lz.L(55 + B));
-  regla(lz, 55, null, op.tinta.franja, false, true);
+  regla(lz, 55, null, op.paleta.acento, false, true);
   pestana(lz, "", op.plantilla.pestana.tamanoValorReverso, null, false);
-  ctx.fillStyle = op.tinta.texto;
-  ctx.strokeStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
+  ctx.strokeStyle = op.paleta.texto;
   ctx.lineWidth = lz.L(0.2);
   fuente(lz, "micro", 2);
   textoEspaciado(lz, op.textos.enBlancoFrase.toLocaleUpperCase(op.idioma), lz.X(4), lz.X(62.5), 0.14, 2);
@@ -599,7 +599,7 @@ function reversoEnBlanco(lz: Lienzo) {
 
 function anversoReto(lz: Lienzo) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.franja);
+  rellenarTodo(lz, op.paleta.acento);
   fuente(lz, "titular", 16);
   ctx.fillStyle = op.estilo.colores.tinta;
   ctx.textAlign = "center";
@@ -610,14 +610,14 @@ function anversoReto(lz: Lienzo) {
 
 function reversoReto(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
-  rellenarTodo(lz, op.tinta.fondo);
+  rellenarTodo(lz, op.paleta.fondo);
   pestana(lz, "!", op.plantilla.pestana.tamanoValorReverso, null, false);
   fuente(lz, "titular", 7);
-  ctx.fillStyle = op.tinta.texto;
+  ctx.fillStyle = op.paleta.texto;
   ctx.textAlign = "left";
   ctx.fillText(op.textos.reto, lz.X(4), lz.X(30));
   const s = 4;
   fuente(lz, "texto", s);
   partirLineas(ctx, d.texto ?? "", lz.L(W - 8), 8).forEach((l, i) => ctx.fillText(l, lz.X(4), lz.X(38 + i * 1.3 * s)));
-  regla(lz, H - 12, null, op.tinta.franja, false, true);
+  regla(lz, H - 12, null, op.paleta.acento, false, true);
 }

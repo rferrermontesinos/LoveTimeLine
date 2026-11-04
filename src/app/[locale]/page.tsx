@@ -149,7 +149,7 @@ export default async function Inicio({ params }: { params: Promise<{ locale: str
                   <ul className="mt-4 space-y-1 text-sm">
                     <li>· {t("packCartas", { n: p.cartas })}</li>
                     <li>· {t("packIncluye")}</li>
-                    <li>· {t("ampliacion", { n: catalogo.ampliacion.bloqueCartas, precio: precio(catalogo.ampliacion.precioBloqueCents) })}</li>
+                    <li>· {t("ampliacion", { precio: precio(p.precioCartaExtraCents) })}</li>
                   </ul>
                   <div className="mt-6">
                     <BotonEnlace href={`/crear?pack=${p.id}`} className="w-full sm:w-auto">

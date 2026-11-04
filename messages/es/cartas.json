@@ -1,0 +1,27 @@
+{
+  "cartas": {
+    "titulo": "Completa las cartas",
+    "texto": "Revisa la fecha, añade una frase si quieres y encuadra la foto. Se guarda solo.",
+    "posicion": "Carta {actual} de {total}",
+    "descripcion": "Frase del recuerdo (opcional)",
+    "descripcionAyuda": "Sale en la cara de la fecha. Hasta {max} caracteres.",
+    "descripcionContador": "{n} / {max}",
+    "descripcionEnAnverso": "Mostrarla también en la cara de la foto, como pista",
+    "estrella": "Recuerdo estrella",
+    "estrellaAyuda": "Quien la acierte, juega otra vez. Hasta {max} por mazo.",
+    "estrellaMax": "Ya tienes {max} recuerdos estrella.",
+    "encuadrar": "Encuadrar",
+    "girar": "Girar",
+    "adornos": "Emojis",
+    "borrarCarta": "Borrar carta",
+    "borrada": "Carta borrada.",
+    "calidad": "Calidad de impresión",
+    "calidadBuena": "Buena ({ppp} ppp)",
+    "calidadJusta": "Justa ({ppp} ppp): puede verse algo borrosa",
+    "calidadConfirmar": "Imprimir igualmente",
+    "calidadConfirmada": "Confirmado: se imprimirá así",
+    "sinCartas": "Primero añade fotos en el paso 1.",
+    "irAFotos": "Ir a las fotos",
+    "atajos": "Atajos: ← y → para moverte entre cartas."
+  }
+}

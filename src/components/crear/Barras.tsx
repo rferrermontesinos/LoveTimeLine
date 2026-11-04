@@ -74,7 +74,7 @@ export function BarraAccion() {
             {t(mazo.cartas.length > cotizacion.minimo ? "contadorCompleto" : "contador", { actual: mazo.cartas.length, minimo: cotizacion.minimo })}
           </p>
           <p className={`text-sm ${completo ? "text-verde-texto" : "text-tinta-2"}`} aria-live="polite">
-            {completo ? (cotizacion.huecosLibres > 0 ? t("huecos", { n: cotizacion.huecosLibres }) : `✓ ${t("barra.minimoCubierto")}`) : t("barra.faltan", { n: cotizacion.faltan })}
+            {completo ? `✓ ${t("barra.minimoCubierto")}` : t("barra.faltan", { n: cotizacion.faltan })}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">

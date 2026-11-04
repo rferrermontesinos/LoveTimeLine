@@ -13,7 +13,7 @@ import { useFoto } from "@/lib/fotos/useFoto";
 import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { useMazo } from "@/lib/mazo/contexto";
 import { datosCarta, proporcionReversoDe } from "@/lib/mazo/derivados";
-import type { Carta } from "@/lib/mazo/tipos";
+import type { CartaFoto } from "@/lib/mazo/tipos";
 
 interface Pendiente {
   anverso: Rect;
@@ -24,7 +24,7 @@ interface Pendiente {
 const aRect = (a: Area): Rect => ({ x: a.x, y: a.y, ancho: a.width, alto: a.height });
 const aArea = (r: Rect): Area => ({ x: r.x, y: r.y, width: r.ancho, height: r.alto });
 
-export function DialogoEncuadre({ carta, abierto, alCerrar, icono, version }: { carta: Carta; abierto: boolean; alCerrar: () => void; icono: string | null; version: number }) {
+export function DialogoEncuadre({ carta, abierto, alCerrar, icono, version }: { carta: CartaFoto; abierto: boolean; alCerrar: () => void; icono: string | null; version: number }) {
   const t = useTranslations();
   const { mazo, despachar } = useMazo();
   const url = useUrlFoto(abierto ? carta.id : null, "copia", version);
@@ -167,7 +167,7 @@ export function DialogoEncuadre({ carta, abierto, alCerrar, icono, version }: { 
             cara={cara}
             datos={datos}
             estiloId={mazo.estiloId}
-            tintaId={mazo.tintaId}
+            paletaId={mazo.paletaId}
             tono={mazo.tono}
             idiomaMazo={mazo.idiomaMazo}
             etiqueta={cara === "anverso" ? t("comun.anverso") : t("comun.reverso")}

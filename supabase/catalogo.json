@@ -1,20 +1,99 @@
 {
-  "$comentario": "Datos de catálogo del prototipo. Es la semilla de la base de datos (supabase/seed.sql se genera con `pnpm db:seed`) y lo que usa el modo demostración cuando no hay Supabase. Los importes van en céntimos. Precios propuestos, pendientes de validar con Pau.",
-  "version": 1,
+  "$comentario": "Datos de catálogo del prototipo. Es la semilla de la base de datos (supabase/seed.sql se genera con `pnpm db:seed`) y lo que usa el modo demostración cuando no hay Supabase. Los importes van en céntimos. Precios propuestos, pendientes de validar con Pau. Lo que se retira no se borra: queda con activo false para que los pedidos antiguos sigan apuntando a algo.",
+  "version": 2,
   "moneda": "EUR",
   "paises": [
-    { "codigo": "ES", "activo": true, "moneda": "EUR", "envioIncluido": true, "diasEntrega": { "min": 5, "max": 8 } }
+    {
+      "codigo": "ES",
+      "activo": true,
+      "moneda": "EUR",
+      "envioIncluido": true,
+      "diasEntrega": {
+        "min": 5,
+        "max": 8
+      }
+    }
   ],
   "packs": [
     {
-      "id": "pareja",
+      "id": "pequeno",
       "orden": 1,
       "activo": true,
       "cartas": 40,
       "precioCents": 4900,
+      "precioCartaExtraCents": 80,
       "moneda": "EUR",
-      "estiloPorDefecto": "pareja",
-      "nombre": { "es": "Pareja", "en": "Couple" },
+      "nombre": {
+        "es": "Pequeño",
+        "en": "Small"
+      },
+      "claim": {
+        "es": "Ideal para parejas",
+        "en": "Perfect for couples"
+      },
+      "descripcion": {
+        "es": "40 recuerdos de vuestra historia, para jugar a dos o con amigos.",
+        "en": "40 memories of your story, to play as a couple or with friends."
+      }
+    },
+    {
+      "id": "mediano",
+      "orden": 2,
+      "activo": true,
+      "cartas": 60,
+      "precioCents": 5900,
+      "precioCartaExtraCents": 70,
+      "moneda": "EUR",
+      "nombre": {
+        "es": "Mediano",
+        "en": "Medium"
+      },
+      "claim": {
+        "es": "Ideal para familias o amigos",
+        "en": "Perfect for families or friends"
+      },
+      "descripcion": {
+        "es": "60 recuerdos de la familia o de la pandilla, para la sobremesa.",
+        "en": "60 memories of the family or the gang, for after dinner."
+      }
+    },
+    {
+      "id": "grande",
+      "orden": 3,
+      "activo": true,
+      "cartas": 100,
+      "precioCents": 7900,
+      "precioCartaExtraCents": 60,
+      "moneda": "EUR",
+      "nombre": {
+        "es": "Grande",
+        "en": "Large"
+      },
+      "claim": {
+        "es": "Ideal para bodas, aniversarios y grandes celebraciones",
+        "en": "Perfect for weddings, anniversaries and big celebrations"
+      },
+      "descripcion": {
+        "es": "100 recuerdos para las fechas importantes: bodas, bodas de plata, aniversarios redondos.",
+        "en": "100 memories for the big dates: weddings, silver anniversaries, milestone birthdays."
+      }
+    },
+    {
+      "id": "pareja",
+      "orden": 11,
+      "activo": false,
+      "cartas": 40,
+      "precioCents": 4900,
+      "precioCartaExtraCents": 60,
+      "moneda": "EUR",
+      "nombre": {
+        "es": "Pareja",
+        "en": "Couple"
+      },
+      "claim": {
+        "es": "",
+        "en": ""
+      },
       "descripcion": {
         "es": "40 recuerdos de vuestra historia para jugar a dos o con amigos.",
         "en": "40 memories of your story to play as a couple or with friends."
@@ -22,13 +101,20 @@
     },
     {
       "id": "familia",
-      "orden": 2,
-      "activo": true,
+      "orden": 12,
+      "activo": false,
       "cartas": 60,
       "precioCents": 5900,
+      "precioCartaExtraCents": 60,
       "moneda": "EUR",
-      "estiloPorDefecto": "familia",
-      "nombre": { "es": "Familia", "en": "Family" },
+      "nombre": {
+        "es": "Familia",
+        "en": "Family"
+      },
+      "claim": {
+        "es": "",
+        "en": ""
+      },
       "descripcion": {
         "es": "60 recuerdos de varias generaciones para jugar en la sobremesa.",
         "en": "60 memories across generations to play after a family meal."
@@ -36,9 +122,8 @@
     }
   ],
   "ampliacion": {
-    "bloqueCartas": 10,
-    "precioBloqueCents": 600,
-    "maxCartasFoto": 300
+    "maxCartas": 300,
+    "ofertaMaxCartas": 10
   },
   "caja": {
     "capacidadCartas": 120,
@@ -49,42 +134,31 @@
       "id": "copia-extra",
       "orden": 1,
       "activo": true,
-      "precio": { "tipo": "porcentajeMazo", "porcentaje": 60 },
-      "nombre": { "es": "Segunda copia del mazo", "en": "Second copy of the deck" },
+      "precio": {
+        "tipo": "porcentajeMazo",
+        "porcentaje": 60
+      },
+      "nombre": {
+        "es": "Segunda copia del mazo",
+        "en": "Second copy of the deck"
+      },
       "descripcion": {
         "es": "El mismo mazo otra vez, para regalar a los abuelos o a los amigos que salen en las fotos.",
         "en": "The same deck again, for the grandparents or the friends in the photos."
       }
     },
     {
-      "id": "pack-retos",
+      "id": "envoltorio-regalo",
       "orden": 2,
       "activo": true,
-      "precio": { "tipo": "fijo", "cents": 600 },
-      "cartasFisicas": 12,
-      "nombre": { "es": "Pack Retos: 12 cartas", "en": "Challenge pack: 12 cards" },
-      "descripcion": {
-        "es": "Cartas de reto ya diseñadas («imita cómo os conocisteis», «tararea la canción de ese verano») que se mezclan con las vuestras.",
-        "en": "Ready-made challenge cards (“act out how you met”, “hum that summer's song”) shuffled in with yours."
-      }
-    },
-    {
-      "id": "acabado-lino",
-      "orden": 3,
-      "activo": true,
-      "precio": { "tipo": "fijo", "cents": 900 },
-      "nombre": { "es": "Acabado lino", "en": "Linen finish" },
-      "descripcion": {
-        "es": "La textura de las barajas de casino: se barajan mejor y duran más.",
-        "en": "The texture of casino decks: they shuffle better and last longer."
-      }
-    },
-    {
-      "id": "envoltorio-regalo",
-      "orden": 4,
-      "activo": true,
-      "precio": { "tipo": "fijo", "cents": 400 },
-      "nombre": { "es": "Envoltorio de regalo", "en": "Gift wrapping" },
+      "precio": {
+        "tipo": "fijo",
+        "cents": 400
+      },
+      "nombre": {
+        "es": "Envoltorio de regalo",
+        "en": "Gift wrapping"
+      },
       "descripcion": {
         "es": "Llega envuelto y con tu dedicatoria impresa, listo para dar.",
         "en": "Arrives wrapped with your printed dedication, ready to give."
@@ -92,13 +166,72 @@
     },
     {
       "id": "envio-urgente",
-      "orden": 5,
+      "orden": 3,
       "activo": true,
-      "precio": { "tipo": "fijo", "cents": 600 },
-      "nombre": { "es": "Envío urgente (24–48 h tras imprimir)", "en": "Express shipping (24–48 h after printing)" },
+      "precio": {
+        "tipo": "fijo",
+        "cents": 600
+      },
+      "nombre": {
+        "es": "Envío urgente (24–48 h tras imprimir)",
+        "en": "Express shipping (24–48 h after printing)"
+      },
       "descripcion": {
         "es": "Para cuando el aniversario es la semana que viene.",
         "en": "For when the anniversary is next week."
+      }
+    },
+    {
+      "id": "caja-personalizada",
+      "orden": 4,
+      "activo": true,
+      "precio": {
+        "tipo": "fijo",
+        "cents": 700
+      },
+      "efecto": "caja-personalizada",
+      "nombre": {
+        "es": "Caja personalizada",
+        "en": "Personalised box"
+      },
+      "descripcion": {
+        "es": "La caja con una de vuestras fotos y el título del mazo, en vez de la caja de siempre.",
+        "en": "The box with one of your photos and the deck's title, instead of the standard box."
+      }
+    },
+    {
+      "id": "pack-retos",
+      "orden": 10,
+      "activo": false,
+      "precio": {
+        "tipo": "fijo",
+        "cents": 600
+      },
+      "cartasFisicas": 12,
+      "nombre": {
+        "es": "Pack Retos: 12 cartas",
+        "en": "Challenge pack: 12 cards"
+      },
+      "descripcion": {
+        "es": "Cartas de reto ya diseñadas («imita cómo os conocisteis», «tararea la canción de ese verano») que se mezclan con las vuestras.",
+        "en": "Ready-made challenge cards (“act out how you met”, “hum that summer's song”) shuffled in with yours."
+      }
+    },
+    {
+      "id": "acabado-lino",
+      "orden": 11,
+      "activo": false,
+      "precio": {
+        "tipo": "fijo",
+        "cents": 900
+      },
+      "nombre": {
+        "es": "Acabado lino",
+        "en": "Linen finish"
+      },
+      "descripcion": {
+        "es": "La textura de las barajas de casino: se barajan mejor y duran más.",
+        "en": "The texture of casino decks: they shuffle better and last longer."
       }
     }
   ],
@@ -113,54 +246,68 @@
       "maxCartas": 5,
       "porDefecto": true,
       "precioCents": 0,
-      "nombre": { "es": "Recuerdos estrella", "en": "Star memories" },
+      "nombre": {
+        "es": "Recuerdos estrella",
+        "en": "Star memories"
+      },
       "descripcion": {
-        "es": "Marca hasta 5 recuerdos favoritos. Llevan una estrella y quien los acierta gana una carta extra.",
-        "en": "Mark up to 5 favourite memories. They carry a star and whoever places one correctly wins an extra card."
+        "es": "Marca hasta 5 recuerdos favoritos: llevan una estrella en la esquina. En el modo clásico, quien acierta una juega otra vez; jugando juntos, recupera una vida.",
+        "en": "Mark up to 5 favourite memories: they carry a star in the corner. In the classic game, whoever places one correctly plays again; playing together, it wins back a life."
+      }
+    },
+    {
+      "id": "comodin",
+      "orden": 2,
+      "activo": true,
+      "tipo": "cartas",
+      "icono": "comodin",
+      "cartasFisicas": 2,
+      "porDefecto": true,
+      "precioCents": 0,
+      "nombre": {
+        "es": "2 comodines",
+        "en": "2 jokers"
+      },
+      "descripcion": {
+        "es": "Sirven para pedir una pista a quien hizo el mazo o para cambiar una carta por otra.",
+        "en": "Use them to ask the deck maker for a clue or to swap a card for another."
+      }
+    },
+    {
+      "id": "en-blanco",
+      "orden": 3,
+      "activo": true,
+      "tipo": "cartas",
+      "icono": "en-blanco",
+      "cartasFisicas": 4,
+      "porDefecto": true,
+      "precioCents": 0,
+      "nombre": {
+        "es": "4 cartas en blanco",
+        "en": "4 blank cards"
+      },
+      "descripcion": {
+        "es": "Con el mismo diseño que las demás, para escribir a mano los recuerdos nuevos que salgan jugando. El mazo crece con vosotros.",
+        "en": "Same design as the rest, to handwrite the new memories that come up while playing. The deck grows with you."
       }
     },
     {
       "id": "cuentalo",
-      "orden": 2,
-      "activo": true,
+      "orden": 10,
+      "activo": false,
       "tipo": "icono",
       "icono": "bocadillo",
       "asignacion": "automatica",
       "cadaN": 4,
       "porDefecto": true,
       "precioCents": 0,
-      "nombre": { "es": "Cuéntalo", "en": "Tell it" },
+      "nombre": {
+        "es": "Cuéntalo",
+        "en": "Tell it"
+      },
       "descripcion": {
         "es": "1 de cada 4 cartas lleva un bocadillo: quien la juega cuenta el recuerdo y, si la historia convence al grupo, se queda la carta aunque falle la fecha.",
         "en": "1 in 4 cards carries a speech bubble: whoever plays it tells the story and, if the group is convinced, keeps the card even with the wrong date."
-      }
-    },
-    {
-      "id": "comodin",
-      "orden": 3,
-      "activo": true,
-      "tipo": "cartas",
-      "cartasFisicas": 2,
-      "porDefecto": true,
-      "precioCents": 0,
-      "nombre": { "es": "2 comodines", "en": "2 wild cards" },
-      "descripcion": {
-        "es": "Úsalo para pedir una pista a quien hizo el mazo o para cambiar tu carta por otra.",
-        "en": "Use it to ask the deck maker for a clue or to swap your card for another."
-      }
-    },
-    {
-      "id": "en-blanco",
-      "orden": 4,
-      "activo": true,
-      "tipo": "cartas",
-      "cartasFisicas": 4,
-      "porDefecto": true,
-      "precioCents": 0,
-      "nombre": { "es": "4 cartas en blanco", "en": "4 blank cards" },
-      "descripcion": {
-        "es": "Para escribir a mano los recuerdos nuevos que salgan jugando. El mazo crece con vosotros.",
-        "en": "To handwrite the new memories that come up while playing. The deck grows with you."
       }
     }
   ]

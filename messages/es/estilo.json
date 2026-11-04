@@ -1,0 +1,30 @@
+{
+  "estilo": {
+    "titulo": "Elige el estilo",
+    "texto": "El estilo, el color y la portada hacen que el mazo sea vuestro.",
+    "estilo": "Estilo",
+    "tinta": "Color",
+    "tituloMazo": "Título del mazo",
+    "tituloMazoAyuda": "Sale en la portada y en la caja. Por ejemplo: Ana y Leo.",
+    "tituloPorDefecto": "Nuestra historia",
+    "dedicatoria": "Dedicatoria (opcional)",
+    "dedicatoriaAyuda": "Va detrás de la portada. Hasta {max} caracteres.",
+    "portada": "Foto de portada",
+    "portadaAyuda": "Toca una foto para ponerla en la portada y en la caja.",
+    "tono": "Tono de las fotos",
+    "tonos": {
+      "original": "Original",
+      "bn": "Blanco y negro",
+      "calido": "Cálido"
+    },
+    "idiomaMazo": "Idioma del mazo",
+    "idiomaMazoAyuda": "Meses, textos de las cartas e instrucciones.",
+    "mecanicas": "Extras de juego gratis",
+    "mecanicasAyuda": "No cambian el precio. Puedes quitarlos.",
+    "vistaPrevia": "Así queda",
+    "caja": "La caja",
+    "portadaCarta": "La portada",
+    "sinFotos": "Cuando subas fotos, podrás elegir la portada.",
+    "masCartas": "+{n} cartas"
+  }
+}

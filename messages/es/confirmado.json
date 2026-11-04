@@ -1,0 +1,24 @@
+{
+  "confirmado": {
+    "titulo": "¡Pedido hecho!",
+    "tituloSimulado": "Pedido de prueba hecho",
+    "texto": "En la versión real te llegaría un correo y el mazo en {min}–{max} días laborables.",
+    "textoPrototipo": "Para las pruebas de impresión, descarga el archivo y pásaselo a Ricard.",
+    "descargarPdf": "Descargar el archivo de impresión (PDF)",
+    "generando": "Generando cara {hecha} de {total}…",
+    "descargarInstrucciones": "Descargar las instrucciones plegables",
+    "volver": "Volver a mi mazo",
+    "sinMazo": "No encontramos el mazo en este dispositivo.",
+    "referencia": "Referencia: {id}",
+    "comprobando": "Comprobando el pago…",
+    "pendiente": "El pago aún no está confirmado. Si acabas de pagar, espera unos segundos y recarga la página.",
+    "pdfListo": "Archivo listo. Si no se ha descargado solo, vuelve a pulsar el botón.",
+    "pdfError": "No se ha podido generar el PDF. Inténtalo otra vez.",
+    "resumen": "{cartas} cartas impresas · {total}",
+    "siguientes": "Y ahora",
+    "paso1": "Descarga el archivo de impresión: cada cara lleva sangrado de 3 mm y marcas de corte.",
+    "paso2": "Imprime las instrucciones a doble cara y dóblalas al tamaño de una carta.",
+    "paso3": "Para la primera partida, probad el modo Guardián: quien hizo el mazo presenta y cuenta.",
+    "comoJugar": "Ver cómo se juega"
+  }
+}

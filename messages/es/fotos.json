@@ -1,0 +1,63 @@
+{
+  "fotos": {
+    "titulo": "Sube tus fotos",
+    "texto": "Cuantas más, mejor: necesitas al menos {minimo} para tu pack. JPG, PNG, HEIC o WEBP.",
+    "consentimiento": "Tengo permiso de las personas que salen en las fotos, y de sus padres si son menores, para usarlas en este mazo.",
+    "consentimientoFalta": "Marca la casilla de permiso para poder añadir fotos.",
+    "soltar": "Arrastra aquí fotos o una carpeta entera",
+    "soltarActivo": "Suelta para añadirlas",
+    "elegirFotos": "Elegir fotos",
+    "elegirCarpeta": "Elegir una carpeta",
+    "privacidad": "Las fotos no salen de este dispositivo: leemos las fechas aquí mismo.",
+    "procesando": "Leyendo {hechas} de {total} fotos…",
+    "procesadas": "{n, plural, one {# foto añadida} other {# fotos añadidas}}",
+    "repetidas": "{n, plural, one {# foto repetida no se ha añadido} other {# fotos repetidas no se han añadido}}",
+    "errores": "{n, plural, one {# archivo no se ha podido leer} other {# archivos no se han podido leer}}",
+    "noImagen": "{nombre} no es una imagen compatible.",
+    "vacio": "Aún no hay fotos. Empieza por una carpeta de un viaje o de un año.",
+    "ordenar": "Ordenar por fecha",
+    "siguienteSinFecha": "Siguiente sin fecha",
+    "sinFechaCuenta": "{n, plural, one {# sin fecha} other {# sin fecha}}",
+    "revisarCuenta": "{n, plural, one {# por revisar} other {# por revisar}}",
+    "seleccionar": "Seleccionar",
+    "seleccionadas": "{n, plural, one {# seleccionada} other {# seleccionadas}}",
+    "ponerFecha": "Poner fecha",
+    "quitarSeleccion": "Quitar selección",
+    "borrarSeleccion": "Borrar",
+    "editar": "Editar {nombre}",
+    "sinFecha": "Sin fecha",
+    "confianza": {
+      "alta": "Fecha de la foto",
+      "media": "Fecha del nombre",
+      "baja": "Revisar"
+    },
+    "estrella": "Recuerdo estrella"
+  },
+  "fechas": {
+    "titulo": "Fecha",
+    "precision": "¿Qué sabes de la fecha?",
+    "dia": "Día exacto",
+    "mes": "Mes y año",
+    "anio": "Solo el año",
+    "campoDia": "Día",
+    "campoMes": "Mes",
+    "campoAnio": "Año",
+    "invalida": "Esa fecha no existe.",
+    "futura": "La fecha no puede ser posterior a hoy.",
+    "fuente": {
+      "exif": "Sacada de los datos de la foto.",
+      "nombre": "Sacada del nombre del archivo.",
+      "archivo": "Es la fecha del archivo: puede ser cuándo lo copiaste. Revísala.",
+      "manual": "Puesta a mano."
+    },
+    "motivo": {
+      "fecha-del-archivo": "Es la fecha del archivo, no la de la foto.",
+      "fecha-de-hoy": "Es la fecha de hoy: seguramente es cuándo copiaste la foto.",
+      "exif-y-nombre-no-coinciden": "Los datos de la foto y el nombre del archivo no coinciden.",
+      "reloj-de-camara": "Parece la fecha de una cámara con el reloj sin configurar."
+    },
+    "confirmar": "La fecha está bien",
+    "aplicarA": "Poner esta fecha a {n, plural, one {# foto} other {# fotos}}",
+    "dialogoTitulo": "Poner la misma fecha"
+  }
+}

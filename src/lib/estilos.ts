@@ -1,15 +1,15 @@
 import naipe from "../../styles/plantillas/naipe.json";
-import pareja from "../../styles/pareja/style.json";
-import familia from "../../styles/familia/style.json";
+import estiloNaipe from "../../styles/naipe/style.json";
 import type { TextoI18n } from "@/domain/precios/tipos";
 
-export interface Tinta {
+/** Paleta de color que elige el cliente. */
+export interface Paleta {
   id: string;
   nombre: TextoI18n;
-  /** Color de fondo de pestañas y reverso. */
+  /** Color de las pestañas de las esquinas y del fondo del reverso. */
   fondo: string;
-  /** Color de la franja de meses. */
-  franja: string;
+  /** Segundo color de la paleta (cartas de texto y detalles). */
+  acento: string;
   /** Color del texto sobre el fondo (contraste ≥ 4.5:1). */
   texto: string;
 }
@@ -20,8 +20,8 @@ export interface Estilo {
   plantilla: string;
   nombre: TextoI18n;
   descripcion: TextoI18n;
-  tintaPorDefecto: string;
-  tintas: Tinta[];
+  paletaPorDefecto: string;
+  paletas: Paleta[];
   colores: { tinta: string; papel: string; celdaInactiva: string; velo: string };
 }
 
@@ -31,15 +31,19 @@ export const TONOS: Tono[] = ["original", "bn", "calido"];
 
 const PLANTILLAS: Record<string, Plantilla> = { naipe };
 
-/** Estilos activos. Añadir uno = crear styles/<id>/style.json y sumarlo aquí. */
-export const ESTILOS: Estilo[] = [pareja, familia];
+/**
+ * Estilos activos. Hoy hay uno («naipe») con varias paletas: el cliente elige la paleta, no el
+ * estilo. Añadir uno = crear styles/<id>/style.json y sumarlo aquí.
+ */
+export const ESTILOS: Estilo[] = [estiloNaipe];
+export const ESTILO_POR_DEFECTO: Estilo = ESTILOS[0]!;
 
-export function obtenerEstilo(id: string): Estilo {
-  return ESTILOS.find((e) => e.id === id) ?? ESTILOS[0]!;
+export function obtenerEstilo(id: string | null | undefined): Estilo {
+  return ESTILOS.find((e) => e.id === id) ?? ESTILO_POR_DEFECTO;
 }
 
-export function obtenerTinta(estilo: Estilo, tintaId: string | null | undefined): Tinta {
-  return estilo.tintas.find((t) => t.id === tintaId) ?? estilo.tintas.find((t) => t.id === estilo.tintaPorDefecto) ?? estilo.tintas[0]!;
+export function obtenerPaleta(estilo: Estilo, paletaId: string | null | undefined): Paleta {
+  return estilo.paletas.find((p) => p.id === paletaId) ?? estilo.paletas.find((p) => p.id === estilo.paletaPorDefecto) ?? estilo.paletas[0]!;
 }
 
 export function obtenerPlantilla(id: string): Plantilla {

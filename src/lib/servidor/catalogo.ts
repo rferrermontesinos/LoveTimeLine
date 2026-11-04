@@ -1,5 +1,5 @@
 /**
- * Catálogo (packs, ampliaciones, extras y mecánicas). Fuente de verdad: la base de datos.
+ * Catálogo (packs, cartas extra, extras y mecánicas). Fuente de verdad: la base de datos.
  * Sin Supabase configurado (modo demostración) se usa la semilla supabase/catalogo.json,
  * que es exactamente lo que carga supabase/seed.sql.
  */
@@ -40,15 +40,15 @@ export async function obtenerCatalogo(): Promise<Catalogo> {
         activo: p.activo,
         cartas: p.cartas,
         precioCents: p.precio_cents,
+        precioCartaExtraCents: p.precio_carta_extra_cents,
         moneda: p.moneda,
-        estiloPorDefecto: p.estilo_por_defecto,
         nombre: p.nombre,
+        claim: p.claim ?? {},
         descripcion: p.descripcion,
       })),
       ampliacion: {
-        bloqueCartas: Number(a.bloque_cartas),
-        precioBloqueCents: Number(a.precio_bloque_cents),
-        maxCartasFoto: Number(a.max_cartas_foto),
+        maxCartas: Number(a.max_cartas),
+        ofertaMaxCartas: Number(a.oferta_max_cartas),
       },
       caja: { capacidadCartas: Number(a.capacidad_caja), precioCajaExtraCents: Number(a.precio_caja_extra_cents) },
       extras: extras.data.map((x) => ({
@@ -57,6 +57,7 @@ export async function obtenerCatalogo(): Promise<Catalogo> {
         activo: x.activo,
         precio: x.precio_tipo === "fijo" ? { tipo: "fijo", cents: x.precio_cents } : { tipo: "porcentajeMazo", porcentaje: x.porcentaje },
         cartasFisicas: x.cartas_fisicas ?? undefined,
+        efecto: x.efecto ?? undefined,
         nombre: x.nombre,
         descripcion: x.descripcion,
       })),

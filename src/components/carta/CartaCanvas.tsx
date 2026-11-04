@@ -6,13 +6,13 @@ import { dibujarCara } from "@/lib/carta/dibujar";
 import { cargarFuentesCartas } from "@/lib/carta/fuentes";
 import { textosCarta } from "@/lib/carta/textos";
 import type { Cara, DatosCarta } from "@/lib/carta/tipos";
-import { obtenerEstilo, obtenerPlantilla, obtenerTinta, type Tono } from "@/lib/estilos";
+import { obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
 
 export interface PropsCartaCanvas {
   cara: Cara;
   datos: DatosCarta;
   estiloId: string;
-  tintaId: string;
+  paletaId: string;
   tono: Tono;
   idiomaMazo: string;
   /** Ancho en px CSS. Sin ancho, ocupa el ancho del contenedor. */
@@ -26,7 +26,7 @@ export interface PropsCartaCanvas {
 const PROPORCION = PRINT.carta.altoMm / PRINT.carta.anchoMm;
 
 /** Dibuja una cara de carta con el mismo código que el archivo de impresión. */
-export function CartaCanvas({ cara, datos, estiloId, tintaId, tono, idiomaMazo, ancho, etiqueta, guias, className = "", sombra = true }: PropsCartaCanvas) {
+export function CartaCanvas({ cara, datos, estiloId, paletaId, tono, idiomaMazo, ancho, etiqueta, guias, className = "", sombra = true }: PropsCartaCanvas) {
   const ref = useRef<HTMLCanvasElement>(null);
   const contenedor = useRef<HTMLDivElement>(null);
   const [anchoMedido, setAnchoMedido] = useState<number>(ancho ?? 0);
@@ -62,7 +62,7 @@ export function CartaCanvas({ cara, datos, estiloId, tintaId, tono, idiomaMazo, 
       dibujarCara(ctx, cara, datos, {
         plantilla,
         estilo,
-        tinta: obtenerTinta(estilo, tintaId),
+        paleta: obtenerPaleta(estilo, paletaId),
         tono,
         idioma: idiomaMazo,
         textos: textosCarta(idiomaMazo),
@@ -78,7 +78,7 @@ export function CartaCanvas({ cara, datos, estiloId, tintaId, tono, idiomaMazo, 
     };
     // `firma` resume los datos; la imagen se compara por identidad.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firma, imagen, cara, estiloId, tintaId, tono, idiomaMazo, anchoFinal, guias]);
+  }, [firma, imagen, cara, estiloId, paletaId, tono, idiomaMazo, anchoFinal, guias]);
 
   return (
     <div ref={contenedor} className={`relative ${ancho ? "" : "w-full"} ${className}`} style={ancho ? { width: ancho } : undefined}>

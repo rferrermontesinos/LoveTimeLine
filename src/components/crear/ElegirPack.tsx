@@ -12,8 +12,8 @@ import type { Accion } from "@/lib/mazo/reductor";
 import { useCrear } from "./contexto";
 
 /** Acción para crear un mazo nuevo (fuera del componente: usa la hora y un id aleatorio). */
-function accionCrear(packId: string, estiloId: string, idiomaMazo: string, mecanicas: string[], titulo: string): Accion {
-  return { tipo: "crear", id: nuevoId(), ahora: Date.now(), packId, estiloId, idiomaMazo, mecanicas, titulo };
+function accionCrear(packId: string, idiomaMazo: string, mecanicas: string[], titulo: string): Accion {
+  return { tipo: "crear", id: nuevoId(), ahora: Date.now(), packId, idiomaMazo, mecanicas, titulo };
 }
 
 export function ElegirPack({ packInicial }: { packInicial?: string | null }) {
@@ -26,7 +26,7 @@ export function ElegirPack({ packInicial }: { packInicial?: string | null }) {
   const empezar = (packId: string) => {
     const pack = packs.find((p) => p.id === packId)!;
     despachar(
-      accionCrear(pack.id, pack.estiloPorDefecto, locale, catalogo.mecanicas.filter((m) => m.activo && m.porDefecto).map((m) => m.id), t("estilo.tituloPorDefecto")),
+      accionCrear(pack.id, locale, catalogo.mecanicas.filter((m) => m.activo && m.porDefecto).map((m) => m.id), t("estilo.tituloPorDefecto")),
     );
   };
 

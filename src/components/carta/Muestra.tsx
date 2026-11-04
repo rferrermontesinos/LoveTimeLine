@@ -42,7 +42,7 @@ export interface CartaMuestra {
   descripcionEnAnverso?: boolean;
   icono?: string | null;
   estiloId: string;
-  tintaId?: string;
+  paletaId?: string;
 }
 
 /** Carta de ejemplo con una foto de muestra generada (para la portada y las instrucciones). */
@@ -82,7 +82,7 @@ export function CartaDeMuestra({
       cara={cara}
       datos={datos}
       estiloId={estilo.id}
-      tintaId={muestra.tintaId ?? estilo.tintaPorDefecto}
+      paletaId={muestra.paletaId ?? estilo.paletaPorDefecto}
       tono="original"
       idiomaMazo={idiomaMazo}
       ancho={ancho}
@@ -97,5 +97,5 @@ export const MUESTRAS: Record<string, CartaMuestra> = {
   aniversario: { foto: "/muestras/luces.jpg", fecha: { anio: 2021, mes: 12, dia: 12 }, descripcion: "Cena de aniversario", estiloId: "pareja", icono: "bocadillo" },
   excursion: { foto: "/muestras/montanas.jpg", fecha: { anio: 2015, mes: 5 }, descripcion: "La primera excursión con los abuelos", estiloId: "familia" },
   jardin: { foto: "/muestras/jardin.jpg", fecha: { anio: 2008 }, descripcion: "El jardín de la casa del pueblo", estiloId: "familia" },
-  nieve: { foto: "/muestras/nieve.jpg", fecha: { anio: 2010, mes: 1 }, descripcion: "Primera vez en la nieve", estiloId: "familia", tintaId: "cobalto" },
+  nieve: { foto: "/muestras/nieve.jpg", fecha: { anio: 2010, mes: 1 }, descripcion: "Primera vez en la nieve", estiloId: "familia", paletaId: "cobalto" },
 };
