@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BRAND_NAME } from "@config/brand";
+import { PERMITIR_INDEXAR } from "@config/prototipo";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: { default: t("titulo", { marca: BRAND_NAME }), template: `%s · ${BRAND_NAME}` },
     description: t("descripcion"),
-    robots: { index: false, follow: false },
+    robots: { index: PERMITIR_INDEXAR, follow: PERMITIR_INDEXAR },
     alternates: { languages: Object.fromEntries(routing.locales.map((l) => [l, `/${l}`])) },
     icons: { icon: "/icono.svg" },
   };

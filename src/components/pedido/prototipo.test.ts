@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { descargaPdfActiva } from "@config/prototipo";
+import { descargaPdfActiva, indexacionPermitida } from "@config/prototipo";
 
 describe("interruptor de la descarga del PDF", () => {
   it("activo durante el prototipo: sin variable o con cualquier otro valor", () => {
@@ -13,5 +13,20 @@ describe("interruptor de la descarga del PDF", () => {
     expect(descargaPdfActiva(" 0 ")).toBe(false);
     expect(descargaPdfActiva("false")).toBe(false);
     expect(descargaPdfActiva("FALSE")).toBe(false);
+  });
+});
+
+describe("interruptor de la indexación en buscadores", () => {
+  it("apagado durante el prototipo: sin variable o con cualquier otro valor", () => {
+    expect(indexacionPermitida(undefined)).toBe(false);
+    expect(indexacionPermitida("")).toBe(false);
+    expect(indexacionPermitida("0")).toBe(false);
+    expect(indexacionPermitida("si")).toBe(false);
+  });
+
+  it("encendido para la comercialización solo con 1 (o true)", () => {
+    expect(indexacionPermitida("1")).toBe(true);
+    expect(indexacionPermitida(" 1 ")).toBe(true);
+    expect(indexacionPermitida("TRUE")).toBe(true);
   });
 });

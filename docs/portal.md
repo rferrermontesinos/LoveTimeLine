@@ -121,6 +121,16 @@ Migraciones en `supabase/migrations/` (esquema inicial y catálogo del 4 de novi
 6. Dar el rol de administración a Ricard: `update perfiles set rol = 'admin' where id = '<su uuid>';`.
 7. Variables en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` (esta, solo de servidor). No activar `HERRAMIENTAS_INTERNAS` en producción.
 
+## Publicación para los socios (URL secreta)
+
+Mientras sea un prototipo, el portal se publica en Vercel (fra1) bajo un subdominio de antipode-prints.com, cerrado con una clave y fuera de los buscadores:
+
+- **Acceso privado** (`src/lib/servidor/acceso.ts`, aplicado en `src/proxy.ts`): con `CLAVE_ACCESO` en el entorno, las páginas y la API responden 403 salvo a quien abre una vez `https://<subdominio>/?acceso=<clave>`. El proxy guarda en ese navegador una cookie `HttpOnly` con la huella SHA-256 de la clave (nunca la clave) durante 90 días y quita la clave de la dirección. Cambiar la clave en Vercel y volver a desplegar deja fuera a todos. El webhook de Stripe y los archivos estáticos (fuentes, fotos de muestra, `sw.js`, `robots.txt`) no se bloquean: no tienen nada privado.
+- **Sin buscadores** (`PERMITIR_INDEXAR`, en `config/prototipo.ts`): `robots.txt` con `Disallow: /`, cabecera `X-Robots-Tag: noindex, nofollow, noarchive` en todas las respuestas y `<meta name="robots" content="noindex">` en las páginas. Para la comercialización, `PERMITIR_INDEXAR=1`.
+- **Modo demostración:** sin Supabase, Stripe ni Brevo. Las fotos no salen del navegador de cada socio (IndexedDB), el PDF se genera en el navegador y el pago es simulado; al servidor solo llegan el pack y el número de cartas.
+- **Variables en Vercel:** `CLAVE_ACCESO` (sensible, solo de servidor) y `HERRAMIENTAS_INTERNAS=1` para que los socios vean el folleto y el muestrario detrás de la clave. Ninguna otra.
+- **Dominio:** un registro DNS `CNAME` del subdominio a Vercel, en el proveedor de DNS de antipode-prints.com. El nombre del subdominio no es secreto (los certificados HTTPS son públicos); lo que protege es la clave.
+
 ## Pagos (Stripe, modo test)
 
 - `STRIPE_SECRET_KEY` con una clave `sk_test_…` o `rk_test_…`; el servidor rechaza cualquier otra.
