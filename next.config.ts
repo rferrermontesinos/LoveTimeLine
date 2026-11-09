@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { PERMITIR_INDEXAR } from "./config/prototipo";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -26,6 +27,8 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Prototipo: ningún buscador lo indexa (ver config/prototipo.ts).
+          ...(PERMITIR_INDEXAR ? [] : [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }]),
         ],
       },
       {

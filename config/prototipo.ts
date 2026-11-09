@@ -18,3 +18,16 @@ export function descargaPdfActiva(valor: string | undefined): boolean {
   const v = valor?.trim().toLowerCase();
   return v !== "0" && v !== "false";
 }
+
+/**
+ * Indexación en buscadores. Apagada mientras dure el prototipo: robots.txt prohíbe todo, cada
+ * respuesta lleva `X-Robots-Tag: noindex` y las páginas, `<meta name="robots" content="noindex">`.
+ * Para la comercialización se enciende con `PERMITIR_INDEXAR=1` (se lee al compilar).
+ */
+export const PERMITIR_INDEXAR = indexacionPermitida(process.env.PERMITIR_INDEXAR);
+
+/** Solo con «1» o «true». Sin variable, no se indexa. */
+export function indexacionPermitida(valor: string | undefined): boolean {
+  const v = valor?.trim().toLowerCase();
+  return v === "1" || v === "true";
+}
