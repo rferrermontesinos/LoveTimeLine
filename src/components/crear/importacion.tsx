@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Aviso, CerrarAviso, Franja } from "@/components/ui/Piezas";
 import { crearDetectorSesion } from "@/domain/fechas/sesion";
-import { esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
-import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo } from "@/lib/importar/procesar";
+import { cargarMazo, esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
+import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo, type FotoImportada } from "@/lib/importar/procesar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaDesdeFoto, proporcionReversoDe } from "@/lib/mazo/derivados";
 import { esFoto, type CartaFoto } from "@/lib/mazo/tipos";
@@ -23,6 +23,27 @@ export interface ResumenImportacion {
   errores: number;
   /** Fotos que no se han podido guardar porque no queda espacio en el dispositivo. */
   sinEspacio: number;
+  /** Quienes mandaron por el enlace las fotos añadidas (los que dejaron su nombre). */
+  autores: string[];
+}
+
+/** Una foto lista para entrar en el mazo: de un archivo o llegada por el enlace. */
+export interface FotoLeida {
+  foto: FotoImportada;
+  /** Las fotos del mismo grupo se miran juntas para reconocer una sesión de fotos de fotos. */
+  grupo: string;
+  /** Quien la mandó por el enlace, si dejó su nombre. */
+  autor: string | null;
+}
+
+/** Una foto por añadir al mazo. */
+export interface EntradaImportacion {
+  /** Cuándo se subió: la referencia de «reciente» al buscar sesiones de fotos de fotos. */
+  hoy: Date;
+  /** Null: no hay nada que añadir (otra pestaña ya la ha recogido). */
+  leer: () => Promise<FotoLeida | null>;
+  /** Cuando la foto ya está en el mazo guardado, añadida ahora o porque ya estaba. */
+  alGuardar?: () => Promise<void>;
 }
 
 interface ValorImportacion {
@@ -34,6 +55,11 @@ interface ValorImportacion {
    * de las fotos no se lee nada: se quedan esperando hasta que se dé (`enEspera`).
    */
   importar: (archivos: File[]) => void;
+  /**
+   * Añade fotos que no son archivos de este dispositivo (las que llegan por el enlace), en la misma
+   * cola que las demás. Necesita el permiso de las fotos. Termina cuando están todas.
+   */
+  importarEntradas: (entradas: EntradaImportacion[]) => Promise<void>;
   /** Da el permiso de las fotos y añade las que esperaban. */
   consentir: () => void;
   /** Fotos elegidas o soltadas antes de dar el permiso. */
@@ -50,6 +76,40 @@ interface ValorImportacion {
 }
 
 const Ctx = createContext<ValorImportacion | null>(null);
+
+/** Los archivos elegidos o soltados: solo las imágenes, por nombre (las de cámara, en el orden en que se hicieron). */
+function entradasDeArchivos(archivos: File[]): { entradas: EntradaImportacion[]; descartados: number } {
+  const hoy = new Date();
+  const imagenes = archivos.filter(esImagenCompatible).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  return {
+    entradas: imagenes.map((archivo) => ({ hoy, leer: async () => ({ foto: await procesarArchivo(archivo, hoy), grupo: "archivos", autor: null }) })),
+    descartados: archivos.length - imagenes.length,
+  };
+}
+
+/**
+ * Espera (poco: las cartas de fotos importadas se guardan al momento) a que el mazo guardado tenga
+ * estas fotos, y avisa a cada una. Las que no lleguen a guardarse no avisan: las del enlace se
+ * quedan en el servicio y se recogen la próxima vez.
+ */
+async function avisarGuardadas(mazoId: string, lista: { hash: string; alGuardar: () => Promise<void> }[]): Promise<void> {
+  const limite = Date.now() + 10_000;
+  let enMazo = new Set<string>();
+  for (;;) {
+    const guardado = await cargarMazo();
+    enMazo = new Set(guardado?.id === mazoId ? guardado.cartas.filter(esFoto).map((c) => c.hash) : []);
+    if (lista.every((x) => enMazo.has(x.hash)) || Date.now() > limite) break;
+    await new Promise((ok) => setTimeout(ok, 250));
+  }
+  await enCola(
+    lista.filter((x) => enMazo.has(x.hash)),
+    4,
+    (x) => x.alGuardar(),
+    (r) => {
+      if (!r.ok) console.warn("No se pudo avisar de una foto ya guardada", r.error);
+    },
+  );
+}
 
 /**
  * La subida de fotos, compartida por Fotos y Cartas: sigue aunque se cambie de paso, y el
@@ -70,60 +130,69 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
     mazoActual.current = mazo;
   }, [mazo]);
 
+  /** `descartados`: archivos que no son imágenes, que cuentan como no leídos. */
   const subir = useCallback(
-    async (archivos: File[]) => {
+    async (entradas: EntradaImportacion[], descartados: number) => {
       const m = mazoActual.current;
-      if (!m || archivos.length === 0) return;
-      const imagenes = archivos.filter(esImagenCompatible);
+      if (!m || (entradas.length === 0 && descartados === 0)) return;
       const vistos = new Set(m.cartas.filter(esFoto).map((c) => c.hash));
-      const hoy = new Date();
-      const sesion = crearDetectorSesion(hoy);
+      // Una sesión de fotos de fotos se busca dentro de cada grupo (una subida, un envío por el enlace).
+      const sesiones = new Map<string, ReturnType<typeof crearDetectorSesion>>();
       const propReverso = proporcionReversoDe(m);
       // Cómo queda cada carta añadida (una sesión puede dejar en blanco las de antes).
       const finales = new Map<string, CartaFoto>();
-      const r = { repetidas: 0, errores: archivos.length - imagenes.length, sinEspacio: 0 };
+      const autores = new Set<string>();
+      const porAvisar: { hash: string; alGuardar: () => Promise<void> }[] = [];
+      const r = { repetidas: 0, errores: descartados, sinEspacio: 0 };
       setResumen(null);
-      setProgreso({ hechas: 0, total: imagenes.length });
+      setProgreso({ hechas: 0, total: entradas.length });
       let hechas = 0;
       await enCola(
-        // Por nombre: las fotos de la cámara salen en el orden en que se hicieron.
-        imagenes.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })),
+        entradas,
         concurrenciaRecomendada(),
-        async (archivo) => {
-          const foto = await procesarArchivo(archivo, hoy);
-          if (vistos.has(foto.hash)) return null;
-          vistos.add(foto.hash);
-          await guardarFoto(foto.id, foto.copia, foto.mini);
-          return foto;
+        async (entrada) => {
+          const leida = await entrada.leer();
+          if (!leida) return null;
+          if (vistos.has(leida.foto.hash)) return { leida, nueva: false };
+          vistos.add(leida.foto.hash);
+          await guardarFoto(leida.foto.id, leida.foto.copia, leida.foto.mini);
+          return { leida, nueva: true };
         },
         (res) => {
           hechas++;
           if (res.ok && res.valor) {
-            const foto = res.valor;
-            let carta = cartaDesdeFoto(foto, propReverso, Date.now());
-            const { enBlanco, anteriores } = sesion.registrar(carta.id, foto.propuesta);
-            if (anteriores.length) {
-              despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo" });
-              for (const id of anteriores) {
-                const c = finales.get(id);
-                if (c) finales.set(id, { ...c, fecha: null, motivo: "sesion-de-escaneo" });
+            const { leida, nueva } = res.valor;
+            if (res.entrada.alGuardar) porAvisar.push({ hash: leida.foto.hash, alGuardar: res.entrada.alGuardar });
+            if (nueva) {
+              let sesion = sesiones.get(leida.grupo);
+              if (!sesion) sesiones.set(leida.grupo, (sesion = crearDetectorSesion(res.entrada.hoy)));
+              let carta = cartaDesdeFoto(leida.foto, propReverso, Date.now());
+              const { enBlanco, anteriores } = sesion.registrar(carta.id, leida.foto.propuesta);
+              if (anteriores.length) {
+                despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo" });
+                for (const id of anteriores) {
+                  const c = finales.get(id);
+                  if (c) finales.set(id, { ...c, fecha: null, motivo: "sesion-de-escaneo" });
+                }
               }
+              if (enBlanco && carta.fecha && carta.fuente && carta.fuente !== "manual") {
+                const sugerencia = { fecha: carta.fecha, fuente: carta.fuente, motivo: "sesion-de-escaneo" as const };
+                carta = { ...carta, fecha: null, fuente: null, confianza: null, motivo: "sesion-de-escaneo", sugerencias: [sugerencia] };
+              }
+              finales.set(carta.id, carta);
+              if (leida.autor) autores.add(leida.autor);
+              // Cada carta entra en el mazo en cuanto su foto está guardada: si la subida se corta
+              // (se cierra la pestaña, se va la batería), lo subido hasta ahí ya está en el mazo.
+              despachar({ tipo: "anadirCartas", cartas: [carta] });
+            } else r.repetidas++;
+          } else if (!res.ok) {
+            if (esErrorDeEspacio(res.error)) r.sinEspacio++;
+            else {
+              r.errores++;
+              console.warn("No se pudo leer una foto", res.error);
             }
-            if (enBlanco && carta.fecha && carta.fuente && carta.fuente !== "manual") {
-              const sugerencia = { fecha: carta.fecha, fuente: carta.fuente, motivo: "sesion-de-escaneo" as const };
-              carta = { ...carta, fecha: null, fuente: null, confianza: null, motivo: "sesion-de-escaneo", sugerencias: [sugerencia] };
-            }
-            finales.set(carta.id, carta);
-            // Cada carta entra en el mazo en cuanto su foto está guardada: si la subida se corta
-            // (se cierra la pestaña, se va la batería), lo subido hasta ahí ya está en el mazo.
-            despachar({ tipo: "anadirCartas", cartas: [carta] });
-          } else if (res.ok) r.repetidas++;
-          else if (esErrorDeEspacio(res.error)) r.sinEspacio++;
-          else {
-            r.errores++;
-            console.warn("No se pudo leer", res.entrada.name, res.error);
           }
-          setProgreso({ hechas, total: imagenes.length });
+          setProgreso({ hechas, total: entradas.length });
         },
       );
       const cartas = [...finales.values()];
@@ -135,16 +204,18 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         porMensajeria: sinFecha.filter((c) => c.motivo === "fecha-de-envio").length,
         conSugerencia: sinFecha.filter((c) => (c.sugerencias?.length ?? 0) > 0).length,
         ...r,
+        autores: [...autores],
       });
+      if (porAvisar.length) await avisarGuardadas(m.id, porAvisar);
     },
     [despachar],
   );
 
   const encolar = useCallback(
-    (archivos: File[]) => {
-      if (archivos.length === 0) return;
-      const siguiente = cola.current.then(() => subir(archivos));
+    (entradas: EntradaImportacion[], descartados = 0): Promise<void> => {
+      const siguiente = cola.current.then(() => subir(entradas, descartados));
       cola.current = siguiente.catch((e) => console.warn("Subida interrumpida", e));
+      return cola.current;
     },
     [subir],
   );
@@ -158,7 +229,20 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         setIntentos((n) => n + 1);
         return;
       }
-      encolar(archivos);
+      const { entradas, descartados } = entradasDeArchivos(archivos);
+      void encolar(entradas, descartados);
+    },
+    [encolar],
+  );
+
+  const importarEntradas = useCallback(
+    async (entradas: EntradaImportacion[]) => {
+      if (entradas.length === 0) return;
+      if (!mazoActual.current?.consentimientoFotos) {
+        setIntentos((n) => n + 1);
+        return;
+      }
+      await encolar(entradas);
     },
     [encolar],
   );
@@ -168,7 +252,9 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
     const lista = esperando.current;
     esperando.current = [];
     setEnEspera(0);
-    encolar(lista);
+    if (lista.length === 0) return;
+    const { entradas, descartados } = entradasDeArchivos(lista);
+    void encolar(entradas, descartados);
   }, [despachar, encolar]);
 
   const cerrarResumen = useCallback(() => setResumen(null), []);
@@ -179,6 +265,7 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
       resumen,
       cerrarResumen,
       importar,
+      importarEntradas,
       consentir,
       enEspera,
       intentosSinPermiso,
@@ -193,7 +280,7 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         return false;
       },
     }),
-    [progreso, resumen, cerrarResumen, importar, consentir, enEspera, intentosSinPermiso],
+    [progreso, resumen, cerrarResumen, importar, importarEntradas, consentir, enEspera, intentosSinPermiso],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
@@ -315,6 +402,7 @@ export function SoltarFotos({ activo }: { activo: boolean }) {
  */
 export function EstadoImportacion() {
   const t = useTranslations("fotos");
+  const locale = useLocale();
   const tc = useTranslations("crear");
   const { progreso, resumen, cerrarResumen } = useImportacion();
   if (progreso) {
@@ -338,6 +426,7 @@ export function EstadoImportacion() {
         {resumen.errores > 0 && <> · {t("errores", { n: resumen.errores })}</>}
         {resumen.sinEspacio > 0 && <> · {t("sinEspacio", { n: resumen.sinEspacio })}</>}
       </p>
+      {resumen.autores.length > 0 && <p className="mt-1">{t("enviadasPor", { autores: new Intl.ListFormat(locale, { type: "conjunction" }).format(resumen.autores) })}</p>}
       {resumen.conSugerencia > 0 && <p className="mt-1">{t("conSugerencia", { n: resumen.conSugerencia })}</p>}
       {resumen.porMensajeria > 0 && <p className="mt-1">{t("porMensajeria", { n: resumen.porMensajeria })}</p>}
     </Aviso>

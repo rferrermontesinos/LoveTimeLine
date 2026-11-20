@@ -135,6 +135,22 @@ export async function borrarFotos(ids: Iterable<string>): Promise<void> {
   }
 }
 
+/**
+ * Otros datos ligados al mazo, en el mismo almacén y con su propia clave (p. ej.
+ * «colaboracion:<id del mazo>»): `borrarTodo` también los borra. Lanzan si no hay almacén.
+ */
+export async function leerDato<T>(claveDato: string): Promise<T | null> {
+  return ((await get(claveDato, t())) as T | undefined) ?? null;
+}
+
+export async function guardarDato(claveDato: string, valor: unknown): Promise<void> {
+  await set(claveDato, valor, t());
+}
+
+export async function borrarDato(claveDato: string): Promise<void> {
+  await del(claveDato, t());
+}
+
 export async function borrarTodo(): Promise<void> {
   try {
     const todas = await keys(t());

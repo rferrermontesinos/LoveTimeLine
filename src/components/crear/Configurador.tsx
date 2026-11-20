@@ -8,6 +8,7 @@ import { Boton, BotonEnlace } from "@/components/ui/Boton";
 import { Aviso, CerrarAviso, Franja } from "@/components/ui/Piezas";
 import { packPorDefecto } from "@/domain/precios/cotizar";
 import { textoEn, type Catalogo } from "@/domain/precios/tipos";
+import { cerrarEnlaceDelMazo } from "@/lib/colaboracion/dueno";
 import { nuevoId } from "@/lib/importar/procesar";
 import { accionCrearMazo, urlSinParametros, type Arranque } from "@/lib/mazo/arranque";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
@@ -128,6 +129,8 @@ function Contenido() {
     const pack = packId ?? packPorDefecto(catalogo)?.id;
     if (!pack) return;
     setBorrando(true);
+    // Su enlace para pedir fotos se cierra: nadie podría abrir ya lo que llegara.
+    await cerrarEnlaceDelMazo(mazo.id);
     await reiniciarTodo();
     despachar(accionCrearMazo({ id: nuevoId(), ahora: Date.now(), packId: pack, idiomaMazo: locale, titulo: t("estilo.tituloPorDefecto"), catalogo }));
     setAvisoCerrado(true);

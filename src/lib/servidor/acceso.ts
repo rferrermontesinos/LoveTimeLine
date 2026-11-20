@@ -15,6 +15,12 @@ export const DURACION_COOKIE_S = 60 * 60 * 24 * 90;
 
 /** Rutas que nunca se bloquean: Stripe no lleva la cookie y su webhook ya va firmado. */
 const RUTAS_LIBRES = ["/api/stripe/webhook"];
+/**
+ * La página para mandar fotos a un mazo la abre la familia, que no tiene la clave; solo muestra
+ * esa página (sin enlaces al resto del portal). Y el servicio local de la subida colaborativa,
+ * que solo existe en desarrollo y pruebas. Lo privado de las fotos lo protege su cifrado.
+ */
+const PATRONES_LIBRES = [/^\/(?:[a-z]{2}\/)?aportar\/[A-Za-z0-9_-]{22}\/?$/, /^\/api\/colaboracion(?:\/|$)/];
 
 export type DecisionAcceso =
   | { tipo: "pasar" }
@@ -39,7 +45,7 @@ export function igualesSeguro(a: string, b: string): boolean {
 export async function decidirAcceso(e: { clave: string | undefined; url: URL; cookie: string | undefined }): Promise<DecisionAcceso> {
   const clave = e.clave?.trim();
   if (!clave) return { tipo: "pasar" };
-  if (RUTAS_LIBRES.some((r) => e.url.pathname === r)) return { tipo: "pasar" };
+  if (RUTAS_LIBRES.some((r) => e.url.pathname === r) || PATRONES_LIBRES.some((p) => p.test(e.url.pathname))) return { tipo: "pasar" };
 
   const huella = await huellaClave(clave);
   const enEnlace = e.url.searchParams.get(PARAM_ACCESO);

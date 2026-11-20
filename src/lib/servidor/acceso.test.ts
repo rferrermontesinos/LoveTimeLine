@@ -38,6 +38,16 @@ describe("acceso privado al prototipo", () => {
     expect(await decidirAcceso({ clave: "nueva-clave", url: url("/es/crear"), cookie: huella })).toEqual({ tipo: "denegar" });
   });
 
+  it("la página para mandar fotos y el servicio local de la subida colaborativa no se bloquean; lo demás de aportar, sí", async () => {
+    const id = "AbCdEfGhIjKlMnOpQrStUv";
+    for (const ruta of [`/es/aportar/${id}`, `/en/aportar/${id}`, `/aportar/${id}`, `/es/aportar/${id}/`, "/api/colaboracion/invitaciones", `/api/colaboracion/invitaciones/${id}/aportaciones`]) {
+      expect(await decidirAcceso({ clave: CLAVE, url: url(ruta), cookie: undefined }), ruta).toEqual({ tipo: "pasar" });
+    }
+    for (const ruta of ["/es/aportar", `/es/aportar/${id}/otra`, "/es/aportar/corto", `/es/crear/aportar/${id}`, "/api/colaboracionx", "/es/aportarlo"]) {
+      expect(await decidirAcceso({ clave: CLAVE, url: url(ruta), cookie: undefined }), ruta).toEqual({ tipo: "denegar" });
+    }
+  });
+
   it("el webhook de Stripe nunca se bloquea", async () => {
     expect(await decidirAcceso({ clave: CLAVE, url: url("/api/stripe/webhook"), cookie: undefined })).toEqual({ tipo: "pasar" });
   });

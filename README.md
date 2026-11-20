@@ -41,6 +41,7 @@ Sin variables de entorno funciona en **modo demostración**: fotos en el navegad
 | Supabase (UE) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Catálogo de la semilla, pedidos sin guardar |
 | Stripe (solo modo test) | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Pago simulado |
 | Brevo | `BREVO_API_KEY`, `BREVO_REMITENTE_EMAIL`, `BREVO_REMITENTE_NOMBRE` | El correo se registra en el log, sin la dirección del cliente |
+| Subida colaborativa (función `colaboracion` de Supabase) | `NEXT_PUBLIC_COLABORACION_URL`; en local, `/api/colaboracion` con `COLABORACION_LOCAL=1` | No se ofrece pedir fotos por enlace |
 
 ## Comandos
 

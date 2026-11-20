@@ -21,6 +21,7 @@
     "repetidas": "{n, plural, one {# foto repetida no se ha añadido} other {# fotos repetidas no se han añadido}}",
     "errores": "{n, plural, one {# archivo no se ha podido leer} other {# archivos no se han podido leer}}",
     "sinEspacio": "{n, plural, one {# foto no cabe en este dispositivo: libera espacio y vuelve a subirla} other {# fotos no caben en este dispositivo: libera espacio y vuelve a subirlas}}",
+    "enviadasPor": "Enviadas por {autores}.",
     "vacio": "Aún no hay fotos. Empieza por una carpeta de un viaje o de un año.",
     "recuerdoSinFoto": "Recuerdo sin foto: {texto}",
     "tusCartas": "Tus cartas",

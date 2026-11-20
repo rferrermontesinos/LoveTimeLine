@@ -14,6 +14,7 @@ import { esAproximada } from "@/lib/mazo/derivados";
 import type { Carta, Mazo } from "@/lib/mazo/tipos";
 import { desplazamiento, useCrear } from "./contexto";
 import { EstadoImportacion, useElegirFotos, useImportacion } from "./importacion";
+import { PanelColaboracion } from "./PanelColaboracion";
 import { SelectorFecha } from "./SelectorFecha";
 
 /** Cartas borradas de una vez: se puede deshacer mientras el mazo no cambie otra vez. */
@@ -163,6 +164,9 @@ export function PasoFotos() {
         {entradas}
         <p className="mt-4 text-sm text-tinta-2">{t("fotos.privacidad")}</p>
       </div>
+
+      {/* Pedir fotos a otros con un enlace (si el servicio está configurado). */}
+      <PanelColaboracion mazoId={mazo.id} />
 
       <EstadoImportacion />
 

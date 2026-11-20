@@ -20,6 +20,8 @@ tests/fixtures/generadas/
 
 # salidas locales (nunca fotos reales en el repo)
 salidas/
+# fotos cifradas de la subida colaborativa en desarrollo y pruebas
+.colaboracion-local/
 *.local.pdf
 
 # entorno

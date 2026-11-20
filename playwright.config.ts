@@ -28,7 +28,8 @@ export default defineConfig({
         timeout: 240_000,
         reuseExistingServer: true,
         // Las pruebas descargan el archivo de impresión: el interruptor del prototipo, encendido
-        // aunque el .env.local lo apague (config/prototipo.ts). Se lee al compilar.
-        env: { NEXT_PUBLIC_DESCARGA_PDF: "1" },
+        // aunque el .env.local lo apague (config/prototipo.ts). Se lee al compilar. Y la subida
+        // colaborativa, con el servicio local de la propia web (src/app/api/colaboracion).
+        env: { NEXT_PUBLIC_DESCARGA_PDF: "1", NEXT_PUBLIC_COLABORACION_URL: "/api/colaboracion", COLABORACION_LOCAL: "1" },
       },
 });

@@ -9,6 +9,7 @@
  */
 import carta from "./es/carta.json";
 import cartas from "./es/cartas.json";
+import colaboracion from "./es/colaboracion.json";
 import comun from "./es/comun.json";
 import confirmado from "./es/confirmado.json";
 import crear from "./es/crear.json";
@@ -21,6 +22,7 @@ import juego from "./es/juego.json";
 import pedido from "./es/pedido.json";
 import cartaEn from "./en/carta.json";
 import cartasEn from "./en/cartas.json";
+import colaboracionEn from "./en/colaboracion.json";
 import comunEn from "./en/comun.json";
 import confirmadoEn from "./en/confirmado.json";
 import crearEn from "./en/crear.json";
@@ -34,11 +36,11 @@ import pedidoEn from "./en/pedido.json";
 
 /** Partes de cada idioma, en el mismo orden. Un test comprueba que no repiten espacios de nombres. */
 export const PARTES = {
-  es: [comun, inicio, juego, guia, confirmado, instrucciones, carta, crear, fotos, cartas, estilo, pedido],
-  en: [comunEn, inicioEn, juegoEn, guiaEn, confirmadoEn, instruccionesEn, cartaEn, crearEn, fotosEn, cartasEn, estiloEn, pedidoEn],
+  es: [comun, inicio, juego, guia, confirmado, instrucciones, carta, crear, fotos, colaboracion, cartas, estilo, pedido],
+  en: [comunEn, inicioEn, juegoEn, guiaEn, confirmadoEn, instruccionesEn, cartaEn, crearEn, fotosEn, colaboracionEn, cartasEn, estiloEn, pedidoEn],
 } as const;
 
-const es = { ...comun, ...inicio, ...juego, ...guia, ...confirmado, ...instrucciones, ...carta, ...crear, ...fotos, ...cartas, ...estilo, ...pedido };
+const es = { ...comun, ...inicio, ...juego, ...guia, ...confirmado, ...instrucciones, ...carta, ...crear, ...fotos, ...colaboracion, ...cartas, ...estilo, ...pedido };
 
 export type Mensajes = typeof es;
 
@@ -52,6 +54,7 @@ const en: Mensajes = {
   ...cartaEn,
   ...crearEn,
   ...fotosEn,
+  ...colaboracionEn,
   ...cartasEn,
   ...estiloEn,
   ...pedidoEn,

@@ -126,3 +126,98 @@ select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333
 select pruebas.comprobar((select count(*) from public.pedidos) = 2, 'la administración ve todos los pedidos');
 select pruebas.comprobar((select count(*) from public.mazos) = 1, 'la administración ve todos los mazos');
 reset role;
+
+-- ── Subida colaborativa: tablas, funciones y límites, solo para el servicio ──
+set role anon;
+do $$ begin
+  perform count(*) from public.invitaciones;
+  raise exception 'FALLA: cualquiera lee los enlaces de la subida colaborativa';
+exception when insufficient_privilege then raise notice 'ok: los enlaces no son públicos';
+end $$;
+do $$ begin
+  perform count(*) from public.aportaciones;
+  raise exception 'FALLA: cualquiera lee las aportaciones';
+exception when insufficient_privilege then raise notice 'ok: las aportaciones no son públicas';
+end $$;
+do $$ begin
+  perform public.colab_reservar('AAAAAAAAAAAAAAAAAAAAAA', 'BBBBBBBBBBBBBBBBBBBBBB', 100, 300, 1000000, 1000000);
+  raise exception 'FALLA: cualquiera puede reservar sitio en un enlace';
+exception when insufficient_privilege then raise notice 'ok: solo el servicio reserva sitio';
+end $$;
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+do $$ begin
+  perform public.colab_leer('AAAAAAAAAAAAAAAAAAAAAA');
+  raise exception 'FALLA: una sesión cualquiera lee enlaces';
+exception when insufficient_privilege then raise notice 'ok: una sesión no lee enlaces';
+end $$;
+do $$ begin
+  insert into public.invitaciones (id, clave_publica, huella_token, caduca_en)
+    values ('AAAAAAAAAAAAAAAAAAAAAA', 'B' || repeat('A', 86), repeat('A', 43), now() + interval '1 day');
+  raise exception 'FALLA: una sesión crea enlaces sin pasar por el servicio';
+exception when insufficient_privilege then raise notice 'ok: los enlaces solo los crea el servicio';
+end $$;
+reset role;
+
+set role service_role;
+select pruebas.comprobar(
+  public.colab_crear('AAAAAAAAAAAAAAAAAAAAAA', 'B' || repeat('A', 86), repeat('A', 43), now() + interval '14 days', 2, 10) = 'ok'
+  and public.colab_crear('CCCCCCCCCCCCCCCCCCCCCC', 'B' || repeat('C', 86), repeat('C', 43), now() + interval '14 days', 2, 10) = 'ok',
+  'el servicio crea enlaces'
+);
+select pruebas.comprobar(
+  public.colab_crear('DDDDDDDDDDDDDDDDDDDDDD', 'B' || repeat('D', 86), repeat('D', 43), now() + interval '14 days', 2, 10) = 'lleno',
+  'no se pasa de los enlaces activos a la vez'
+);
+select pruebas.comprobar(
+  public.colab_crear('DDDDDDDDDDDDDDDDDDDDDD', 'B' || repeat('D', 86), repeat('D', 43), now() + interval '14 days', 10, 2) = 'lleno',
+  'no se pasa de los enlaces nuevos por hora'
+);
+do $$ begin
+  perform public.colab_crear('corto', 'B' || repeat('A', 86), repeat('A', 43), now(), 10, 10);
+  raise exception 'FALLA: se aceptó un id de enlace mal formado';
+exception when check_violation then raise notice 'ok: rechaza ids de enlace mal formados';
+end $$;
+do $$ begin
+  perform public.colab_crear('EEEEEEEEEEEEEEEEEEEEEE', 'no es una clave', repeat('A', 43), now(), 10, 10);
+  raise exception 'FALLA: se aceptó una clave pública mal formada';
+exception when check_violation then raise notice 'ok: rechaza claves públicas mal formadas';
+end $$;
+
+select pruebas.comprobar(
+  public.colab_reservar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a1', 100, 2, 1000, 5000) = 'ok'
+  and public.colab_reservar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a2', 100, 2, 1000, 5000) = 'ok',
+  'reserva sitio para dos fotos'
+);
+select pruebas.comprobar(public.colab_reservar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a3', 100, 2, 1000, 5000) = 'lleno', 'no pasa de las fotos esperando en un enlace');
+select pruebas.comprobar(public.colab_reservar('CCCCCCCCCCCCCCCCCCCCCC', 'c0000000000000000000c1', 1001, 300, 1000, 5000) = 'lleno', 'no pasa de los bytes de un enlace');
+select pruebas.comprobar(public.colab_reservar('CCCCCCCCCCCCCCCCCCCCCC', 'c0000000000000000000c1', 900, 300, 1000, 1000) = 'lleno', 'no pasa de los bytes entre todos los enlaces');
+select pruebas.comprobar(public.colab_reservar('ZZZZZZZZZZZZZZZZZZZZZZ', 'z0000000000000000000z1', 100, 300, 1000, 5000) = 'no-existe', 'un enlace que no existe no admite fotos');
+
+select pruebas.comprobar((select count(*) from public.colab_listar('AAAAAAAAAAAAAAAAAAAAAA')) = 0, 'lo reservado no se lista hasta que se confirma');
+select public.colab_confirmar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a1');
+select pruebas.comprobar(
+  (select array_agg(id) from public.colab_listar('AAAAAAAAAAAAAAAAAAAAAA')) = array['a0000000000000000000a1'],
+  'se lista lo confirmado'
+);
+select pruebas.comprobar(public.colab_quitar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a1'), 'se quita una aportación recogida');
+select pruebas.comprobar(not public.colab_quitar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a1'), 'quitarla otra vez no hace nada');
+
+-- Una reserva a medias de hace más de una hora deja de contar.
+update public.aportaciones set recibida_en = now() - interval '2 hours' where id = 'a0000000000000000000a2';
+select pruebas.comprobar(
+  public.colab_reservar('AAAAAAAAAAAAAAAAAAAAAA', 'a0000000000000000000a4', 100, 1, 1000, 5000) = 'ok',
+  'las reservas a medias de hace más de una hora no cuentan'
+);
+-- (En otra sentencia: la de arriba no ve lo que borra la función que llama.)
+select pruebas.comprobar(not exists (select 1 from public.aportaciones where id = 'a0000000000000000000a2'), 'y se borran al reservar');
+
+update public.invitaciones set caduca_en = now() - interval '1 minute' where id = 'CCCCCCCCCCCCCCCCCCCCCC';
+select pruebas.comprobar(public.colab_reservar('CCCCCCCCCCCCCCCCCCCCCC', 'c0000000000000000000c2', 10, 300, 1000, 5000) = 'caducada', 'un enlace caducado no admite fotos');
+select pruebas.comprobar((select array_agg(id) from public.colab_caducadas(50)) = array['CCCCCCCCCCCCCCCCCCCCCC'], 'la purga encuentra los enlaces caducados');
+select public.colab_borrar('AAAAAAAAAAAAAAAAAAAAAA');
+select pruebas.comprobar(not exists (select 1 from public.aportaciones where invitacion_id = 'AAAAAAAAAAAAAAAAAAAAAA'), 'borrar un enlace borra sus aportaciones');
+reset role;
+select pruebas.comprobar((select public from storage.buckets where id = 'aportaciones') = false, 'el bucket de aportaciones es privado');

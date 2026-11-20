@@ -21,6 +21,7 @@
     "repetidas": "{n, plural, one {# repeated photo was skipped} other {# repeated photos were skipped}}",
     "errores": "{n, plural, one {# file couldn’t be read} other {# files couldn’t be read}}",
     "sinEspacio": "{n, plural, one {# photo didn’t fit on this device: free up some space and add it again} other {# photos didn’t fit on this device: free up some space and add them again}}",
+    "enviadasPor": "Sent by {autores}.",
     "vacio": "No photos yet. Start with a folder from a trip or a year.",
     "recuerdoSinFoto": "Memory without a photo: {texto}",
     "tusCartas": "Your cards",

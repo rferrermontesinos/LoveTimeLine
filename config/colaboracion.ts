@@ -12,9 +12,6 @@
  */
 export const URL_COLABORACION = urlColaboracion(process.env.NEXT_PUBLIC_COLABORACION_URL);
 
-/** Días que dura un enlace. Al caducar se borra del servicio todo lo que no se haya añadido aún. */
-export const DIAS_ENLACE = 14;
-
 /**
  * La dirección del servicio, sin barra final, o null si no hay o no vale. Una ruta («/api/…») es
  * de la propia web; si no, solo https (o http en el propio ordenador, para desarrollo).
