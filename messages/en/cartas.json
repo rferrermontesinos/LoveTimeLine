@@ -3,10 +3,13 @@
     "titulo": "Complete your cards",
     "texto": "Check each card’s date and add a line if you like. It saves itself.",
     "posicion": "Card {actual} of {total}",
+    "hecho": "Done: the previous one now has a date ({fecha}). {n, plural, one {# card to go} other {# cards to go}}.",
     "progreso": {
       "faltan": "{n, plural, one {# card left to finish} other {# cards left to finish}}",
       "listas": "{n} of {total} cards ready",
-      "siguiente": "Finish the next one"
+      "siguiente": "Finish the next one",
+      "casi": "{n, plural, one {Almost there! # card left} other {Almost there! # cards left}}",
+      "unToque": "{n, plural, one {one has a suggested date: if it’s right, one tap does it} other {# have a suggested date: if it’s right, one tap does it}}"
     },
     "listo": {
       "titulo": "Your deck is ready!",

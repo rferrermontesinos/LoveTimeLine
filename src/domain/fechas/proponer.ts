@@ -14,10 +14,12 @@ export type Confianza = "alta" | "media" | "baja";
  *   nombre que pone el móvil, como IMG_20190814_123045);
  * - metadatos: otra fecha de los metadatos (original sin datos de cámara, la anotada por un
  *   programa de fotos o la original que guarda un escáner);
- * - escrito: la que escribió una persona en el nombre del archivo o de la carpeta;
- * - envio: la de envío o de captura (WhatsApp, capturas de pantalla), aproximada: solo el mes.
+ * - escrito: la que escribió una persona en el nombre del archivo o de la carpeta.
+ *
+ * La de envío o de captura (WhatsApp, capturas de pantalla) ya no se pone sola desde el 20 de
+ * noviembre de 2026: como mucho se sugiere su mes (ver MotivoRevision «mes-de-envio»).
  */
-export type PistaFecha = "camara" | "metadatos" | "escrito" | "envio";
+export type PistaFecha = "camara" | "metadatos" | "escrito";
 
 /** Por qué una fecha queda en blanco (o, en mazos antiguos, solo se sugería). Se explica en lenguaje llano. */
 export type MotivoRevision =
@@ -33,6 +35,10 @@ export type MotivoRevision =
   | "fecha-reciente"
   | "fecha-de-envio"
   | "captura-de-pantalla"
+  /** Llegó por mensajería hace más de un mes: se sugiere el mes del envío, pero la foto puede ser de antes. */
+  | "mes-de-envio"
+  /** Captura de hace más de un mes: se sugiere su mes, pero lo que sale en ella puede ser de antes. */
+  | "mes-de-captura"
   | "sin-datos-de-camara"
   | "fecha-digitalizacion"
   /** Muchas fotos de cámara del mismo día reciente en una subida: seguramente fotos de fotos. */
@@ -136,11 +142,12 @@ interface Candidata {
   pista: PistaFecha;
 }
 
-const CONFIANZA: Record<PistaFecha, Confianza> = { camara: "alta", metadatos: "media", escrito: "media", envio: "baja" };
+const CONFIANZA: Record<PistaFecha, Confianza> = { camara: "alta", metadatos: "media", escrito: "media" };
 
 /**
- * Decide la fecha de una foto. Se pone sola casi siempre; solo queda en blanco cuando la única
- * pista es la de preparar el mazo, porque una fecha equivocada impresa es peor que una en blanco:
+ * Decide la fecha de una foto. Se pone sola cuando la foto la dice clara; si no, queda en blanco,
+ * con una sugerencia de un toque cuando hay una fecha posible, porque una fecha equivocada impresa
+ * es peor que una en blanco. Ricard, 20-11-2026: «no elijas fechas si no las tienes claras».
  *
  * 1. La fecha de la cámara (original, o el nombre que pone el móvil), salvo en un escaneo (sería la
  *    del escaneo) o si es de los últimos DIAS_PREPARACION días antes de subirla (foto de una foto,
@@ -149,8 +156,9 @@ const CONFIANZA: Record<PistaFecha, Confianza> = { camara: "alta", metadatos: "m
  *    la cámara si es anterior: es una foto de una foto antigua, que solo se digitaliza después.
  *    La de la carpeta («Menorca 2015/») gana solo si es de otra época (2 años o más antes).
  * 3. Sin fecha de cámara, la escrita por una persona (nombre, metadatos o carpeta).
- * 4. Sin nada mejor, la de envío o de captura (WhatsApp, capturas) con solo el mes, si es de hace
- *    más de un mes: las recientes son, casi siempre, reenvíos para el mazo que han perdido la fecha.
+ * 4. Sin nada mejor, la de envío o de captura (WhatsApp, capturas) no se pone sola: la foto puede
+ *    ser de mucho antes. Si es de hace más de un mes, se sugiere su mes; las recientes son, casi
+ *    siempre, reenvíos para el mazo que han perdido la fecha, y no se sugieren.
  *
  * La fecha del archivo nunca se pone sola (es la de la copia o la descarga): como mucho se sugiere.
  */
@@ -235,12 +243,14 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
   const otra = escrita ?? deCarpeta;
   if (otra) return resultado(otra);
 
-  // 4. Envío o captura: solo el mes, y solo si no puede ser de preparar el mazo.
+  // 4. Envío o captura: en blanco; si no puede ser de preparar el mazo, con su mes como sugerencia.
   if (nombre && !conSenales && (nombre.origen === "mensajeria" || nombre.origen === "captura")) {
+    const deMensajeria = nombre.origen === "mensajeria";
     if (!puedeSerReciente(nombre.fecha, hoy, DIAS_PREPARACION_ENVIO)) {
-      return resultado({ fecha: conPrecision(nombre.fecha, "mes"), fuente: "nombre", pista: "envio" });
+      const motivoMes: MotivoRevision = deMensajeria ? "mes-de-envio" : "mes-de-captura";
+      return enBlanco(motivoMes, [{ fecha: conPrecision(nombre.fecha, "mes"), fuente: "nombre", motivo: motivoMes }]);
     }
-    return enBlanco(nombre.origen === "mensajeria" ? "fecha-de-envio" : "captura-de-pantalla", []);
+    return enBlanco(deMensajeria ? "fecha-de-envio" : "captura-de-pantalla", []);
   }
   // Una fecha de estos días escrita en el nombre («2026-11-19 mazo»): seguramente la de prepararlo.
   if (nombre?.origen === "escrito" && !escaneo && esFechaReciente(nombre.fecha, hoy, DIAS_PREPARACION)) {

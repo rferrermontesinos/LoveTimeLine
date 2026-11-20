@@ -19,25 +19,30 @@ export function fotos(): string[] {
 }
 
 /**
- * Las fotos que se quedan sin fecha al subirlas (ver scripts/fixtures.ts): las que no la llevan en
- * el nombre ni en sus datos («foto-7.jpg»). La fecha del archivo solo se sugiere: suele ser la de
- * una copia, no la del recuerdo.
+ * Las fotos que se quedan sin fecha al subirlas (ver scripts/fixtures.ts), todas con una fecha
+ * sugerida: las que no la llevan en el nombre ni en sus datos («foto-7.jpg»), con la del archivo,
+ * que suele ser la de una copia; y las de WhatsApp y las capturas, con su mes (ver conMesSugerido).
  */
 export function sinFechaAlSubir(archivo: string): boolean {
-  return /^foto-\d+\.jpg$/.test(path.basename(archivo));
+  return /^foto-\d+\.jpg$/.test(path.basename(archivo)) || conMesSugerido(archivo);
 }
 
 /**
- * Las que salen con una fecha aproximada, solo el mes: las de WhatsApp («IMG-…-WA0001.jpg», la del
- * envío) y las capturas de pantalla («Screenshot_…», la de la captura), todas de hace años.
+ * Las de WhatsApp («IMG-…-WA0001.jpg», la del envío) y las capturas de pantalla («Screenshot_…», la
+ * de la captura), todas de hace años: su mes solo se sugiere, porque la foto puede ser de antes.
  */
-export function aproximada(archivo: string): boolean {
+export function conMesSugerido(archivo: string): boolean {
   return /^(IMG-\d{8}-WA\d+\.jpg|Screenshot_)/.test(path.basename(archivo));
 }
 
-/** Las fotos que salen ya con su fecha (de la cámara, del nombre o, aproximada, del envío): sus cartas quedan listas. */
+/** Las fotos que salen ya con su fecha (de la cámara o escrita en el nombre): sus cartas quedan listas. */
 export function conFecha(archivo: string): boolean {
   return !sinFechaAlSubir(archivo);
+}
+
+/** Para buscar un nombre de archivo dentro de una expresión regular. */
+export function literal(texto: string): string {
+  return texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**

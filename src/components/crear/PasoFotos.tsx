@@ -262,7 +262,7 @@ export function PasoFotos() {
 
 /**
  * Una carta de la cuadrícula: la foto (o el texto, en un recuerdo sin foto) con la fecha abajo.
- * Las fechas aproximadas (el mes de un reenvío antiguo) llevan «≈».
+ * Las fechas aproximadas, que solo quedan en mazos guardados antes del 20-11-2026, llevan «≈».
  */
 function Miniatura({
   carta,

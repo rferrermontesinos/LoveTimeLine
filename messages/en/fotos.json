@@ -14,6 +14,7 @@
     "procesadas": "{n, plural, one {# photo added} other {# photos added}}",
     "resumenConFecha": "{n, plural, one {with a date} other {all with a date}}",
     "resumenSinFecha": "{n, plural, one {# without a date} other {# without a date}}",
+    "conSugerencia": "{n, plural, one {One has a suggested date: if it’s right, add it with a single tap in Cards.} other {# have a suggested date: if it’s right, add it with a single tap in Cards.}}",
     "porMensajeria": "{n, plural, one {One arrived recently through WhatsApp or another messaging app, which removed the date it was taken. If you have it on the phone that took it, add it from there.} other {# arrived recently through WhatsApp or another messaging app, which removed the date they were taken. If you have them on the phone that took them, add them from there.}}",
     "repetidas": "{n, plural, one {# repeated photo was skipped} other {# repeated photos were skipped}}",
     "errores": "{n, plural, one {# file couldn’t be read} other {# files couldn’t be read}}",
@@ -67,6 +68,8 @@
       "fecha-reciente": "It’s from the last few days: probably when you copied, scanned or photographed the photo, not the day of the memory.",
       "fecha-de-envio": "It arrived recently through WhatsApp or another messaging app, which removed the date it was taken: the date it has is when it was sent. If you have it on the phone that took it, add it from there.",
       "captura-de-pantalla": "It’s a screenshot from the last few days: its date is when it was taken, not the day of the memory.",
+      "mes-de-envio": "It’s the month it arrived through WhatsApp or another messaging app, which removed the date it was taken: the photo may be older.",
+      "mes-de-captura": "It’s the month of the screenshot: what it shows may be older.",
       "sin-datos-de-camara": "The photo has this date but no camera details: it may be the date of a copy or an edit.",
       "fecha-digitalizacion": "It’s when the photo was saved digitally. For camera photos it’s usually the same day.",
       "sesion-de-escaneo": "Many photos in the same upload share this recent day: they look like photos of photos taken that day, not the day of the memory."

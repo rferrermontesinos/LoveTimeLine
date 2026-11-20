@@ -40,7 +40,11 @@ interface ValorCrear {
    * Abre en el paso 2 la siguiente carta pendiente, por fecha, después de la indicada (o la
    * primera). Desde otro paso, la página empieza arriba; dentro del paso 2, sube `avisoFecha`.
    */
-  irASiguientePendiente: (desdeId?: string | null) => void;
+  /**
+   * Abre la siguiente carta sin completar después de `desdeId` y devuelve su id (null si no queda
+   * ninguna). Con `desplazar: false`, quien llama se encarga de lo que se ve después.
+   */
+  irASiguientePendiente: (desdeId?: string | null, opciones?: { desplazar?: boolean }) => string | null;
   /**
    * Cuántas veces se ha ido a una carta pendiente sin salir del paso 2. Cuando cambia, el paso de
    * cartas trae a la vista la fecha de esa carta, que es lo que le falta.
@@ -157,14 +161,17 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
         if (!conAncla) subir();
       },
       ancla,
-      irASiguientePendiente: (desdeId) => {
+      irASiguientePendiente: (desdeId, opciones) => {
         const desde = desdeId ? porFecha.findIndex((c) => c.id === desdeId) : -1;
         const i = siguientePendiente(porFecha, desde, hoy);
-        if (i < 0) return;
-        setCartaActiva(porFecha[i]!.id);
+        if (i < 0) return null;
+        const id = porFecha[i]!.id;
+        setCartaActiva(id);
         if (pasoGuardado !== 2) despachar({ tipo: "cambiar", campo: "paso", valor: 2 });
+        if (opciones?.desplazar === false) return id;
         if (pasoActual === 2) setAvisoFecha((n) => n + 1);
         else subir();
+        return id;
       },
       avisoFecha,
       versiones,

@@ -135,7 +135,11 @@ export function cartaPortada(mazo: Pick<Mazo, "cartas" | "portadaId">): CartaFot
   return conFecha[conFecha.length - 1] ?? fotos[0] ?? null;
 }
 
-/** Fecha puesta sola que solo es aproximada: el mes de un reenvío o de una captura de hace tiempo. */
+/**
+ * Fecha puesta sola que solo es aproximada (confianza baja). Desde la tarde del 20-11-2026 ya no se
+ * pone ninguna así (el mes de un reenvío o de una captura se sugiere, ver migrar.ts): solo puede
+ * quedar en mazos guardados antes.
+ */
 export function esAproximada(c: Pick<Carta, "fecha" | "confianza" | "fuente">): boolean {
   return !!c.fecha && c.confianza === "baja" && c.fuente !== "manual";
 }

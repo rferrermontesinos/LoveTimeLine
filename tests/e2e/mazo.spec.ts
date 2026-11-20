@@ -6,7 +6,7 @@ import { PDFDocument } from "pdf-lib";
 import { PRINT } from "../../config/print";
 import { leerZip } from "../../src/lib/pdf/zip";
 import catalogo from "../../supabase/catalogo.json";
-import { aproximada, borrarSoloElMazo, cambiarMazo, conFecha, fotos, fotosGuardadas, guardado, leerMazo, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
+import { borrarSoloElMazo, cambiarMazo, conFecha, conMesSugerido, fotos, fotosGuardadas, guardado, leerMazo, literal, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
 
 /** Cartas físicas que añaden las mecánicas que el catálogo pone por defecto (comodines, en blanco…). */
 const CARTAS_DE_MECANICAS = catalogo.mecanicas
@@ -46,41 +46,57 @@ test.describe("mazo de principio a fin", () => {
     await expect(page).toHaveURL(/\/es\/crear$/);
     await expect(page.getByRole("button", { name: /^Pack Pequeño/ })).toBeVisible();
 
-    // Casi todas salen ya con fecha: de la cámara, del nombre o, aproximada (el mes), del envío por
-    // WhatsApp o de la captura. Solo se quedan sin ella las que no traen más que la del archivo,
-    // y van al final de la cuadrícula.
+    // Salen ya con fecha las que la traen clara: de la cámara o escrita en el nombre. Las de WhatsApp
+    // y las capturas se quedan en blanco con su mes como sugerencia (la foto puede ser de antes), y
+    // las que no traen más que la del archivo, con esa. Van al final de la cuadrícula.
     const archivos = fotos();
     const sinFecha = archivos.filter(sinFechaAlSubir).length;
-    expect(sinFecha).toBeGreaterThan(1);
+    const conMes = archivos.filter(conMesSugerido);
+    expect(conMes.length).toBeGreaterThan(1);
     await subir(page, archivos);
     await expect(page.getByTestId("resumen-subida")).toContainText(`${sinFecha} sin fecha`);
+    await expect(page.getByText(`${sinFecha} tienen una fecha sugerida: si es la buena, en Cartas la pones con un toque.`)).toBeVisible();
     await expect(page.getByTestId("fotos-sin-fecha").getByRole("button")).toHaveCount(sinFecha);
     const enFotos = page.getByRole("region", { name: /^Tus cartas/ });
-    await expect(enFotos.getByRole("button", { name: /\. Fecha aproximada: / })).toHaveCount(archivos.filter(aproximada).length);
+    await expect(enFotos.getByRole("button", { name: /\. Fecha aproximada: / })).toHaveCount(0);
 
     // Cartas: cuántas faltan, en grande, y el mazo como se jugará, con las que no tienen fecha al final.
     await page.getByRole("button", { name: "Siguiente: cartas" }).click();
     await expect(page.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
     const pendientes = page.getByTestId("mazo-pendientes");
     await expect(pendientes).toContainText(`Te faltan ${sinFecha} cartas por completar`);
-    await expect(pendientes).toContainText(`${archivos.length - sinFecha} de ${archivos.length} cartas listas`);
+    await expect(pendientes).toContainText(`${archivos.length - sinFecha} de ${archivos.length} cartas listas · ${sinFecha} tienen una fecha sugerida: si es la buena, basta un toque`);
     const mazo = page.getByTestId("linea-del-mazo");
+    const actual = mazo.locator('[aria-current="true"]');
     await expect(mazo.getByRole("heading", { name: `Sin fecha · ${sinFecha}` })).toBeVisible();
     await expect(mazo.getByRole("button", { name: /, por completar$/ })).toHaveCount(sinFecha);
     await expect(mazo.getByRole("button", { name: /, lista$/ })).toHaveCount(archivos.length - sinFecha);
 
+    // Una de WhatsApp: la carta dice de dónde sale su mes, y con un toque queda lista y se pasa sola
+    // a la siguiente sin completar, con el foco en su sugerencia.
+    const whatsapp = path.basename(conMes.find((a) => /-WA\d+\.jpg$/.test(a))!);
+    await mazo.getByRole("button", { name: `${whatsapp}, sin fecha, por completar` }).click();
+    await expect(page.getByText(/Es el mes en que llegó por WhatsApp/)).toBeVisible();
+    await page.getByRole("button", { name: "Usar esta fecha" }).click();
+    await expect(mazo.getByRole("button", { name: new RegExp(`^${literal(whatsapp)}, .+ de \\d{4}, lista$`) })).toBeVisible();
+    await expect(actual).toHaveAccessibleName(/, sin fecha, por completar$/);
+    await expect(page.locator(":focus")).toHaveText("Usar esta fecha");
+    const faltan = sinFecha - 1;
+    await expect(page.getByRole("status").filter({ hasText: "Hecho:" })).toHaveText(new RegExp(`Hecho: la anterior ya tiene fecha \\(.+ de \\d{4}\\)\\. Te quedan ${faltan} cartas\\.`));
+    await expect(pendientes).toContainText(`Te faltan ${faltan} cartas por completar`);
+
     // Estilo y Pedido se abren aunque falten cartas; lo que espera a que estén todas es el pago.
     await page.getByRole("button", { name: "Siguiente: estilo" }).click();
     await expect(page.getByRole("heading", { name: "Elige el estilo" })).toBeVisible();
-    await expect(page.getByText(`Faltan ${sinFecha} cartas por completar`)).toBeVisible();
+    await expect(page.getByText(`Faltan ${faltan} cartas por completar`)).toBeVisible();
     await page.getByRole("button", { name: "Siguiente: pedido" }).click();
     await expect(page.getByRole("heading", { name: "Revisa y haz el pedido" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Pagar .* \(prueba\)/ })).toBeDisabled();
-    await expect(page.getByText(`Para pagar, completa antes las ${sinFecha} cartas que faltan.`)).toBeVisible();
+    await expect(page.getByText(`Para pagar, completa antes las ${faltan} cartas que faltan.`)).toBeVisible();
 
     // En Fotos, el mismo año a todas las que no tienen fecha.
     await irA(page, "Fotos");
-    expect(await ponerAnioALasSinFecha(page, 2016)).toBe(sinFecha);
+    expect(await ponerAnioALasSinFecha(page, 2016)).toBe(faltan);
 
     // Cartas: todo listo. Un recuerdo sin foto desde las ideas de abajo, con un hueco por rellenar.
     await page.getByRole("button", { name: "Siguiente: cartas" }).click();
@@ -90,10 +106,9 @@ test.describe("mazo de principio a fin", () => {
     await dialogo.getByRole("button", { name: "Añadir la carta" }).click();
     await expect(dialogo).toBeHidden();
 
-    // Se abre la carta nueva, que va al final: está por completar.
-    const actual = mazo.locator('[aria-current="true"]');
+    // Se abre la carta nueva, que va al final: está por completar, y el aviso anima.
     await expect(actual).toHaveAccessibleName("Nació [nombre], sin fecha, por completar");
-    await expect(pendientes).toContainText("Te falta 1 carta por completar");
+    await expect(pendientes).toContainText("¡Ya casi! Te falta 1 carta");
     // «Siguiente» con la carta a medias: la primera vez lleva a la fecha y lo pide; la segunda, pasa.
     await page.getByRole("button", { name: "Siguiente →", exact: true }).click();
     await expect(page.getByText(/falta la fecha.*pulsa otra vez «Siguiente» para dejarla para luego/)).toBeVisible();
@@ -220,12 +235,16 @@ test.describe("fechas de copias y escaneos", () => {
       expect(cartas.filter((c) => /^IMG_\d{8}_/.test(c.nombreArchivo ?? "") && !c.fecha)).toHaveLength(recientes.length);
       expect(cartas.filter((c) => c.fecha).map((c) => c.nombreArchivo).sort()).toEqual(["abuelos 1958.jpg", "boda tios.jpg"]);
 
-      // En Cartas, la carta dice por qué está en blanco y deja usar la fecha que trae con un toque.
-      await page.getByRole("button", { name: `Editar ${path.basename(recientes[0]!)}. Sin fecha` }).click();
+      // En Cartas, la carta dice por qué está en blanco y deja usar la fecha que trae con un toque:
+      // queda lista y se pasa sola a la siguiente sin completar.
+      const nombre = path.basename(recientes[0]!);
+      await page.getByRole("button", { name: `Editar ${nombre}. Sin fecha` }).click();
       await expect(page.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
       await expect(page.getByText(caso.motivo)).toBeVisible();
       await page.getByRole("button", { name: "Usar esta fecha" }).click();
-      await expect(page.getByText("Carta lista")).toBeVisible();
+      const mazo = page.getByTestId("linea-del-mazo");
+      await expect(mazo.getByRole("button", { name: new RegExp(`^${literal(nombre)}, .+, lista$`) })).toBeVisible();
+      await expect(mazo.locator('[aria-current="true"]')).toHaveAccessibleName(/, sin fecha, por completar$/);
     });
   }
 });

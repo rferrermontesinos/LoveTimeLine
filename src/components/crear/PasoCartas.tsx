@@ -8,14 +8,17 @@ import { VistaCarta } from "@/components/carta/VistaCarta";
 import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
 import { Franja, Interruptor } from "@/components/ui/Piezas";
+import type { FechaCarta } from "@/domain/fechas/fecha";
+import { fechaLegible } from "@/domain/fechas/formato";
 import { pendientesDeCarta, rangoHueco } from "@/domain/mazo/configuracion";
 import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import { ordenarPorFecha } from "@/domain/mazo/ordenar";
+import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
 import { girarFoto } from "@/lib/importar/girar";
 import { useMazo } from "@/lib/mazo/contexto";
 import { pppDeCarta, proporcionReversoDe, recortesIniciales } from "@/lib/mazo/derivados";
 import { ideasParaProponer } from "@/lib/mazo/recuerdos";
-import type { CambiosCarta, Carta } from "@/lib/mazo/tipos";
+import type { CambiosCarta, Carta, SugerenciaFecha } from "@/lib/mazo/tipos";
 import { desplazamiento, useCrear } from "./contexto";
 import { DialogoEncuadre } from "./Encuadre";
 import { FechaDeCarta } from "./FechaDeCarta";
@@ -23,6 +26,9 @@ import { EstadoImportacion, useElegirFotos } from "./importacion";
 import { LineaDelMazo } from "./LineaDelMazo";
 
 const EditorAdornos = dynamic(() => import("./EditorAdornos"), { ssr: false });
+
+/** Con estas pendientes o menos (y alguna lista), el aviso anima: «¡Ya casi!». */
+const CASI = 3;
 
 /**
  * Orden para pasar de una carta a otra: por fecha, con las que no tienen fecha al final. Se fija
@@ -63,6 +69,11 @@ export function PasoCartas() {
   const avisoVisto = useRef(avisoFecha);
   // Carta en la que «Siguiente» ya se ha frenado una vez por estar a medias.
   const [frenada, setFrenada] = useState<string | null>(null);
+  // Tras usar una fecha sugerida: a dónde va el foco cuando se pinta la carta siguiente (o el aviso
+  // de que el mazo está listo), para que quien usa el teclado o un lector de pantalla siga el paso.
+  const focoTrasSugerencia = useRef<"fecha" | "listo" | null>(null);
+  // Lo que se dice en la carta a la que se pasa sola: que la anterior ya tiene fecha y cuántas quedan.
+  const [hecho, setHecho] = useState<{ cartaId: string; fecha: FechaCarta; quedan: number } | null>(null);
 
   const cartas = useMemo(() => mazo?.cartas ?? [], [mazo?.cartas]);
   const orden = useOrdenDeRecorrido(cartas);
@@ -72,6 +83,8 @@ export function PasoCartas() {
   const abierta = cartaActiva && porId.has(cartaActiva) ? cartaActiva : (pendientes[0] ?? orden[0] ?? null);
   const carta: Carta | undefined = abierta ? porId.get(abierta) : undefined;
   const indice = carta ? orden.indexOf(carta.id) : -1;
+  // Miniatura de la foto para las sugerencias de fecha en el móvil, donde la carta queda más arriba.
+  const miniatura = useUrlFoto(carta?.tipo === "foto" ? carta.id : null, "mini", carta ? (versiones[carta.id] ?? 0) : 0);
 
   useEffect(() => {
     if (carta && carta.id !== cartaActiva) setCartaActiva(carta.id);
@@ -91,6 +104,31 @@ export function PasoCartas() {
     const tapado = bloque.getBoundingClientRect().top < arriba || campos.getBoundingClientRect().bottom > window.innerHeight - abajo;
     if (tapado) bloque.scrollIntoView({ block: "start", behavior: desplazamiento() });
   }, [avisoFecha]);
+
+  // Sin dependencias: se mira después de cada pintado, y el de después de usar la sugerencia ya
+  // tiene la carta siguiente (o el aviso) en la página.
+  useEffect(() => {
+    const destinoPedido = focoTrasSugerencia.current;
+    if (!destinoPedido) return;
+    focoTrasSugerencia.current = null;
+    if (destinoPedido === "listo") {
+      const boton = document.querySelector<HTMLElement>('[data-testid="mazo-listo"] button');
+      boton?.scrollIntoView({ block: "center", behavior: desplazamiento() });
+      boton?.focus({ preventScroll: true });
+      return;
+    }
+    // La carta siguiente: el foco en su sugerencia (o en su fecha) y, si no se ve entera, la zona
+    // con lo hecho y lo siguiente por decidir, justo entre las barras fijas.
+    const bloque = bloqueFecha.current;
+    const zona = bloque?.querySelector<HTMLElement>("[data-zona-sugerencias]") ?? bloque;
+    const destino = zona?.querySelector<HTMLElement>("[data-sugerencia] button") ?? bloque?.querySelector<HTMLElement>("fieldset input, fieldset select");
+    destino?.focus({ preventScroll: true });
+    if (!zona) return;
+    const estilo = getComputedStyle(zona);
+    const caja = zona.getBoundingClientRect();
+    const tapada = caja.top < (parseFloat(estilo.scrollMarginTop) || 0) || caja.bottom > window.innerHeight - (parseFloat(estilo.scrollMarginBottom) || 0);
+    if (tapada) zona.scrollIntoView({ block: "nearest", behavior: desplazamiento() });
+  });
 
   // ← y → para moverse entre cartas, salvo mientras se escribe, en un control que ya usa las
   // flechas (grupos de opciones, pestañas) o con un diálogo abierto encima.
@@ -148,6 +186,26 @@ export function PasoCartas() {
     else areaTexto.current?.focus({ preventScroll: true });
   }
 
+  /**
+   * Con una fecha sugerida, completar el mazo es ir tocando: si la carta queda lista, se pasa sola
+   * a la siguiente sin completar; con la última, al aviso de que el mazo está listo. Si a la carta
+   * aún le falta algo (el texto, por ejemplo), se queda en ella.
+   */
+  const alUsarSugerencia = (s: SugerenciaFecha) => {
+    if (!carta) return;
+    const lista = pendientesDeCarta({ ...carta, fecha: s.fecha, revisar: false }, hoy).length === 0;
+    if (!lista) return;
+    if (pendientes.every((p) => p === carta.id)) {
+      focoTrasSugerencia.current = "listo";
+      return;
+    }
+    setFrenada(null);
+    const siguienteId = irASiguientePendiente(carta.id, { desplazar: false });
+    if (!siguienteId) return;
+    setHecho({ cartaId: siguienteId, fecha: s.fecha, quedan: pendientes.length - 1 });
+    focoTrasSugerencia.current = "fecha";
+  };
+
   /** Desde el mazo de abajo: abre la carta y sube a ella. */
   const abrirDesdeMazo = (cartaId: string) => {
     setFrenada(null);
@@ -165,6 +223,11 @@ export function PasoCartas() {
   const version = versiones[carta.id] ?? 0;
   const total = cartas.length;
   const listas = total - pendientes.length;
+  // Pendientes a las que solo les falta la fecha y tienen una sugerida: se completan con un toque.
+  const deUnToque = pendientes.filter((pid) => {
+    const c = porId.get(pid);
+    return !!c?.sugerencias?.length && pendientesDeCarta(c, hoy).every((m) => m === "sin-fecha");
+  }).length;
   const faltanMinimo = Math.max(0, (cotizacion?.minimo ?? 0) - total);
   const faltan = pendientesDeCarta(carta, hoy);
   const listaDeMotivos = new Intl.ListFormat(locale, { style: "long", type: "conjunction" });
@@ -222,8 +285,13 @@ export function PasoCartas() {
         <section aria-live="polite" data-testid="mazo-pendientes" className="space-y-3 rounded-[var(--radius-carta)] bg-blanco p-5 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0">
-              <p className="tipo-titular text-[clamp(1.7rem,4vw,2.4rem)] leading-none">{t("cartas.progreso.faltan", { n: pendientes.length })}</p>
-              <p className="mt-2 text-tinta-2">{t("cartas.progreso.listas", { n: listas, total })}</p>
+              <p className="tipo-titular text-[clamp(1.7rem,4vw,2.4rem)] leading-none">
+                {t(pendientes.length <= CASI && listas > 0 ? "cartas.progreso.casi" : "cartas.progreso.faltan", { n: pendientes.length })}
+              </p>
+              <p className="mt-2 text-tinta-2">
+                {t("cartas.progreso.listas", { n: listas, total })}
+                {deUnToque > 0 && <> · {t("cartas.progreso.unToque", { n: deUnToque })}</>}
+              </p>
             </div>
             <Boton variante="secundario" className="max-sm:w-full" onClick={() => irASiguientePendiente(carta.id)}>
               {t("cartas.progreso.siguiente")} →
@@ -323,7 +391,13 @@ export function PasoCartas() {
                     })}
               </span>
             </p>
-            <FechaDeCarta carta={carta} hoy={hoy} />
+            <FechaDeCarta
+              carta={carta}
+              hoy={hoy}
+              alUsarSugerencia={alUsarSugerencia}
+              miniatura={miniatura}
+              hecho={hecho?.cartaId === carta.id ? t("cartas.hecho", { fecha: fechaLegible(hecho.fecha, locale), n: hecho.quedan }) : null}
+            />
           </div>
 
           <section className="flex flex-1 flex-col gap-3 rounded-[var(--radius-carta)] bg-blanco p-5">

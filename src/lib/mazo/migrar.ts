@@ -4,10 +4,11 @@
  * depende del catálogo, como extras retirados, lo limpia normalizarSeleccion al abrir el configurador).
  */
 import { conPrecision } from "@/domain/fechas/fecha";
-import { anterior, DIAS_PREPARACION, DIAS_PREPARACION_ENVIO, esFechaReciente, puedeSerReciente, type Confianza } from "@/domain/fechas/proponer";
+import { origenDeNombre } from "@/domain/fechas/nombre-archivo";
+import { anterior, DIAS_PREPARACION, DIAS_PREPARACION_ENVIO, esFechaReciente, puedeSerReciente, type Confianza, type MotivoRevision } from "@/domain/fechas/proponer";
 import { idsEnSesionGuardada } from "@/domain/fechas/sesion";
 import { ESTILO_POR_DEFECTO, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
-import { POLITICA_FECHAS, VERSION_MAZO, type Carta, type Mazo, type Paso, type SugerenciaFecha } from "./tipos";
+import { POLITICA_FECHAS, VERSION_MAZO, type Carta, type CartaFoto, type Mazo, type Paso, type SugerenciaFecha } from "./tipos";
 
 /** Packs de la primera versión y su equivalente por tamaño. */
 const PACKS_ANTIGUOS: Record<string, string> = { pareja: "pequeno", familia: "mediano" };
@@ -64,15 +65,20 @@ export function migrarMazo(guardado: unknown): Mazo | null {
 }
 
 /**
- * Revisa una vez, con las reglas de fechas del 20 de noviembre de 2026, las cartas de un mazo
- * guardado antes: las que se quedaron en blanco con una fecha sugerida que ahora se pondría sola
- * pasan a tenerla. Las fechas de la foto ya no están (no se guardan), así que se decide con lo que
- * se guardó: la sugerencia, su motivo y el día en que se añadió la carta, desde el que se cuentan
- * los días de preparación. No toca las cartas que ya tienen fecha, ni las de texto, ni borra nada.
+ * Revisa una vez, con las reglas de fechas actuales (POLITICA_FECHAS), las cartas con foto de un
+ * mazo guardado antes. Las fechas de la foto ya no están (no se guardan), así que se decide con lo
+ * que se guardó: la sugerencia, su motivo, el nombre del archivo y el día en que se añadió la carta,
+ * desde el que se cuentan los días de preparación. Nunca toca una fecha puesta a mano ni una
+ * sugerencia aceptada, ni las cartas de texto, ni borra nada:
+ * - las que se quedaron en blanco con una fecha sugerida que ahora se pondría sola (la de la
+ *   cámara, fuera de los días de preparar el mazo) pasan a tenerla;
+ * - el mes de un envío por mensajería o de una captura ya no se pone solo: las que lo tenían
+ *   puesto solo vuelven a quedar en blanco, con ese mes como sugerencia de un toque.
  */
 export function mejorarFechasGuardadas(cartas: Carta[]): Carta[] {
   const enSesion = idsEnSesionGuardada(cartas.filter((c) => c.tipo === "foto"));
   return cartas.map((c): Carta => {
+    if (c.tipo === "foto" && esMesPuestoSolo(c)) return mesComoSugerencia(c);
     const s0 = c.sugerencias?.[0];
     if (c.tipo !== "foto" || c.fecha || c.fuente === "manual" || !s0 || !Number.isFinite(c.anadidaEn)) return c;
     const subida = new Date(c.anadidaEn);
@@ -103,12 +109,31 @@ export function mejorarFechasGuardadas(cartas: Carta[]): Carta[] {
         return deEstosDias(elegida) ? c : poner(elegida, "media");
       }
       case "fecha-de-envio":
-      case "captura-de-pantalla":
-        // Un reenvío del último mes perdió la fecha de la foto: la suya no sirve ni de pista.
+      case "captura-de-pantalla": {
+        // Un reenvío del último mes perdió la fecha de la foto: la suya no sirve ni de pista. Uno
+        // más antiguo deja su mes como sugerencia, porque la foto puede ser de antes.
         if (puedeSerReciente(s0.fecha, subida, DIAS_PREPARACION_ENVIO)) return { ...c, motivo, sugerencias: [] };
-        return poner({ ...s0, fecha: conPrecision(s0.fecha, "mes") }, "baja");
+        const mes: MotivoRevision = motivo === "fecha-de-envio" ? "mes-de-envio" : "mes-de-captura";
+        return { ...c, motivo: mes, sugerencias: [{ ...s0, fecha: conPrecision(s0.fecha, "mes"), motivo: mes }] };
+      }
       default:
         return c;
     }
   });
+}
+
+/**
+ * Fecha aproximada puesta sola con las reglas del 20 de noviembre de 2026 por la mañana: el mes de
+ * un envío por mensajería o de una captura, del nombre del archivo y con confianza baja. Las puestas
+ * a mano y las sugerencias aceptadas llevan otra fuente o confianza alta.
+ */
+function esMesPuestoSolo(c: CartaFoto): boolean {
+  return !!c.fecha && c.fuente === "nombre" && c.confianza === "baja";
+}
+
+/** La carta vuelve a quedar en blanco, con su mes como sugerencia. */
+function mesComoSugerencia(c: CartaFoto): CartaFoto {
+  const fecha = conPrecision(c.fecha!, "mes");
+  const motivo: MotivoRevision = origenDeNombre(c.nombreArchivo) === "captura" ? "mes-de-captura" : "mes-de-envio";
+  return { ...c, fecha: null, fuente: null, confianza: null, revisar: false, motivo, sugerencias: [{ fecha, fuente: "nombre", motivo }] };
 }

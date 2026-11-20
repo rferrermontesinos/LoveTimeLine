@@ -108,10 +108,12 @@ export const VERSION_MAZO = 2;
 
 /**
  * Reglas de fechas con las que se revisaron las cartas del mazo. 2: las del 20 de noviembre de
- * 2026, que ponen sola casi cualquier fecha salvo las de preparar el mazo. Los mazos anteriores se
- * revisan una vez al abrirlos (ver mejorarFechasGuardadas), sin tocar las fechas que ya tenían.
+ * 2026, que ponen sola casi cualquier fecha salvo las de preparar el mazo. 3: las de esa misma
+ * tarde, que ya no ponen solo el mes de un envío o de una captura, sino que lo sugieren. Los mazos
+ * anteriores se revisan una vez al abrirlos (ver mejorarFechasGuardadas), sin tocar las fechas
+ * puestas a mano.
  */
-export const POLITICA_FECHAS = 2;
+export const POLITICA_FECHAS = 3;
 
 export interface Mazo {
   version: typeof VERSION_MAZO;

@@ -17,6 +17,8 @@ export interface ResumenImportacion {
   sinFecha: number;
   /** De las sin fecha, las que llegaron hace poco por WhatsApp u otra app de mensajes y perdieron su fecha. */
   porMensajeria: number;
+  /** De las sin fecha, las que tienen una fecha sugerida: se completan con un toque en Cartas. */
+  conSugerencia: number;
   repetidas: number;
   errores: number;
   /** Fotos que no se han podido guardar porque no queda espacio en el dispositivo. */
@@ -131,6 +133,7 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         anadidas: cartas.length,
         sinFecha: sinFecha.length,
         porMensajeria: sinFecha.filter((c) => c.motivo === "fecha-de-envio").length,
+        conSugerencia: sinFecha.filter((c) => (c.sugerencias?.length ?? 0) > 0).length,
         ...r,
       });
     },
@@ -335,6 +338,7 @@ export function EstadoImportacion() {
         {resumen.errores > 0 && <> · {t("errores", { n: resumen.errores })}</>}
         {resumen.sinEspacio > 0 && <> · {t("sinEspacio", { n: resumen.sinEspacio })}</>}
       </p>
+      {resumen.conSugerencia > 0 && <p className="mt-1">{t("conSugerencia", { n: resumen.conSugerencia })}</p>}
       {resumen.porMensajeria > 0 && <p className="mt-1">{t("porMensajeria", { n: resumen.porMensajeria })}</p>}
     </Aviso>
   );

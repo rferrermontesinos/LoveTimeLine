@@ -108,6 +108,46 @@ describe("migrar un mazo guardado", () => {
   });
 });
 
+describe("mazo guardado con el mes de un envío puesto solo (reglas 2, 20-11-2026 por la mañana)", () => {
+  const anadida = new Date(2026, 10, 20, 10).getTime();
+  const base = v1().cartas[0]!;
+  const conFecha = (id: string, nombreArchivo: string, extra: Partial<CartaFoto>): CartaFoto =>
+    ({ ...base, tipo: "foto", id, nombreArchivo, motivo: undefined, sugerencias: [], anadidaEn: anadida, ...extra }) as CartaFoto;
+  const marzo = { anio: 2024, mes: 3 };
+
+  it("el mes puesto solo vuelve a quedar en blanco, como sugerencia de un toque", () => {
+    const [w, c] = mejorarFechasGuardadas([
+      conFecha("w", "IMG-20240314-WA0003.jpg", { fecha: marzo, fuente: "nombre", confianza: "baja" }),
+      conFecha("c", "Screenshot_2024-03-02-10-00-00.png", { fecha: marzo, fuente: "nombre", confianza: "baja" }),
+    ]);
+    expect(w).toMatchObject({ fecha: null, fuente: null, confianza: null, revisar: false, motivo: "mes-de-envio", sugerencias: [{ fecha: marzo, fuente: "nombre", motivo: "mes-de-envio" }] });
+    expect(c).toMatchObject({ fecha: null, motivo: "mes-de-captura", sugerencias: [{ fecha: marzo, fuente: "nombre", motivo: "mes-de-captura" }] });
+  });
+
+  it("no toca la fecha puesta a mano, la sugerencia aceptada ni las fechas claras", () => {
+    const cartas = [
+      conFecha("mano", "IMG-20240314-WA0003.jpg", { fecha: { anio: 2019, mes: 5 }, fuente: "manual", confianza: "alta" }),
+      conFecha("aceptada", "IMG-20240314-WA0004.jpg", { fecha: marzo, fuente: "nombre", confianza: "alta" }),
+      conFecha("camara", "IMG_20190814_123045.jpg", { fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "nombre", confianza: "alta" }),
+      conFecha("escrita", "verano 2015.jpg", { fecha: { anio: 2015 }, fuente: "nombre", confianza: "media" }),
+    ];
+    const mejoradas = mejorarFechasGuardadas(cartas);
+    mejoradas.forEach((c, i) => expect(c).toBe(cartas[i]));
+  });
+
+  it("al abrir el mazo se revisa una vez y después ya no cambia", () => {
+    const guardado = {
+      ...migrarMazo(v1())!,
+      politicaFechas: 2,
+      cartas: [conFecha("w", "IMG-20240314-WA0003.jpg", { fecha: marzo, fuente: "nombre", confianza: "baja", descripcion: "Comida en casa" })],
+    };
+    const m = migrarMazo(guardado)!;
+    expect(m.politicaFechas).toBe(POLITICA_FECHAS);
+    expect(m.cartas[0]).toMatchObject({ fecha: null, descripcion: "Comida en casa", sugerencias: [{ fecha: marzo }] });
+    expect(migrarMazo(m)).toEqual(m);
+  });
+});
+
 describe("mazo guardado con las reglas de fechas anteriores (20-11-2026)", () => {
   /** Añadida el 18 de noviembre de 2026: las ventanas de preparación se cuentan desde ahí. */
   const anadida = new Date(2026, 10, 18, 12).getTime();
@@ -141,15 +181,17 @@ describe("mazo guardado con las reglas de fechas anteriores (20-11-2026)", () =>
       "sin-datos-camara": "2012-05-05",
       "escaneada-1987": "1987-06-01",
       anotada: "1987",
-      "whatsapp-antiguo": "2019-08",
+      "whatsapp-antiguo": null,
       "whatsapp-de-hoy": null,
-      "captura-antigua": "2020-03",
+      "captura-antigua": null,
       archivo: null,
       "nombre-anterior": "2015",
       "nombre-posterior": "2019-12-24",
     });
     const porId = new Map(cartas.map((c) => [c.id, c]));
-    expect(porId.get("whatsapp-antiguo")).toMatchObject({ fuente: "nombre", confianza: "baja", revisar: false, sugerencias: [] });
+    // El mes de un envío o de una captura antiguos no se pone solo: queda como sugerencia de un toque.
+    expect(porId.get("whatsapp-antiguo")).toMatchObject({ motivo: "mes-de-envio", sugerencias: [{ fecha: { anio: 2019, mes: 8 }, fuente: "nombre", motivo: "mes-de-envio" }] });
+    expect(porId.get("captura-antigua")).toMatchObject({ motivo: "mes-de-captura", sugerencias: [{ fecha: { anio: 2020, mes: 3 }, motivo: "mes-de-captura" }] });
     expect(porId.get("camara-de-meses")).toMatchObject({ fuente: "exif", motivo: undefined, sugerencias: [] });
     // El reenvío de hoy perdió la fecha: queda en blanco, sin la del envío como pista.
     expect(porId.get("whatsapp-de-hoy")).toMatchObject({ motivo: "fecha-de-envio", sugerencias: [] });
@@ -188,7 +230,8 @@ describe("mazo guardado con las reglas de fechas anteriores (20-11-2026)", () =>
     const m = migrarMazo(guardado)!;
     expect(m.politicaFechas).toBe(POLITICA_FECHAS);
     expect(m.cartas.map((c) => c.id)).toEqual(["w", "hoy"]);
-    expect(fechas(m.cartas)).toEqual({ w: "2019-08", hoy: null });
+    expect(fechas(m.cartas)).toEqual({ w: null, hoy: null });
+    expect(m.cartas[0]?.sugerencias).toEqual([{ fecha: { anio: 2019, mes: 8 }, fuente: "nombre", motivo: "mes-de-envio" }]);
     expect(m.cartas[0]).toMatchObject({ destacada: true, descripcion: "Menorca", adornos: [{ emoji: "❤️" }] });
     expect(m.portadaId).toBe("w");
     expect(m.caja).toEqual({ origen: "carta", cartaId: "w" });

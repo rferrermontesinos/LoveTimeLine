@@ -448,22 +448,25 @@ describe("proponerFecha: escaneos", () => {
 });
 
 describe("proponerFecha: WhatsApp, mensajería y capturas", () => {
+  // Ricard, 20-11-2026: «no elijas fechas si no las tienes claras». La foto pudo hacerse mucho
+  // antes de enviarla o de capturarla: el mes queda como sugerencia de un toque, nunca puesto solo.
   it.each([
-    ["IMG-20190814-WA0001.jpg", "2019-08"],
-    ["WhatsApp Image 2019-08-14 at 12.30.45.jpeg", "2019-08"],
-    ["Imagen de WhatsApp 2023-11-02 a las 19.25.31_2a0b0f4c.jpg", "2023-11"],
-    ["Imatge de WhatsApp 2023-11-02 a les 19.25.31_2a0b0f4c.jpg", "2023-11"],
-    ["Image WhatsApp 2023-11-02 à 19.25.31_2a0b0f4c.jpg", "2023-11"],
-    ["photo_2019-08-14_12-30-45.jpg", "2019-08"],
-    ["signal-2019-08-14-123045.jpg", "2019-08"],
-    ["FB_IMG_1565786400000.jpg", "2019-08"],
-    ["1565786400000.jpg", "2019-08"],
-    ["Screenshot_2019-08-14-12-30-45.png", "2019-08"],
-    ["Captura de pantalla 2019-08-14 a las 12.30.45.png", "2019-08"],
-  ])("de hace más de un mes: %s → solo el mes, %s, aproximada", (nombreArchivo, iso) => {
+    ["IMG-20190814-WA0001.jpg", "2019-08", "mes-de-envio"],
+    ["WhatsApp Image 2019-08-14 at 12.30.45.jpeg", "2019-08", "mes-de-envio"],
+    ["Imagen de WhatsApp 2023-11-02 a las 19.25.31_2a0b0f4c.jpg", "2023-11", "mes-de-envio"],
+    ["Imatge de WhatsApp 2023-11-02 a les 19.25.31_2a0b0f4c.jpg", "2023-11", "mes-de-envio"],
+    ["Image WhatsApp 2023-11-02 à 19.25.31_2a0b0f4c.jpg", "2023-11", "mes-de-envio"],
+    ["photo_2019-08-14_12-30-45.jpg", "2019-08", "mes-de-envio"],
+    ["signal-2019-08-14-123045.jpg", "2019-08", "mes-de-envio"],
+    ["FB_IMG_1565786400000.jpg", "2019-08", "mes-de-envio"],
+    ["1565786400000.jpg", "2019-08", "mes-de-envio"],
+    ["Screenshot_2019-08-14-12-30-45.png", "2019-08", "mes-de-captura"],
+    ["Captura de pantalla 2019-08-14 a las 12.30.45.png", "2019-08", "mes-de-captura"],
+  ])("de hace más de un mes: %s → en blanco, con %s como sugerencia (%s)", (nombreArchivo, iso, motivo) => {
     const r = proponer({ nombreArchivo, ultimaModificacion: new Date("2020-01-01T10:00:00").getTime() });
-    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "baja", pista: "envio" });
-    expect(isoAuto(r)).toBe(iso);
+    expect(r).toMatchObject({ automatica: null, motivo });
+    // Solo el mes, y sin la fecha del archivo, que no dice más que la del envío.
+    expect(isoSugerencias(r)).toEqual([`${iso} nombre ${motivo}`]);
   });
 
   it.each([
@@ -478,8 +481,10 @@ describe("proponerFecha: WhatsApp, mensajería y capturas", () => {
 
   it("el último mes son DIAS_PREPARACION_ENVIO días", () => {
     expect(DIAS_PREPARACION_ENVIO).toBe(31);
-    expect(proponer({ nombreArchivo: "IMG-20261005-WA0001.jpg" }).automatica).toBeNull();
-    expect(isoAuto(proponer({ nombreArchivo: "IMG-20261003-WA0001.jpg" }))).toBe("2026-10");
+    expect(proponer({ nombreArchivo: "IMG-20261005-WA0001.jpg" }).sugerencias).toEqual([]);
+    const antes = proponer({ nombreArchivo: "IMG-20261003-WA0001.jpg" });
+    expect(antes.automatica).toBeNull();
+    expect(isoSugerencias(antes)).toEqual(["2026-10 nombre mes-de-envio"]);
   });
 
   it("enviada como documento conserva los datos de la cámara: vale la original", () => {
@@ -508,7 +513,8 @@ describe("proponerFecha: la fecha del archivo solo se sugiere", () => {
   });
 
   it("no se ofrece si la foto ya tiene fecha", () => {
-    const r = proponer({ nombreArchivo: "IMG-20190814-WA0001.jpg", ultimaModificacion: new Date("2020-01-01T10:00:00").getTime() });
+    const r = proponer({ nombreArchivo: "IMG_20190814_123045.jpg", ultimaModificacion: new Date("2020-01-01T10:00:00").getTime() });
+    expect(isoAuto(r)).toBe("2019-08-14");
     expect(r.sugerencias).toEqual([]);
   });
 

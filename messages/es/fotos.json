@@ -14,6 +14,7 @@
     "procesadas": "{n, plural, one {# foto añadida} other {# fotos añadidas}}",
     "resumenConFecha": "{n, plural, one {con fecha} other {todas con fecha}}",
     "resumenSinFecha": "{n, plural, one {# sin fecha} other {# sin fecha}}",
+    "conSugerencia": "{n, plural, one {Una tiene una fecha sugerida: si es la buena, en Cartas la pones con un toque.} other {# tienen una fecha sugerida: si es la buena, en Cartas la pones con un toque.}}",
     "porMensajeria": "{n, plural, one {Una llegó hace poco por WhatsApp u otra app de mensajes, que le quitó la fecha en que se hizo. Si la tienes en el móvil que la hizo, súbela desde allí.} other {# llegaron hace poco por WhatsApp u otra app de mensajes, que les quitó la fecha en que se hicieron. Si las tienes en el móvil que las hizo, súbelas desde allí.}}",
     "repetidas": "{n, plural, one {# foto repetida no se ha añadido} other {# fotos repetidas no se han añadido}}",
     "errores": "{n, plural, one {# archivo no se ha podido leer} other {# archivos no se han podido leer}}",
@@ -67,6 +68,8 @@
       "fecha-reciente": "Es de estos últimos días: seguramente es cuándo copiaste, escaneaste o fotografiaste la foto, no el día del recuerdo.",
       "fecha-de-envio": "Llegó hace poco por WhatsApp u otra app de mensajes, que le quitó la fecha en que se hizo: la que trae es la del envío. Si la tienes en el móvil que la hizo, súbela desde allí.",
       "captura-de-pantalla": "Es una captura de pantalla de estos días: su fecha es la de la captura, no la del recuerdo.",
+      "mes-de-envio": "Es el mes en que llegó por WhatsApp u otra app de mensajes, que le quitó la fecha en que se hizo: la foto puede ser de antes.",
+      "mes-de-captura": "Es el mes de la captura de pantalla: lo que sale en ella puede ser de antes.",
       "sin-datos-de-camara": "La foto trae esta fecha, pero no con qué cámara se hizo: puede ser la de una copia o una edición.",
       "fecha-digitalizacion": "Es cuándo la foto se guardó en digital. En las fotos de cámara suele ser el mismo día.",
       "sesion-de-escaneo": "Muchas fotos de la misma subida tienen este mismo día reciente: parecen fotos de fotos hechas ese día, no el día del recuerdo."

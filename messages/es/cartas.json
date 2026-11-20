@@ -3,10 +3,13 @@
     "titulo": "Completa las cartas",
     "texto": "Revisa la fecha de cada carta y, si quieres, añade una frase. Se guarda solo.",
     "posicion": "Carta {actual} de {total}",
+    "hecho": "Hecho: la anterior ya tiene fecha ({fecha}). {n, plural, one {Te queda # carta} other {Te quedan # cartas}}.",
     "progreso": {
       "faltan": "{n, plural, one {Te falta # carta por completar} other {Te faltan # cartas por completar}}",
       "listas": "{n} de {total} cartas listas",
-      "siguiente": "Completar la siguiente"
+      "siguiente": "Completar la siguiente",
+      "casi": "{n, plural, one {¡Ya casi! Te falta # carta} other {¡Ya casi! Te faltan # cartas}}",
+      "unToque": "{n, plural, one {una tiene una fecha sugerida: si es la buena, basta un toque} other {# tienen una fecha sugerida: si es la buena, basta un toque}}"
     },
     "listo": {
       "titulo": "¡Tu mazo está listo!",
