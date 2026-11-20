@@ -11,7 +11,7 @@ Versión del 20 de noviembre de 2026. Recoge los cambios que pidió Ricard el 4 
 | 3 | **Extras de juego gratis, extras opcionales de pago.** 2 comodines y 4 cartas en blanco van incluidos (el recuerdo estrella se retiró el 20 de noviembre); segunda copia, envoltorio de regalo, envío urgente y caja personalizada se pagan. | Las mecánicas hacen el juego mejor sin pedir decisiones de compra; los extras suben el ticket medio. | Cualquiera se mueve entre las dos listas cambiando `supabase/catalogo.json`. |
 | 4 | **Precios propuestos** (pendientes de Pau): ver tabla de abajo. | Tres packs por tamaño con su claim; cada carta de más se cobra suelta, los avisos de oferta dicen cuándo sale a cuenta pasar al pack mayor y, en cuanto sale más barato, se aplica solo. | Los precios viven en la base de datos (`packs`, `ajustes_catalogo`, `extras`), nunca en el código. |
 | 5 | **Fechas: se ponen solas casi siempre; en blanco, solo las que seguramente son de preparar el mazo.** Quedan en blanco una fecha de cámara de los últimos 7 días (`DIAS_PREPARACION`), una de WhatsApp o de captura del último mes (`DIAS_PREPARACION_ENVIO`), 5 fotos de cámara o más del mismo día de las últimas 9 semanas en una subida, que serán fotos de fotos (`MINIMO_SESION_ESCANEO`, `DIAS_SESION_ESCANEO`), y un escaneo sin fecha escrita. Las de WhatsApp y las capturas más antiguas se ponen con solo el mes y llevan «≈» (aproximadas), sin frenar el pedido. La fecha del archivo nunca se pone sola. Los contadores de cámara (`IMGP2015.JPG`) no cuentan como año, a cambio de que «Roma2014.jpg» se quede sin año. | Ricard, 20 de noviembre: que el cliente pierda el menor tiempo posible, sin fechas que no sean (una foto con la fecha de hoy es, casi seguro, de pasársela para el mazo). | Cada umbral es una constante en `src/domain/fechas/`. CLAUDE.md dice que las fechas de confianza baja quedan «para revisar»: ahora las aproximadas llevan «≈» y una explicación en su carta, pero no piden confirmación; si se prefiere, pueden volver a pedirla. |
-| 6 | **Descarga del PDF en la confirmación solo durante el prototipo.** La controla `NEXT_PUBLIC_DESCARGA_PDF` en `config/prototipo.ts` (activa salvo que valga `0`), y solo con el pedido pagado. | Los 4 socios necesitan el PDF para las pruebas de imprenta; para clientes no se podrá descargar. | Con Supabase, el PDF se genera en el servidor y solo lo ve la administración. |
+| 6 | **Descarga de los archivos de impresión en la confirmación solo durante el prototipo**, uno por imprenta. La controla `NEXT_PUBLIC_DESCARGA_PDF` en `config/prototipo.ts` (activa salvo que valga `0`), y solo con el pedido pagado. | Los 4 socios necesitan los archivos para las pruebas de imprenta; para clientes no se podrán descargar. | Con Supabase, los archivos se generan en el servidor y solo los ve la administración. |
 
 ## Precios del prototipo
 
@@ -79,7 +79,16 @@ service worker: reabrir /crear sin conexión
 - **Un solo estilo de carta, «Naipe», con 6 paletas** (`styles/naipe/style.json` sobre la plantilla `styles/plantillas/naipe.json`). El cliente elige la paleta; el código no conoce estilos concretos y añadir uno es crear su JSON. La plantilla lleva los iconos de la esquina como rutas vectoriales, los mismos en la web y en la carta.
 - **Caras de carta:** recuerdo con foto, recuerdo sin foto (texto grande y la fecha detrás), portada, comodín, carta en blanco y caja (la de siempre o la personalizada). Sin franja de meses: se queda la pestaña de la esquina.
 - **Un solo renderizador** (`src/lib/carta/dibujar.ts`) para la vista previa, la línea temporal, la confirmación, el muestrario y el PDF.
-- **PDF de impresión** (`src/lib/pdf/`): una página por cara (anverso y reverso intercalados) de 81 × 106 mm: carta de 63 × 88 mm con 3 mm de sangrado y 6 mm de margen para las marcas de corte, con TrimBox y BleedBox. Orden: portada, recuerdos con y sin foto en orden cronológico, comodines, cartas en blanco y, solo con el extra, las dos caras de la caja personalizada.
+- **Archivos de impresión** (`src/lib/pdf/`): uno por imprenta, según su perfil en `config/print.ts` (`IMPRENTAS`). Las cartas se dibujan siempre con los 3 mm de sangrado del diseño; si la imprenta pide más, el borde se amplía en espejo, y si pide menos, se recorta. Todas las páginas llevan TrimBox (63 × 88 mm) y BleedBox, a 300 ppp. Orden: portada, recuerdos con y sin foto en orden cronológico, comodines, cartas en blanco y, solo con el extra, la caja personalizada.
+
+  | Perfil | Sangrado | Marcas de corte | Páginas | Página |
+  |---|---|---|---|---|
+  | AGR · Tipia | 4 mm | No | Caras y reversos en dos PDF, dentro de un ZIP con un `LEEME.txt` que explica cómo casan | 71 × 96 mm |
+  | Pinbro | 3 mm | No | Cada carta seguida de su reverso, un solo PDF; cada página por debajo de 3 MB | 69 × 94 mm |
+  | Soriano | 2 mm | Sí | Cada carta seguida de su reverso | 79 × 104 mm |
+  | Otra imprenta | 3 mm | Sí | Cada carta seguida de su reverso | 81 × 106 mm |
+
+  Todas piden CMYK FOGRA39 y los archivos salen en RGB (sRGB): Pinbro lo convierte; a AGR y a Soriano hay que pedírselo al mandarlo. Convertir a CMYK en la web necesita una librería y un perfil ICC con licencia, y queda pendiente del visto bueno de Ricard.
 - **Precio en el servidor:** el navegador solo manda qué quiere; `/api/checkout` valida la petición, recalcula con el catálogo del servidor y crea la sesión de Stripe (solo claves de test) o simula el pago.
 - **Idiomas:** `next-intl` con `es` y `en`; el idioma del mazo (meses, textos de las cartas, recuerdos sin foto sugeridos y folleto) es independiente del de la interfaz. Fechas siempre con `Intl.DateTimeFormat`.
 
@@ -164,13 +173,13 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 | Portada, «Cómo se juega», créditos de las fotos y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | 32 |
 | Migración, semilla y RLS | `pnpm db:test` | 19 comprobaciones |
 
-Las pruebas de Playwright (`pnpm test:e2e`, 58 en total entre escritorio y móvil; 5 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera un PDF de impresión con datos ficticios: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
+Las pruebas de Playwright (`pnpm test:e2e`, 58 en total entre escritorio y móvil; 5 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera los archivos de impresión con datos ficticios, uno por imprenta: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
 
 ## Siguientes pasos
 
 1. Marc valida el diseño del portal y de las cartas (ver [diseno/portal.md](diseno/portal.md) y el muestrario interno).
 2. Ricard decide sobre la tabla de arriba, sobre todo los puntos 1 y 5; Pau, los precios; Jose prueba las reglas.
-3. Los 4 socios crean su mazo en la vista previa y Ricard manda los 4 PDF a la imprenta para las pruebas.
+3. Los 4 socios crean su mazo en la vista previa y Ricard manda a cada imprenta su archivo para las pruebas.
 4. Con el formato confirmado: ajustar `config/print.ts`, el troquel de la caja y el folleto.
 5. Conectar Supabase (registro, sincronización del borrador, subida TUS) y generar la impresión en el servidor; quitar la descarga pública del PDF.
 6. Panel de administración y plantillas de Brevo.

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { PRINT } from "@config/print";
+import { IMPRENTAS, PRINT, paginaImprenta, type PerfilImprenta } from "@config/print";
 import { DESCARGA_PDF } from "@config/prototipo";
 import { CartaPortada } from "@/components/carta/CartaPortada";
 import { VistaCaja } from "@/components/carta/VistaCaja";
@@ -16,7 +16,7 @@ import type { Catalogo } from "@/domain/precios/tipos";
 import { decodificarFoto } from "@/lib/fotos/cache";
 import { ProveedorMazo, useMazo } from "@/lib/mazo/contexto";
 import { iconosDelMazo } from "@/lib/mazo/derivados";
-import { cartasImpresas, planImpresion } from "@/lib/pdf/plan";
+import { planImpresion } from "@/lib/pdf/plan";
 
 export function PedidoConfirmado({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: string | null }) {
   return (
@@ -32,8 +32,9 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
   const locale = useLocale();
   const { estado, mazo, despachar } = useMazo();
   const [verificacion, setVerificacion] = useState<"pagado" | "pendiente" | null>(null);
-  const [progreso, setProgreso] = useState<{ hecha: number; total: number } | null>(null);
-  const [resultado, setResultado] = useState<"listo" | "error" | null>(null);
+  // Un archivo cada vez: el de la imprenta que se está generando y cómo acabó el último.
+  const [progreso, setProgreso] = useState<{ imprenta: string; hecha: number; total: number } | null>(null);
+  const [resultado, setResultado] = useState<{ imprenta: string; estado: "listo" | "error" } | null>(null);
   const iconos = useMemo(() => (mazo ? iconosDelMazo(mazo, catalogo) : new Map<string, string>()), [mazo, catalogo]);
   const pedido = mazo?.pedido ?? null;
   // Para poder volver a esta página sin conexión (el código ya se adelantó en el configurador).
@@ -83,36 +84,50 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
   const muestra = ordenarPorFecha(mazo.cartas).find((c) => c.fecha) ?? mazo.cartas[0] ?? null;
   const pais = catalogo.paises.find((p) => p.activo);
   // La descarga del archivo, solo en el prototipo (config/prototipo.ts) y con el pedido pagado.
-  const pasos = [
-    DESCARGA_PDF ? t("paso1", { sangrado: PRINT.sangradoMm, marcas: PRINT.marcasCorte.activas ? "si" : "no" }) : t("paso1SinDescarga"),
-    t("aJugar"),
-  ];
+  const pasos = [DESCARGA_PDF ? t("paso1") : t("paso1SinDescarga"), t("aJugar")];
+  const nombreImprenta = (perfil: PerfilImprenta) => perfil.nombre ?? t("otraImprenta");
 
-  const generar = async () => {
+  const generar = async (perfil: PerfilImprenta) => {
     setResultado(null);
     const plan = planImpresion({ mazo, catalogo, iconos });
-    setProgreso({ hecha: 0, total: plan.length * 2 });
+    setProgreso({ imprenta: perfil.id, hecha: 0, total: plan.length * 2 });
     try {
       // El generador (pdf-lib y el dibujo a 300 ppp) pesa: solo se carga al pedir el archivo.
-      const { descargar, generarPdfMazo, nombreArchivoPdf } = await import("@/lib/pdf/imprimir");
-      const bytes = await generarPdfMazo({
-        plan,
-        estiloId: mazo.estiloId,
-        paletaId: mazo.paletaId,
-        tono: mazo.tono,
-        idiomaMazo: mazo.idiomaMazo,
-        titulo: mazo.titulo,
-        obtenerFoto: async (id) => {
-          const d = await decodificarFoto(id, "copia");
-          return d ? { imagen: d.imagen, ancho: d.ancho, cerrar: () => d.imagen.close() } : null;
+      const { descargar, generarArchivoImpresion } = await import("@/lib/pdf/imprimir");
+      const pagina = paginaImprenta(perfil);
+      const archivo = await generarArchivoImpresion(
+        {
+          plan,
+          estiloId: mazo.estiloId,
+          paletaId: mazo.paletaId,
+          tono: mazo.tono,
+          idiomaMazo: mazo.idiomaMazo,
+          titulo: mazo.titulo,
+          obtenerFoto: async (id) => {
+            const d = await decodificarFoto(id, "copia");
+            return d ? { imagen: d.imagen, ancho: d.ancho, cerrar: () => d.imagen.close() } : null;
+          },
+          alProgresar: (hecha, total) => setProgreso({ imprenta: perfil.id, hecha, total }),
         },
-        alProgresar: (hecha, total) => setProgreso({ hecha, total }),
-      });
-      descargar(bytes, nombreArchivoPdf(mazo.titulo, cartasImpresas(plan)));
-      setResultado("listo");
+        perfil,
+        (d) =>
+          t("leeme", {
+            ...d,
+            imprenta: nombreImprenta(perfil),
+            ancho: PRINT.carta.anchoMm,
+            alto: PRINT.carta.altoMm,
+            sangrado: perfil.sangradoMm,
+            anchoPagina: pagina.ancho,
+            altoPagina: pagina.alto,
+            radio: PRINT.carta.radioEsquinaMm,
+            ppp: PRINT.ppp,
+          }),
+      );
+      descargar(archivo.bytes, archivo.nombre, archivo.tipo);
+      setResultado({ imprenta: perfil.id, estado: "listo" });
     } catch (e) {
       console.error(e);
-      setResultado("error");
+      setResultado({ imprenta: perfil.id, estado: "error" });
     } finally {
       setProgreso(null);
     }
@@ -149,22 +164,47 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
         </div>
       </section>
 
-      <div className={`mx-auto grid max-w-[1200px] gap-6 px-4 pt-10 sm:px-6 ${DESCARGA_PDF ? "lg:grid-cols-2" : ""}`}>
+      <div className={`mx-auto grid max-w-[1200px] items-start gap-6 px-4 pt-10 sm:px-6 ${DESCARGA_PDF ? "lg:grid-cols-2" : ""}`}>
         {DESCARGA_PDF && (
           <section className="relative space-y-4 overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 shadow-[var(--shadow-carta)]" data-testid="bloque-descarga">
             <h2 className="tipo-subtitular text-xl">{t("archivo")}</h2>
             <p className="text-sm text-tinta-2">{t("textoPrototipo")}</p>
             {pagado ? (
-              <>
-                <Boton tamano="lg" onClick={() => void generar()} disabled={!!progreso}>
-                  {progreso ? t("generando", { hecha: progreso.hecha, total: progreso.total }) : t("descargarPdf")}
-                </Boton>
-                {progreso && <Franja valor={progreso.total ? progreso.hecha / progreso.total : 0} etiqueta={t("generando", { hecha: progreso.hecha, total: progreso.total })} />}
-                <p aria-live="polite" className="min-h-5 text-sm">
-                  {resultado === "listo" && <span className="text-verde-texto">✓ {t("pdfListo")}</span>}
-                  {resultado === "error" && <span className="text-rojo-texto">{t("pdfError")}</span>}
-                </p>
-              </>
+              <ul className="space-y-4" aria-label={t("imprentas")}>
+                {IMPRENTAS.map((perfil) => {
+                  const nombre = nombreImprenta(perfil);
+                  const aqui = progreso?.imprenta === perfil.id;
+                  const final = resultado?.imprenta === perfil.id ? resultado.estado : null;
+                  const tipo = perfil.paginas === "separadas" ? "ZIP" : "PDF";
+                  return (
+                    <li key={perfil.id} className="space-y-2 border-t border-linea pt-4 first:border-t-0 first:pt-0" data-testid={`imprenta-${perfil.id}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold">{nombre}</h3>
+                          <p className="text-sm text-tinta-2">
+                            {t("especificaciones", {
+                              sangrado: perfil.sangradoMm,
+                              marcas: perfil.marcasCorte ? "si" : "no",
+                              paginas: perfil.paginas,
+                            })}
+                          </p>
+                        </div>
+                        <Boton onClick={() => void generar(perfil)} disabled={!!progreso} aria-label={t("descargarPara", { archivo: tipo, imprenta: nombre })}>
+                          {aqui ? t("generando", { hecha: progreso.hecha, total: progreso.total }) : t("descargar", { archivo: tipo })}
+                        </Boton>
+                      </div>
+                      {aqui && <Franja valor={progreso.total ? progreso.hecha / progreso.total : 0} etiqueta={t("generando", { hecha: progreso.hecha, total: progreso.total })} />}
+                      <p aria-live="polite" className="text-sm empty:hidden">
+                        {final === "listo" && <span className="text-verde-texto">✓ {t("pdfListo")}</span>}
+                        {final === "error" && <span className="text-rojo-texto">{t("pdfError")}</span>}
+                      </p>
+                      {perfil.color === "cmyk-fogra39" && (
+                        <p className="text-sm text-tinta-2">{perfil.convierteRgb ? t("colorConvierten") : t("colorPreguntar")}</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             ) : (
               <p className="text-sm font-semibold">{t("descargaPendiente")}</p>
             )}

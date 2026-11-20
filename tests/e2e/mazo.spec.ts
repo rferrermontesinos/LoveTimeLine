@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
 import { PRINT } from "../../config/print";
+import { leerZip } from "../../src/lib/pdf/zip";
 import catalogo from "../../supabase/catalogo.json";
 import { aproximada, borrarSoloElMazo, cambiarMazo, conFecha, fotos, fotosGuardadas, guardado, leerMazo, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
 
@@ -38,7 +39,7 @@ async function irA(page: Page, paso: "Fotos" | "Cartas" | "Estilo" | "Pedido") {
 test.describe("mazo de principio a fin", () => {
   test("de las fotos al PDF: fechas solas, fecha a varias, recuerdo con hueco, paleta, caja propia, oferta, pago y descarga", async ({ page }, info) => {
     test.skip(info.project.name === "movil", "El flujo completo se prueba en escritorio; el móvil tiene el suyo.");
-    test.setTimeout(300_000);
+    test.setTimeout(480_000);
 
     await empezar(page);
     // El pack de la URL se usa una vez y sale de ella.
@@ -143,17 +144,51 @@ test.describe("mazo de principio a fin", () => {
     await expect(page.getByRole("heading", { name: "Pedido de prueba hecho" })).toBeVisible();
     await expect(page.getByText(`${cartasFisicas} cartas impresas`)).toBeVisible();
 
-    // Descarga (el interruptor está activo en el prototipo): cada pieza, a dos caras.
-    const descarga = page.waitForEvent("download", { timeout: 240_000 });
-    await page.getByRole("button", { name: /Descargar el archivo de impresión/ }).click();
-    const archivo = await descarga;
-    expect(archivo.suggestedFilename()).toBe(`prueba-de-impresion-${cartasFisicas}-cartas.pdf`);
-    const pdf = await PDFDocument.load(await readFile((await archivo.path())!));
-    expect(pdf.getPageCount()).toBe(2 * (cartasFisicas + CAJA_PERSONALIZADA));
-    const primera = pdf.getPage(0);
-    const mm = 72 / 25.4;
-    expect(Math.round(primera.getTrimBox().width / mm)).toBe(PRINT.carta.anchoMm);
-    expect(Math.round(primera.getBleedBox().height / mm)).toBe(PRINT.carta.altoMm + 2 * PRINT.sangradoMm);
+    // Descarga (el interruptor está activo en el prototipo): un archivo por imprenta, cada pieza a
+    // dos caras, con el sangrado, las marcas y el reparto de páginas que pide cada una.
+    const piezas = cartasFisicas + CAJA_PERSONALIZADA;
+    const base = `prueba-de-impresion-${cartasFisicas}-cartas`;
+    const enMm = (pt: number) => Math.round(pt / (72 / 25.4));
+    const medidas = (caja: { width: number; height: number }) => [enMm(caja.width), enMm(caja.height)];
+    const { anchoMm: ancho, altoMm: alto } = PRINT.carta;
+    const descargar = async (imprenta: string, tipo: "PDF" | "ZIP") => {
+      const descarga = page.waitForEvent("download", { timeout: 240_000 });
+      await page.getByRole("button", { name: `Descargar ${tipo} para ${imprenta}` }).click();
+      const d = await descarga;
+      return { nombre: d.suggestedFilename(), bytes: new Uint8Array(await readFile((await d.path())!)) };
+    };
+
+    // Pinbro: un PDF con cada carta seguida de su reverso, 3 mm de sangrado y sin marcas (la página es la cara).
+    const pinbro = await descargar("Pinbro", "PDF");
+    expect(pinbro.nombre).toBe(`${base}-${ancho}x${alto}-pinbro.pdf`);
+    const pdfPinbro = await PDFDocument.load(pinbro.bytes);
+    expect(pdfPinbro.getPageCount()).toBe(2 * piezas);
+    expect(medidas(pdfPinbro.getPage(0).getTrimBox())).toEqual([ancho, alto]);
+    expect(medidas(pdfPinbro.getPage(0).getMediaBox())).toEqual([ancho + 6, alto + 6]);
+    expect(pinbro.bytes.length / (2 * piezas)).toBeLessThan(3_000_000);
+
+    // Soriano: 2 mm de sangrado y las marcas de corte en un margen alrededor.
+    const pdfSoriano = await PDFDocument.load((await descargar("Soriano", "PDF")).bytes);
+    expect(pdfSoriano.getPageCount()).toBe(2 * piezas);
+    const soriano = pdfSoriano.getPage(0);
+    expect(medidas(soriano.getTrimBox())).toEqual([ancho, alto]);
+    expect(medidas(soriano.getBleedBox())).toEqual([ancho + 4, alto + 4]);
+    expect(medidas(soriano.getMediaBox())).toEqual([ancho + 4 + 2 * PRINT.marcasCorte.margenMm, alto + 4 + 2 * PRINT.marcasCorte.margenMm]);
+
+    // AGR (Tipia): un ZIP con el PDF de las caras, el de los reversos en el mismo orden y una nota; 4 mm de sangrado.
+    const agr = await descargar("AGR · Tipia", "ZIP");
+    expect(agr.nombre).toBe(`${base}-${ancho}x${alto}-agr.zip`);
+    const partes = leerZip(agr.bytes);
+    expect(partes.map((p) => p.nombre)).toEqual([`${base}-caras.pdf`, `${base}-reversos.pdf`, "LEEME.txt"]);
+    for (const parte of partes.slice(0, 2)) {
+      const pdf = await PDFDocument.load(parte.bytes);
+      expect(pdf.getPageCount()).toBe(piezas);
+      expect(medidas(pdf.getPage(0).getMediaBox())).toEqual([ancho + 8, alto + 8]);
+      expect(medidas(pdf.getPage(0).getTrimBox())).toEqual([ancho, alto]);
+    }
+    const nota = new TextDecoder().decode(partes[2]!.bytes);
+    expect(nota).toContain(`la página 1 es el reverso de la página 1 de ${base}-caras.pdf`);
+    expect(nota).toContain("La última página de cada archivo es la caja.");
   });
 });
 
