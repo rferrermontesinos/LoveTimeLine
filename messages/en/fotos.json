@@ -2,6 +2,8 @@
   "fotos": {
     "titulo": "Upload your photos",
     "texto": "You need at least {minimo} cards for your pack.",
+    "sinPresion": "They don’t have to be perfect: a blurry photo from a great day makes a better game than a pretty one with no story behind it.",
+    "guiaEnlace": "Tips for choosing them",
     "consentimiento": "I have permission from the people in the photos, and from their parents if they are minors, to use them in this deck.",
     "consentimientoFalta": "Tick this box to add your photos.",
     "enEspera": "{n, plural, one {You have # photo waiting: it’s added as soon as you tick the box.} other {You have # photos waiting: they’re added as soon as you tick the box.}}",

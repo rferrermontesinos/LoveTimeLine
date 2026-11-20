@@ -358,10 +358,11 @@ export function PasoCartas() {
                 {t("cartas.borrarCarta")}
               </Boton>
             </div>
-            {/* Calidad de impresión: solo si la foto se queda corta, en una línea. */}
+            {/* Calidad de impresión: solo si la foto se queda corta, en una línea y sin alarmar (no es un
+                error: un buen recuerdo vale aunque la foto no sea perfecta). */}
             {foto && justa && (
               <p className="text-center text-sm">
-                <span className="text-rojo-texto">{t("cartas.calidadJusta", { ppp })}</span>{" "}
+                <span className="text-tinta-2">{t("cartas.calidadJusta", { ppp })}</span>{" "}
                 {foto.pppConfirmado ? (
                   <span className="whitespace-nowrap text-tinta-2">✓ {t("cartas.calidadConfirmada")}</span>
                 ) : (

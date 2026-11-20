@@ -30,6 +30,9 @@ export async function Pie() {
           <Link className={ENLACE} href="/como-jugar">
             {n("comoJugar")}
           </Link>
+          <Link className={ENLACE} href="/guia-fotos">
+            {n("guia")}
+          </Link>
           <Link className={ENLACE} href="/privacidad">
             {n("privacidad")}
           </Link>

@@ -26,7 +26,7 @@ const creditos = leerJson<{ fuente: string; licencia: { nombre: string; url: str
 
 const IDIOMAS = ["es", "en"] as const;
 type Idioma = (typeof IDIOMAS)[number];
-const PAGINAS = ["", "/como-jugar", "/privacidad"];
+const PAGINAS = ["", "/como-jugar", "/guia-fotos", "/privacidad"];
 
 /** Primer pantallazo que pide el encargo: portátil y móvil. */
 const pantallaDe = (proyecto: string) => (proyecto === "movil" ? { width: 390, height: 844 } : { width: 1280, height: 800 });
@@ -275,7 +275,7 @@ test.describe("«Cómo se juega»", () => {
     const piezas = page.locator("[data-escena] [data-pieza]");
     expect(await piezas.count()).toBeGreaterThanOrEqual(10);
     for (const pieza of await piezas.all()) await expect(pieza).toHaveAttribute("aria-hidden", "true");
-    await expect(page.locator("figure:has([data-escena]) figcaption li")).toHaveCount(6);
+    await expect(page.locator("figure:has([data-escena]) figcaption li")).toHaveCount(5);
     const caja = (await escena.boundingBox())!;
     expect(caja.x).toBeGreaterThanOrEqual(0);
     expect(caja.x + caja.width).toBeLessThanOrEqual(pantallaDe(info.project.name).width);
@@ -301,6 +301,20 @@ test.describe("«Cómo se juega»", () => {
     await expect(page.getByRole("tabpanel", { name: "Clásico" })).toBeHidden();
     await page.keyboard.press("Home");
     await expect(pestanas.first()).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("cada tipo de juego explica en su turno qué pasa con las cartas del mismo año, y ya no hay consejo de primera partida", async ({ page }) => {
+    await page.goto("/es/como-jugar");
+    const clasico = page.getByRole("tabpanel", { name: "Clásico" });
+    await expect(clasico.getByTestId("empates-clasico")).toContainText("vale cualquier orden entre las dos: la carta se queda");
+    await page.getByRole("tab", { name: "Nuestra historia" }).click();
+    const historia = page.getByRole("tabpanel", { name: "Nuestra historia" });
+    await expect(historia.getByTestId("empates-historia")).toContainText("no perdéis vida");
+    // Cada pestaña se entiende sola: Nuestra historia no remite al Clásico.
+    await expect(historia).not.toContainText("como en el Clásico");
+    // Ricard, 20-11-2026: fuera el consejo de la primera partida y la leyenda del mazo de robo.
+    await expect(page.getByText("Para la primera partida")).toHaveCount(0);
+    await expect(page.getByText("para cuando se falla en el Clásico")).toHaveCount(0);
   });
 
   test("un ancla mal escapada no tira la página: se abre la primera pestaña", async ({ page, baseURL }) => {
@@ -335,6 +349,32 @@ test.describe("«Cómo se juega»", () => {
     await expect(flota).toHaveCSS("animation-name", "none");
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await expect(flota).not.toHaveCSS("animation-name", "none");
+  });
+});
+
+test.describe("guía para elegir fotos", () => {
+  test("atajos del iPhone y de Android, cuántas fotos según el catálogo, consejos y el camino a crear el mazo", async ({ page }) => {
+    for (const idioma of IDIOMAS) {
+      await page.goto(`/${idioma}/guia-fotos`);
+      await expect(page.locator("h1")).toHaveText(idioma === "es" ? "Cómo elegir las fotos de tu mazo" : "How to choose the photos for your deck");
+      // Cuántas: las cartas de cada pack salen del catálogo, no del texto.
+      const cuantas = page.getByTestId("guia-cuantas");
+      for (const p of packs) await expect(cuantas).toContainText(`${textoEn(p.nombre, idioma)}: ${p.cartas}`);
+      // Cuatro atajos; todos menos la búsqueda dicen qué hacer en cada sistema.
+      const atajos = page.locator("[data-atajo]");
+      await expect(atajos).toHaveCount(4);
+      for (const a of ["favoritas", "personas", "album"]) {
+        const atajo = page.locator(`[data-atajo="${a}"]`);
+        await expect(atajo.locator("dt")).toHaveText(["iPhone", "Android"]);
+      }
+      await expect(page.locator('[data-atajo="buscar"] dt')).toHaveCount(0);
+      await expect(page.locator("[data-consejo]")).toHaveCount(6);
+      await expect(page.getByRole("main").getByRole("link", { name: idioma === "es" ? "Crear mi mazo" : "Make my deck" })).toHaveAttribute("href", `/${idioma}/crear`);
+    }
+    // Se llega desde el pie de cualquier página.
+    await page.goto("/es");
+    await page.getByRole("contentinfo").getByRole("link", { name: "Elegir las fotos" }).click();
+    await expect(page).toHaveURL(/\/es\/guia-fotos$/);
   });
 });
 

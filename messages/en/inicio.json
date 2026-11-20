@@ -77,6 +77,10 @@
       "5": {
         "p": "Which languages?",
         "r": "The site is in Spanish and English, and the deck can be in either: months, card texts and instructions."
+      },
+      "6": {
+        "p": "What if my photos aren’t great?",
+        "r": "They still count. A blurry, old or backlit photo can be the best card in the deck, because the game is about what you remember. If one might print blurry, we’ll let you know and you decide."
       }
     },
     "ctaTitulo": "Shall we start with a few photos?",

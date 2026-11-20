@@ -6,7 +6,7 @@
  *
  * Lo que tiene que contar de un vistazo: la línea de recuerdos en el centro, ordenada por fecha y
  * por la cara de la fecha; una carta por la cara de la foto a punto de entrar en un hueco; las
- * cartas de dos personas en abanico; el mazo de robo; un comodín y una carta en blanco; y alguna
+ * cartas de dos personas en abanico; el resto del mazo; un comodín y una carta en blanco; y alguna
  * carta de texto (un recuerdo sin foto). Lógica pura, sin React, para poder probarla.
  */
 import type { ClaveMuestra } from "@/components/inicio/muestras";
@@ -49,7 +49,7 @@ export interface PiezaEscena {
   contenido: ContenidoPieza;
   /** Orden de apilado: la mayor, encima. */
   capa: number;
-  /** Cartas que asoman debajo, un poco desplazadas (el mazo de robo, los comodines). */
+  /** Cartas que asoman debajo, un poco desplazadas (el resto del mazo, los comodines). */
   debajo?: number;
   /** Dónde va en cada formato. Sin colocación, la pieza no sale en ese formato. */
   en: Partial<Record<FormatoEscena, Colocacion>>;
@@ -108,7 +108,7 @@ export const PIEZAS: readonly PiezaEscena[] = [
     en: { apaisada: { x: 77.5, y: 49.5, ancho: 9.5, giro: -1 }, vertical: { x: 88.5, y: 54.5, ancho: 15.5, giro: 1.5 } },
   },
 
-  // Fuera de la línea: comodín y carta en blanco a un lado, mazo de robo al otro.
+  // Fuera de la línea: comodín y carta en blanco a un lado, el resto del mazo al otro.
   {
     id: "comodin",
     papel: "comodin",
@@ -180,11 +180,15 @@ export const PIEZAS: readonly PiezaEscena[] = [
   },
 ];
 
-/** Numeritos sobre la escena que remiten a la leyenda de debajo, en el orden de la leyenda. */
+/**
+ * Numeritos sobre la escena que remiten a la leyenda de debajo, en el orden de la leyenda. El resto
+ * del mazo (`robo`) no lleva número: Ricard quitó su explicación el 20-11-2026 (solo hablaba del
+ * Clásico) y un mazo sobre la mesa se entiende solo.
+ */
 export interface MarcaEscena {
   numero: number;
   /** Clave de la leyenda (juego.mesa.leyenda.<clave>). */
-  clave: "linea" | "candidata" | "manos" | "robo" | "comodin" | "enBlanco";
+  clave: "linea" | "candidata" | "manos" | "comodin" | "enBlanco";
   /** Las piezas a las que señala. */
   papeles: Papel[];
   en: Record<FormatoEscena, { x: number; y: number }>;
@@ -196,13 +200,15 @@ export const DIAMETRO_MARCA: Record<FormatoEscena, number> = { apaisada: 2.8, ve
 /** Lo que una carta de `debajo` asoma respecto a la de encima, en % de su ancho. */
 export const ASOMA_DEBAJO = 3.5;
 
+/** Piezas que se dibujan sin número en la leyenda. */
+export const SIN_MARCA: readonly Papel[] = ["robo"];
+
 export const MARCAS: readonly MarcaEscena[] = [
   { numero: 1, clave: "linea", papeles: ["linea"], en: { apaisada: { x: 22.5, y: 65 }, vertical: { x: 11.5, y: 66.5 } } },
   { numero: 2, clave: "candidata", papeles: ["candidata", "hueco"], en: { apaisada: { x: 64.5, y: 26 }, vertical: { x: 64.5, y: 31 } } },
   { numero: 3, clave: "manos", papeles: ["mano"], en: { apaisada: { x: 68.5, y: 86 }, vertical: { x: 86, y: 86 } } },
-  { numero: 4, clave: "robo", papeles: ["robo"], en: { apaisada: { x: 91.5, y: 33 }, vertical: { x: 87.5, y: 9 } } },
-  { numero: 5, clave: "comodin", papeles: ["comodin"], en: { apaisada: { x: 8.5, y: 17.5 }, vertical: { x: 12, y: 9 } } },
-  { numero: 6, clave: "enBlanco", papeles: ["en-blanco"], en: { apaisada: { x: 9, y: 85.5 }, vertical: { x: 11.5, y: 92.5 } } },
+  { numero: 4, clave: "comodin", papeles: ["comodin"], en: { apaisada: { x: 8.5, y: 17.5 }, vertical: { x: 12, y: 9 } } },
+  { numero: 5, clave: "enBlanco", papeles: ["en-blanco"], en: { apaisada: { x: 9, y: 85.5 }, vertical: { x: 11.5, y: 92.5 } } },
 ];
 
 /** Piezas que salen en un formato, con su colocación. */

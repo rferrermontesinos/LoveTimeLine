@@ -32,7 +32,7 @@
       "fecha-futura": "{n, plural, one {# card has} other {# cards have}} a date later than today.",
       "texto-pendiente": "{n, plural, one {# card without a photo has unfinished text} other {# cards without a photo have unfinished text}}.",
       "descripcion-larga": "{n, plural, one {# line is} other {# lines are}} longer than 90 characters.",
-      "baja-resolucion": "{n, plural, one {# photo may look blurry} other {# photos may look blurry}} when printed.",
+      "baja-resolucion": "{n, plural, one {# photo may look a little blurry} other {# photos may look a little blurry}} when printed. If the memory is good, they’re still worth it.",
       "revisar-fechas": "{n, plural, one {# date is worth checking} other {# dates are worth checking}}.",
       "fechas-duplicadas": "{n, plural, one {There is # repeated date} other {There are # repeated dates}}: in the game, any order between those cards counts.",
       "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}.",

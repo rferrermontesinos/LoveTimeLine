@@ -114,6 +114,15 @@ export function PasoFotos() {
       <header className="space-y-2">
         <h1 className="tipo-titular text-[clamp(2.2rem,6vw,3.4rem)] leading-[0.95]">{t("fotos.titulo")}</h1>
         <p className="max-w-2xl text-md text-tinta-2">{t("fotos.texto", { minimo: cotizacion?.minimo ?? 0 })}</p>
+        {/* Quitar presión: vale un buen recuerdo aunque la foto no sea perfecta. La guía se abre en
+            otra pestaña para no cortar una subida en marcha. */}
+        <p data-testid="sin-presion" className="max-w-2xl text-tinta-2">
+          {t("fotos.sinPresion")}{" "}
+          <a href={`/${locale}/guia-fotos`} target="_blank" rel="noopener" className="enlace whitespace-nowrap font-semibold">
+            {t("fotos.guiaEnlace")}
+            <span className="sr-only"> {t("comun.nuevaPestana")}</span>
+          </a>
+        </p>
       </header>
 
       {/* Permiso explícito antes de añadir fotos (RGPD). Si se intenta añadir sin él, se resalta y

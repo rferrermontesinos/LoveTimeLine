@@ -96,6 +96,22 @@ function Pasos({ pasos, className = "" }: { pasos: string[]; className?: string 
   );
 }
 
+/**
+ * «¿Del mismo año?»: el empate de fechas tal como lo dice cada tipo de juego. Fuera del panel de su
+ * tipo de juego (el del Clásico va en el panel 4, que es donde cabe), lleva su nombre delante.
+ */
+function Empates({ empates, modo }: { empates: { titulo: string; texto: string }; modo?: string }) {
+  return (
+    <p className={CUERPO}>
+      <span className="font-bold">
+        {modo && `${modo} · `}
+        {empates.titulo}{" "}
+      </span>
+      {empates.texto}
+    </p>
+  );
+}
+
 /** Cabecera de un tipo de juego: cuadrado de su color, nombre y «Cooperativo · De 2 a 6 personas». */
 function CabeceraModo({ nombre, detalle, color }: { nombre: string; detalle: string; color: string }) {
   return (
@@ -135,16 +151,18 @@ function aniosAbanico(p: Personalizacion | null): [string, string, string] {
 }
 
 /** «Fechas iguales o con solo el año», con tres cartas en orden como ejemplo de línea del tiempo. */
-function BloqueFechas({ j, c }: { j: TextosFolleto["juego"]; c: ColoresFolleto }) {
+function BloqueFechas({ j, c, ejemplos }: { j: TextosFolleto["juego"]; c: ColoresFolleto; ejemplos: boolean }) {
   return (
     <>
       <Titulo className="pt-[0.6mm]">{j.fechas}</Titulo>
       <p className={CUERPO}>{j.fechasTexto}</p>
-      <div aria-hidden="true" className="flex justify-between px-[3mm] pt-[1mm]">
-        <MiniReverso anio="2008" c={c} girada={-4} />
-        <MiniReverso anio="2015" c={c} />
-        <MiniReverso anio="2019" c={c} girada={4} />
-      </div>
+      {ejemplos && (
+        <div aria-hidden="true" className="flex justify-between px-[3mm] pt-[1mm]">
+          <MiniReverso anio="2008" c={c} girada={-4} />
+          <MiniReverso anio="2015" c={c} />
+          <MiniReverso anio="2019" c={c} girada={4} />
+        </div>
+      )}
     </>
   );
 }
@@ -246,7 +264,8 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
             <p className={CUERPO}>{j.jugadores.texto}</p>
           )}
           <p className={CUERPO}>{j.jugadores.parejas}</p>
-          {!fechasEnPanel4 && <BloqueFechas j={j} c={c} />}
+          {/* Con los iconos en el panel 4, aquí no caben las cartas de ejemplo. */}
+          {!fechasEnPanel4 && <BloqueFechas j={j} c={c} ejemplos={false} />}
         </Regla>
         <Regla n={2} c={c}>
           <CabeceraModo nombre={m.clasico.nombre} detalle={`${m.clasico.etiqueta} · ${m.clasico.jugadores}`} color={COLOR_MODO.clasico} />
@@ -261,8 +280,10 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
           <Pasos pasos={j.clasico.final} />
         </Regla>
         <Regla n={4} c={c}>
+          {/* El panel 3 va lleno: el empate del Clásico sigue aquí, con su nombre. */}
+          <Empates empates={j.clasico.empates} modo={m.clasico.nombre} />
           {fechasEnPanel4 ? (
-            <BloqueFechas j={j} c={c} />
+            <BloqueFechas j={j} c={c} ejemplos />
           ) : (
             <>
               <Titulo>{j.mecanicas.titulo}</Titulo>
@@ -311,9 +332,9 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
         <PanelHistoria n={6} c={c}>
           <Titulo>{j.turno}</Titulo>
           <Pasos pasos={j.historia.turno} className="opacity-90" />
+          <Empates empates={j.historia.empates} />
           <Titulo className="pt-[0.6mm]">{j.final}</Titulo>
           <Pasos pasos={j.historia.final} className="opacity-90" />
-          <p className={`${CUERPO} opacity-75`}>{j.historia.dificultad}</p>
         </PanelHistoria>
         <PanelHistoria n={7} c={c}>
           <Titulo>{j.historia.completa}</Titulo>
@@ -330,9 +351,8 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
               <p className={`${CUERPO} font-semibold`}>{con(ti.vidasCompleta, { n: vidasHistoriaCompleta(p.cartas) })}</p>
             </div>
           )}
-          <p className="rounded-[1.6mm] p-[2mm] text-[6.8pt] font-semibold leading-[1.3]" style={{ background: COLOR_MODO.clasico, color: c.tinta }}>
-            {j.consejo}
-          </p>
+          {/* Viene del panel 6, que con el empate de fechas ya no tenía sitio. */}
+          <p className={`${CUERPO} opacity-75`}>{j.historia.dificultad}</p>
         </PanelHistoria>
         <Portada t={t} c={c} p={p} />
       </div>

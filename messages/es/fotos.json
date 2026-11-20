@@ -2,6 +2,8 @@
   "fotos": {
     "titulo": "Sube tus fotos",
     "texto": "Necesitas al menos {minimo} cartas para tu pack.",
+    "sinPresion": "No hace falta que sean perfectas: una foto movida de un gran día da más juego que una bonita que no cuenta nada.",
+    "guiaEnlace": "Ideas para elegirlas",
     "consentimiento": "Tengo permiso de las personas que salen en las fotos, y de sus padres si son menores, para usarlas en este mazo.",
     "consentimientoFalta": "Marca esta casilla para poder añadir las fotos.",
     "enEspera": "{n, plural, one {Tienes # foto esperando: se añade en cuanto marques la casilla.} other {Tienes # fotos esperando: se añaden en cuanto marques la casilla.}}",

@@ -7,6 +7,7 @@ import {
   desdeIso,
   esFutura,
   filaBienOrdenada,
+  huecosValidos,
   precisionDe,
   puedeIrAntes,
   rangoDias,
@@ -53,6 +54,36 @@ describe("fecha de carta", () => {
     expect(puedeIrAntes(f("2020"), f("2019-12-31"))).toBe(false);
     expect(filaBienOrdenada([f("2015"), f("2015-06-01"), f("2016")])).toBe(true);
     expect(filaBienOrdenada([f("2016"), f("2015")])).toBe(false);
+  });
+
+  describe("dónde encaja una carta en la línea (regla de Clásico y Nuestra historia)", () => {
+    const linea = (...isos: string[]) => isos.map(f);
+
+    it("dos cartas del mismo año valen en cualquier orden si alguna solo dice el año", () => {
+      expect(huecosValidos(linea("2015-03-14"), f("2015"))).toEqual([0, 1]);
+      expect(huecosValidos(linea("2015"), f("2015-08-02"))).toEqual([0, 1]);
+      expect(huecosValidos(linea("2015"), f("2015"))).toEqual([0, 1]);
+    });
+
+    it("con dos fechas completas del mismo año, el orden sí cuenta", () => {
+      expect(huecosValidos(linea("2015-03-14"), f("2015-08-02"))).toEqual([1]);
+    });
+
+    it("con el mismo mes, igual si alguna no dice el día", () => {
+      expect(huecosValidos(linea("2015-03", "2015-06"), f("2015-03-20"))).toEqual([0, 1]);
+      expect(huecosValidos(linea("2015-03-02", "2015-03-28"), f("2015-03"))).toEqual([0, 1, 2]);
+    });
+
+    it("una carta con solo el año cabe en cualquier punto de su año, y en ninguno fuera", () => {
+      expect(huecosValidos(linea("2014", "2015-03", "2015-11", "2016"), f("2015"))).toEqual([1, 2, 3]);
+      expect(huecosValidos(linea("2015", "2016"), f("2015-08-14"))).toEqual([0, 1]);
+      expect(huecosValidos(linea("2012", "2013"), f("2015"))).toEqual([2]);
+    });
+
+    it("se mira toda la línea, no solo las vecinas", () => {
+      // «2015» puede ir junto a las dos, pero marzo nunca va después de junio.
+      expect(huecosValidos(linea("2015-06", "2015"), f("2015-03"))).toEqual([0]);
+    });
   });
 
   it("recorta la precisión sin inventar datos", () => {

@@ -1,6 +1,6 @@
 # Portal: arquitectura, decisiones y puesta en marcha
 
-Versión del 20 de noviembre de 2026. Recoge los cambios que pidió Ricard el 4 de noviembre (packs por tamaño, dos tipos de juego, recuerdos sin foto, cartas sin franja de meses, caja personalizada, guardado en el dispositivo) y los del 20 de noviembre: pantallas de Fotos y Cartas más simples, fechas que se ponen solas cuando la foto las dice claras (y si no, una sugerencia de un toque), el mazo entero a la vista en Cartas, cartas sin recuadros «?» y sin recuerdo estrella, Estilo sin foto de portada ni tono y un archivo de impresión por imprenta. Acompaña al prototipo navegable del portal. Lo que cambia el producto está en [especificacion.md](especificacion.md); aquí está cómo está hecho y qué queda por decidir.
+Versión del 20 de noviembre de 2026. Recoge los cambios que pidió Ricard el 4 de noviembre (packs por tamaño, dos tipos de juego, recuerdos sin foto, cartas sin franja de meses, caja personalizada, guardado en el dispositivo) y los del 20 de noviembre: pantallas de Fotos y Cartas más simples, fechas que se ponen solas cuando la foto las dice claras (y si no, una sugerencia de un toque), el mazo entero a la vista en Cartas, cartas sin recuadros «?» y sin recuerdo estrella, Estilo sin foto de portada ni tono y un archivo de impresión por imprenta. La tarde del 20 de noviembre se sumaron la regla de las fechas que solo dicen el año, una guía para elegir las fotos, una línea en Fotos para quitar presión y un repaso de «Cómo se juega». Acompaña al prototipo navegable del portal. Lo que cambia el producto está en [especificacion.md](especificacion.md); aquí está cómo está hecho y qué queda por decidir.
 
 ## Decisiones que esperan a Ricard
 
@@ -39,6 +39,10 @@ Dos tipos, en la web (`/como-jugar`) y en el folleto. Los textos están en `mess
 | Clásico (competitivo) | 2–6 | 7 cartas por persona (8 para quien hizo el mazo). En tu turno colocas una carta en la línea; si la fecha no encaja, va al descarte y robas. Gana quien coloca todas antes, terminando la ronda para que todos jueguen las mismas veces. |
 | Nuestra historia (cooperativo) | 2–6, en equipo | Todos contra el mazo, con tantas vidas como personas más una. Quien hizo el mazo no recibe cartas: es el guardián de la memoria, responde las pistas y cuenta cada recuerdo. Variante «Historia completa» con el mazo entero (una vida por cada 8 cartas). |
 
+**Fechas que solo dicen el año (o el mes):** si la carta que se juega o la de la línea solo dice el año, dos cartas del mismo año valen en cualquier orden entre sí; lo mismo con el mismo mes si una no dice el día. En el Clásico la carta se queda; en Nuestra historia no se pierde vida. Se compara con toda la línea, no solo con las vecinas (`huecosValidos` y `puedeIrAntes` en `src/domain/fechas/fecha.ts`). Va en el turno de cada tipo, en la web y en el folleto. Ricard la pidió el 20 de noviembre para Jose; los textos definitivos de cada juego llegarán más adelante.
+
+**Repaso del 20 de noviembre:** Ricard quitó el consejo de primera partida («Para la primera partida, Nuestra historia con quien hizo el mazo de guardián…») y la explicación del mazo de robo en la escena de la mesa, que ahora numera 5 piezas y deja el resto del mazo sin número. Nuestra historia ya no remite al Clásico: su preparación se explica entera.
+
 Cuántas personas caben según el pack (7 cartas cada una y algo de mazo para robar): Pequeño, de 2 a 4 (5 como mucho); Mediano, de 2 a 6; Grande, de 2 a 6 o por parejas.
 
 **Iconos de la esquina:** el comodín (pista de quien hizo el mazo o cambio de carta) y la carta en blanco (para los recuerdos que salen jugando). El recuerdo estrella se retiró el 20 de noviembre: los mazos guardados que lo tenían lo pierden al abrirse, sin más cambios.
@@ -57,7 +61,7 @@ Una carta está lista con una fecha válida y no futura, la frase dentro del lí
 
 ## Pantallas del configurador
 
-1. **Fotos:** el permiso (si se intenta añadir fotos sin él, se resalta y dice qué falta), elegir fotos o una carpeta o arrastrarlas, y la cuadrícula ordenada por fecha con las que no tienen al final. Una sola herramienta: «Seleccionar», para poner la misma fecha a varias o borrarlas.
+1. **Fotos:** una línea que quita presión («No hace falta que sean perfectas: una foto movida de un gran día da más juego que una bonita que no cuenta nada.») con «Ideas para elegirlas», que abre la guía en otra pestaña; el permiso (si se intenta añadir fotos sin él, se resalta y dice qué falta), elegir fotos o una carpeta o arrastrarlas, y la cuadrícula ordenada por fecha con las que no tienen al final. Una sola herramienta: «Seleccionar», para poner la misma fecha a varias o borrarlas.
 2. **Cartas:** el aviso de cuántas faltan; la carta abierta, con sus dos caras y sus herramientas (encuadrar, girar, emojis, borrar) a un lado y su fecha y su frase al otro, a la misma altura; y debajo el mazo entero como se jugará, por años y con las que no tienen fecha al final, «Añadir más fotos» (también soltándolas) y, discretas, ideas de recuerdos sin foto («El día que nos conocimos»…). La calidad de impresión solo aparece, en una línea, si la foto se queda corta.
 3. **Estilo:** colores, título, dedicatoria, idioma del mazo, caja y extras de juego. La foto de portada es automática (la más reciente con fecha) y las fotos salen siempre con su color.
 4. **Pedido:** el pack, la línea del tiempo (la misma vista del mazo que en Cartas), las comprobaciones, los extras y el pago, que no se activa hasta que todas las cartas están listas.
@@ -92,6 +96,10 @@ service worker: reabrir /crear sin conexión
   Todas piden CMYK FOGRA39 y los archivos salen en RGB (sRGB): Pinbro lo convierte; a AGR y a Soriano hay que pedírselo al mandarlo. Convertir a CMYK en la web necesita una librería y un perfil ICC con licencia, y queda pendiente del visto bueno de Ricard.
 - **Precio en el servidor:** el navegador solo manda qué quiere; `/api/checkout` valida la petición, recalcula con el catálogo del servidor y crea la sesión de Stripe (solo claves de test) o simula el pago.
 - **Idiomas:** `next-intl` con `es` y `en`; el idioma del mazo (meses, textos de las cartas, recuerdos sin foto sugeridos y folleto) es independiente del de la interfaz. Fechas siempre con `Intl.DateTimeFormat`.
+
+## Guía para elegir las fotos
+
+`/<idioma>/guia-fotos`, pública y enlazada desde Fotos y el pie. Cuántas fotos pide cada pack (del catálogo, no del código); cuatro atajos en el móvil, con lo que se hace en Fotos del iPhone y en Google Fotos (favoritas, personas, buscar por lugar o palabra y un álbum para el mazo); el ordenador, las fotos de papel (una foto con el móvil, con buena luz y sin reflejos, basta) y las que tienen otros; y qué fotos dan más juego en la partida. El texto sobre pedir fotos a otros por enlace solo aparece cuando la subida colaborativa está configurada (`NEXT_PUBLIC_COLABORACION_URL`). Sirve también para que la encuentren los buscadores cuando se abra la indexación. Los textos están en `messages/<idioma>/guia.json` y, como el resto del diseño, pendientes de Marc.
 
 ## Guardado y sin conexión
 
@@ -168,13 +176,13 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 
 | Qué | Cómo | Estado |
 | --- | --- | --- |
-| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla) | `pnpm test` (Vitest) | 665 pruebas en 47 archivos |
+| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla) | `pnpm test` (Vitest) | 670 pruebas en 47 archivos |
 | Configurador de principio a fin (empezar en Fotos con un pack, fechas solas y sugeridas de un toque con salto a la siguiente, la misma fecha a varias, fechas de preparar el mazo y fotos de fotos, Estilo y Pedido con cartas pendientes, «Siguiente» con la fecha en blanco, recuerdo sin foto desde las ideas, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 22 |
 | Volver sin conexión y service worker tras un despliegue | `tests/e2e/sin-conexion.spec.ts` | 4 |
-| Portada, «Cómo se juega», créditos de las fotos y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | 32 |
+| Portada, «Cómo se juega» (con la regla de las fechas de solo el año), guía para elegir las fotos, créditos de las fotos y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | 36 |
 | Migración, semilla y RLS | `pnpm db:test` | 19 comprobaciones |
 
-Las pruebas de Playwright (`pnpm test:e2e`, 58 en total entre escritorio y móvil; 5 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera los archivos de impresión con datos ficticios, uno por imprenta: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
+Las pruebas de Playwright (`pnpm test:e2e`, 62 en total entre escritorio y móvil; 5 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera los archivos de impresión con datos ficticios, uno por imprenta: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
 
 ## Siguientes pasos
 

@@ -45,6 +45,12 @@ test.describe("mazo de principio a fin", () => {
     // El pack de la URL se usa una vez y sale de ella.
     await expect(page).toHaveURL(/\/es\/crear$/);
     await expect(page.getByRole("button", { name: /^Pack Pequeño/ })).toBeVisible();
+    // Sin presión: una foto imperfecta vale, y la guía para elegirlas se abre aparte (no corta la subida).
+    const sinPresion = page.getByTestId("sin-presion");
+    await expect(sinPresion).toContainText("No hace falta que sean perfectas");
+    const guia = sinPresion.getByRole("link", { name: "Ideas para elegirlas (se abre en otra pestaña)" });
+    await expect(guia).toHaveAttribute("href", "/es/guia-fotos");
+    await expect(guia).toHaveAttribute("target", "_blank");
 
     // Salen ya con fecha las que la traen clara: de la cámara o escrita en el nombre. Las de WhatsApp
     // y las capturas se quedan en blanco con su mes como sugerencia (la foto puede ser de antes), y

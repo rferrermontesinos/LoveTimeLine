@@ -83,6 +83,13 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
                   </li>
                 ))}
               </ol>
+              {/* Empates de fecha: al comprobar si la carta encaja, cada tipo de juego lo dice a su manera. */}
+              {parte === "turno" && (
+                <aside data-testid={`empates-${m.id}`} className="mt-4 rounded-[14px] border-2 border-dashed border-papel/25 p-4">
+                  <h4 className="tipo-subtitular text-md">{t(`${m.id}.empates.titulo`)}</h4>
+                  <p className="mt-1 text-sm text-papel/85">{t(`${m.id}.empates.texto`)}</p>
+                </aside>
+              )}
             </section>
           ))}
         </div>
@@ -166,7 +173,6 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
             <h2 className="tipo-titular max-w-3xl text-3xl">{t("tiposTitulo")}</h2>
             <p className="mb-8 mt-4 max-w-2xl text-md text-papel/80">{t("tiposTexto")}</p>
             <PestanasModos paneles={paneles} etiqueta={t("reglas.etiqueta")} idSeccion={ID_REGLAS} />
-            <p className="tipo-subtitular mt-8 max-w-2xl rounded-[var(--radius-carta)] bg-amarillo p-6 text-xl text-tinta">{t("consejo")}</p>
           </Seccion>
         </div>
 

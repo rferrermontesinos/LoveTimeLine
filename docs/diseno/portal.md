@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Estado** | Prototipo navegable, **pendiente de validación de Marc** |
-| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard); tercera versión el 20 de noviembre, con Fotos y Cartas más simples |
+| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard); tercera versión el 20 de noviembre, con Fotos y Cartas más simples; por la tarde, la guía para elegir las fotos y la línea que quita presión en Fotos |
 | **Validado por Marc** | — (fecha cuando lo valide) |
 | **Base** | Dirección visual D «Naipe» (v3), la de las cartas, ver el lienzo de dirección visual |
 
@@ -41,8 +41,9 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 | Pantalla | Qué mirar |
 | --- | --- |
 | Portada | Los tres packs a primera vista con su claim y precio, «Continuar mi mazo», abanico de cartas con las fotos de muestra, tipos de juego, tono de los textos |
-| Cómo se juega | La mesa con una partida en marcha, las reglas de los dos tipos, los iconos de la esquina |
-| Paso 1 · Fotos | Consentimiento que se resalta si se intenta añadir fotos sin él, zona de subida con «o arrastra aquí archivos o una carpeta», resumen de la subida («N fotos añadidas · M sin fecha»), cuadrícula por fecha con las que no tienen al final, «≈» en las fechas aproximadas, «Seleccionar» con «Poner fecha» y «Borrar» |
+| Cómo se juega | La mesa con una partida en marcha (5 piezas numeradas, el resto del mazo sin número), las reglas de los dos tipos con qué pasa con las fechas de solo el año, los iconos de la esquina |
+| Guía para elegir las fotos | Cuántas fotos según el pack, los cuatro atajos numerados con iPhone y Android, las tarjetas de ordenador, papel y fotos de otros, la franja oscura de consejos y la llamada a crear el mazo |
+| Paso 1 · Fotos | La línea «No hace falta que sean perfectas…» con el enlace a la guía, consentimiento que se resalta si se intenta añadir fotos sin él, zona de subida con «o arrastra aquí archivos o una carpeta», resumen de la subida («N fotos añadidas · M sin fecha»), cuadrícula por fecha con las que no tienen al final, «≈» en las fechas aproximadas, «Seleccionar» con «Poner fecha» y «Borrar» |
 | Paso 2 · Cartas | Aviso grande de cuántas faltan (o «¡Tu mazo está listo!»), la carta abierta con sus dos caras y herramientas a la misma altura que su fecha y su frase, sugerencias de fecha de un toque, el mazo entero por años con «Sin fecha» al final y punto amarillo en las que faltan, «Añadir más fotos» y las ideas de recuerdos sin foto |
 | Paso 3 · Estilo | Paleta como elección principal, caja de siempre o personalizada con su foto, vista previa (caja, portada, carta), título, dedicatoria, idioma y extras de juego con su icono |
 | Paso 4 · Pedido | Pack y cambio de pack, avisos de oferta, el mazo como se jugará, comprobaciones, extras, resumen con el total y pago bloqueado mientras falten cartas por completar |
@@ -70,3 +71,4 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 5. La mesa de «Cómo se juega» y las fotos de muestra.
 6. La densidad del paso 3 en móvil (vista previa arriba, controles debajo).
 7. El folleto interno: la portada y el póster de la cara B.
+8. La guía para elegir las fotos: es la primera página de contenido largo y usa las piezas de siempre (tarjetas blancas, números de color y la franja oscura).

@@ -2,7 +2,7 @@
   "juego": {
     "titulo": "Cómo se juega",
     "intro": "Un juego para ordenar vuestros recuerdos. Cada carta tiene la foto delante y la fecha detrás: colócala en la línea del tiempo donde creas que va, dale la vuelta y descubre si acertaste.",
-    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea del tiempo con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista, el mazo de robo, un comodín y una carta en blanco.",
+    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea del tiempo con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista, el resto del mazo, un comodín y una carta en blanco.",
     "mesa": {
       "titulo": "Así se ve una partida",
       "texto": "La foto de cada carta da la pista; la fecha de detrás, la respuesta.",
@@ -11,7 +11,6 @@
         "linea": "La línea del tiempo: las cartas ya colocadas, por la cara de la fecha y en orden. Alguna es un recuerdo sin foto, solo con texto.",
         "candidata": "En tu turno, eliges una de tus cartas y la pones donde crees que va. Después, vuelta: ¿encaja la fecha?",
         "manos": "Las cartas de cada persona, con la foto a la vista y la fecha escondida.",
-        "robo": "El mazo de robo, para cuando se falla en el Clásico.",
         "comodin": "Los comodines, para pedir una pista o cambiar una carta.",
         "enBlanco": "Una carta en blanco, para escribir los recuerdos que salgan jugando."
       }
@@ -63,12 +62,16 @@
         "Cuando alguien coloca bien su última carta, se termina la ronda: así todos juegan las mismas veces.",
         "Si solo una persona se ha quedado sin cartas, gana.",
         "Si son varias, desempatan: cada una roba una carta y la coloca, y quien falla queda fuera. Si aciertan todas o ninguna, otra ronda, hasta que solo quede una."
-      ]
+      ],
+      "empates": {
+        "titulo": "¿Del mismo año?",
+        "texto": "Si tu carta o la de la línea solo dice el año, vale cualquier orden entre las dos: la carta se queda. Igual con el mismo mes si una no dice el día."
+      }
     },
     "historia": {
       "preparacion": [
         "Barajad las cartas de recuerdos con la fecha hacia abajo y repartid 7 a cada persona, con la foto a la vista de todos. Nadie mira las fechas.",
-        "Poned la carta inicial en el centro, como en el Clásico. Si tenéis comodines, son del equipo.",
+        "Dad la vuelta a la primera carta del mazo y ponedla en el centro con la fecha a la vista: es el principio de la línea del tiempo. Si tenéis comodines, son del equipo.",
         "Tenéis tantas vidas como personas con cartas, más una: 3 si sois 2, 4 si sois 3… Contadlas con monedas o con lo que tengáis a mano.",
         "Si juega quien hizo el mazo, no recibe cartas: es el guardián de la memoria. Responde las pistas y cuenta cada recuerdo al darle la vuelta.",
         "Empieza la persona de más edad y se sigue en el sentido de las agujas del reloj."
@@ -85,7 +88,11 @@
       ],
       "completa": "Historia completa",
       "completaTexto": "Para jugar con el mazo entero, ideal en pareja: al acabar cada turno, robad hasta volver a tener 7 cartas mientras quede mazo. Empezad con una vida por cada 8 cartas del mazo.",
-      "dificultad": "¿Muy fácil? Empezad con una vida menos. ¿Muy difícil? El guardián puede decir «antes» o «después» una vez por carta."
+      "dificultad": "¿Muy fácil? Empezad con una vida menos. ¿Muy difícil? El guardián puede decir «antes» o «después» una vez por carta.",
+      "empates": {
+        "titulo": "¿Del mismo año?",
+        "texto": "Si vuestra carta o la de la línea solo dice el año, vale cualquier orden entre las dos: no perdéis vida. Igual con el mismo mes si una no dice el día."
+      }
     },
     "mecanicas": {
       "titulo": "Iconos de la esquina",
@@ -100,7 +107,6 @@
         "texto": "Si sale un recuerdo que no está en el mazo, escribidlo en una carta en blanco, con la fecha detrás. Entrará en la próxima partida."
       }
     },
-    "consejo": "Para la primera partida, Nuestra historia con quien hizo el mazo de guardián. Para la segunda, cada uno con sus cartas.",
     "cta": {
       "titulo": "¿Jugamos con vuestros recuerdos?",
       "texto": "Sube las fotos, revisa las fechas y elige los colores. Del resto nos encargamos nosotros."

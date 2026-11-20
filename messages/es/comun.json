@@ -7,6 +7,7 @@
     "inicio": "Inicio",
     "crear": "Crear mi mazo",
     "comoJugar": "Cómo se juega",
+    "guia": "Elegir las fotos",
     "precios": "Precios",
     "privacidad": "Privacidad",
     "idioma": "Idioma",
@@ -39,7 +40,8 @@
     "anversoTexto": "Cara del recuerdo",
     "reverso": "Cara de la fecha",
     "verAnverso": "Ver la cara de la foto",
-    "verReverso": "Ver la cara de la fecha"
+    "verReverso": "Ver la cara de la fecha",
+    "nuevaPestana": "(se abre en otra pestaña)"
   },
   "errores": {
     "noEncontrada": "Esta página no existe.",

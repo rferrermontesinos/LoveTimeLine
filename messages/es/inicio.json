@@ -77,6 +77,10 @@
       "5": {
         "p": "¿En qué idiomas?",
         "r": "La web está en español e inglés, y el mazo puede ir en cualquiera de los dos: meses, textos e instrucciones."
+      },
+      "6": {
+        "p": "¿Y si mis fotos no son buenas?",
+        "r": "Valen igual. Una foto movida, antigua o a contraluz puede ser la mejor carta del mazo, porque en el juego cuenta lo que recordáis. Si alguna puede salir borrosa, te avisamos y decides tú."
       }
     },
     "ctaTitulo": "¿Empezamos con unas fotos?",

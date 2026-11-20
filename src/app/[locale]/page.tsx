@@ -177,7 +177,7 @@ export default async function Inicio({ params }: { params: Promise<{ locale: str
         <Seccion className="py-16">
           <h2 className="tipo-titular text-3xl">{t("faqTitulo")}</h2>
           <div className="mt-6 divide-y divide-linea border-y border-linea">
-            {(["1", "2", "3", "4", "5"] as const).map((n) => (
+            {(["1", "2", "3", "4", "5", "6"] as const).map((n) => (
               <details key={n} className="group py-4">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-md font-semibold">
                   {t(`faq.${n}.p`)}

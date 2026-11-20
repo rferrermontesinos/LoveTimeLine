@@ -101,6 +101,23 @@ export function filaBienOrdenada(fechas: FechaCarta[]): boolean {
   return true;
 }
 
+/**
+ * Huecos de una línea donde una carta encaja (0 = antes de todas; `linea.length` = después de
+ * todas), con la regla de las fechas incompletas de los dos tipos de juego: dos cartas del mismo
+ * año valen en cualquier orden si alguna solo dice el año, y lo mismo con el mes si alguna no dice
+ * el día. Se compara con toda la línea, no solo con las vecinas: «marzo de 2015» no encaja después
+ * de «2015» si antes hay «junio de 2015».
+ */
+export function huecosValidos(linea: FechaCarta[], carta: FechaCarta): number[] {
+  const huecos: number[] = [];
+  for (let i = 0; i <= linea.length; i++) {
+    const antes = linea.slice(0, i).every((a) => puedeIrAntes(a, carta));
+    const despues = linea.slice(i).every((b) => puedeIrAntes(carta, b));
+    if (antes && despues) huecos.push(i);
+  }
+  return huecos;
+}
+
 export function mismaFecha(a: FechaCarta, b: FechaCarta): boolean {
   return aIso(a) === aIso(b);
 }

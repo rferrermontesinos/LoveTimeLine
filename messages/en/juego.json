@@ -2,7 +2,7 @@
   "juego": {
     "titulo": "How to play",
     "intro": "A game for putting your memories in order. Each card has the photo on the front and the date on the back: place it in the memory line where you think it goes, flip it and see if you got it right.",
-    "mesaAlt": "A game in progress seen from above: in the middle of the table, the memory line with the cards in date order and a gap where someone is about to place theirs; around it, two players’ cards photo side up, the draw pile, a joker and a blank card.",
+    "mesaAlt": "A game in progress seen from above: in the middle of the table, the memory line with the cards in date order and a gap where someone is about to place theirs; around it, two players’ cards photo side up, the rest of the deck, a joker and a blank card.",
     "mesa": {
       "titulo": "What a game looks like",
       "texto": "The photo on each card is the clue; the date on the back, the answer.",
@@ -11,7 +11,6 @@
         "linea": "The memory line: cards already placed, date side up and in order. Some are memories with no photo, just text.",
         "candidata": "On your turn, pick one of your cards and put it where you think it goes. Then flip it: does the date fit?",
         "manos": "Each player’s cards, photo side up and date hidden.",
-        "robo": "The draw pile, for when you miss in Classic.",
         "comodin": "The jokers, to ask for a hint or swap a card.",
         "enBlanco": "A blank card, to write down the memories that come up while playing."
       }
@@ -63,12 +62,16 @@
         "When someone places their last card correctly, finish the round so everyone gets the same number of turns.",
         "If only one player has run out of cards, they win.",
         "If several have, they play a tiebreak: each draws a card and places it, and anyone who misses is out. If everyone hits or everyone misses, play another round until only one is left."
-      ]
+      ],
+      "empates": {
+        "titulo": "Same year?",
+        "texto": "If your card or the one in the line only shows the year, either order is right: the card stays. Same with the month if one has no day."
+      }
     },
     "historia": {
       "preparacion": [
         "Shuffle the memory cards date side down and deal 7 to each player, photo side up for everyone to see. Nobody looks at the dates.",
-        "Put the starting card in the middle, as in Classic. If you have jokers, they belong to the team.",
+        "Flip the top card of the deck and put it in the middle, date side up: it starts the memory line. If you have jokers, they belong to the team.",
         "You get as many lives as players with cards, plus one: 3 for 2 players, 4 for 3… Keep count with coins or whatever you have to hand.",
         "If the person who made the deck plays, they don’t get cards: they’re the memory keeper. They answer hints and tell each story when the card is flipped.",
         "The oldest player starts, and play goes clockwise."
@@ -85,7 +88,11 @@
       ],
       "completa": "The whole story",
       "completaTexto": "To play with the whole deck, great for two: at the end of each turn, draw back up to 7 cards while the deck lasts. Start with one life for every 8 cards in the deck.",
-      "dificultad": "Too easy? Start with one life fewer. Too hard? The memory keeper can say “before” or “after” once per card."
+      "dificultad": "Too easy? Start with one life fewer. Too hard? The memory keeper can say “before” or “after” once per card.",
+      "empates": {
+        "titulo": "Same year?",
+        "texto": "If your card or the one in the line only shows the year, either order is right: no life lost. Same with the month if one has no day."
+      }
     },
     "mecanicas": {
       "titulo": "Corner icons",
@@ -100,7 +107,6 @@
         "texto": "If a memory comes up that isn’t in the deck, write it on a blank card with the date on the back. It joins the next game."
       }
     },
-    "consejo": "For your first game, play Our story with the deck maker as memory keeper. For the second, everyone with their own cards.",
     "cta": {
       "titulo": "Shall we play with your memories?",
       "texto": "Upload your photos, check the dates and choose the colours. We’ll take care of the rest."

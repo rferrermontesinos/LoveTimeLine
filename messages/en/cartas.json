@@ -58,7 +58,7 @@
     "adornos": "Emojis",
     "borrarCarta": "Delete card",
     "borrada": "Card deleted.",
-    "calidadJusta": "Low-resolution photo ({ppp} ppi): it may print a bit blurry.",
+    "calidadJusta": "It may print a little blurry ({ppp} dpi), but if the memory is good, it’s worth it.",
     "calidadConfirmar": "Print it anyway",
     "calidadConfirmada": "It will print like this",
     "sinCartas": "No cards yet. Add photos in step 1 or write a memory without a photo.",

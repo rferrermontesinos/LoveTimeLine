@@ -10,6 +10,7 @@ import {
   FONDOS,
   FORMATOS,
   MARCAS,
+  SIN_MARCA,
   PIEZAS,
   PROPORCION_CARTA,
   PROPORCION_ESCENA,
@@ -209,11 +210,14 @@ describe.each(FORMATOS)("escena de la mesa, formato %s", (formato) => {
 });
 
 describe("leyenda de la escena", () => {
-  it("numera del 1 al 6 sin repetir y cubre todo lo que hay en la mesa", () => {
-    expect(MARCAS.map((m) => m.numero)).toEqual([1, 2, 3, 4, 5, 6]);
+  it("numera del 1 al 5 sin repetir y cubre todo lo que hay en la mesa menos el resto del mazo", () => {
+    expect(MARCAS.map((m) => m.numero)).toEqual([1, 2, 3, 4, 5]);
     expect(new Set(MARCAS.map((m) => m.clave)).size).toBe(MARCAS.length);
     const senalados = new Set(MARCAS.flatMap((m) => m.papeles));
-    for (const p of PIEZAS) expect(senalados.has(p.papel), p.id).toBe(true);
+    for (const p of PIEZAS) expect(senalados.has(p.papel) || SIN_MARCA.includes(p.papel), p.id).toBe(true);
+    // El resto del mazo se dibuja, pero sin número (Ricard, 20-11-2026).
+    expect(PIEZAS.some((p) => p.papel === "robo")).toBe(true);
+    for (const papel of SIN_MARCA) expect(senalados.has(papel), papel).toBe(false);
   });
 
   it("todas las piezas salen al menos en un formato y los ids no se repiten", () => {
