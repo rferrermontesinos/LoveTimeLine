@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { esDispositivoEscaner, esNombreDeEscaneo, senalesDeEscaneo, sinDiacriticos } from "./escaneo";
-import type { FechaCarta } from "./fecha";
-import { aceptableEnLote, sesionDeEscaneo } from "./sesion";
+import { proponerFecha, type ResultadoFecha } from "./proponer";
+import { crearDetectorSesion, diaDeSesion, idsEnSesionGuardada, MINIMO_SESION_ESCANEO } from "./sesion";
 
 describe("senalesDeEscaneo: metadatos", () => {
   it.each([
@@ -119,46 +119,40 @@ describe("senalesDeEscaneo: nombre y carpeta", () => {
   });
 });
 
-describe("sesionDeEscaneo", () => {
-  const reciente = (dia: number) => ({ fecha: null, sugerencias: [{ fecha: { anio: 2026, mes: 10, dia }, motivo: "fecha-reciente" as const }] });
-  it("detecta muchas fotos sin fecha cuya pista es el mismo día reciente", () => {
-    const cartas = [...Array.from({ length: 6 }, () => reciente(30)), reciente(29), { fecha: { anio: 2019 } }];
-    expect(sesionDeEscaneo(cartas)).toEqual({ dia: { anio: 2026, mes: 10, dia: 30 }, fotos: 6 });
+describe("sesiones de fotos de fotos en una subida", () => {
+  const hoy = new Date(2026, 10, 20, 12);
+  const camara = (iso: string, extra = ""): ResultadoFecha =>
+    proponerFecha({ nombreArchivo: `IMG_${iso.replaceAll("-", "")}_1015${extra || "00"}.jpg`, exif: { Make: "Apple", Model: "iPhone 13", DateTimeOriginal: `${iso.replaceAll("-", ":")} 10:15:00` }, hoy });
+
+  it("diaDeSesion: solo fechas de cámara con día de las últimas semanas", () => {
+    expect(diaDeSesion(camara("2026-11-02"), hoy)).toBe("2026-11-02");
+    expect(diaDeSesion(camara("2026-09-25"), hoy)).toBe("2026-09-25");
+    expect(diaDeSesion(camara("2026-08-01"), hoy)).toBeNull();
+    expect(diaDeSesion(proponerFecha({ nombreArchivo: "2026-11-02 cena.jpg", hoy }), hoy)).toBeNull(); // escrita por una persona
+    expect(diaDeSesion(proponerFecha({ nombreArchivo: "IMG-20261002-WA0001.jpg", hoy }), hoy)).toBeNull(); // envío
   });
 
-  it("no avisa con pocas fotos, con otras pistas o con fechas ya puestas", () => {
-    expect(sesionDeEscaneo(Array.from({ length: 4 }, () => reciente(30)))).toBeNull();
-    const envio = { fecha: null, sugerencias: [{ fecha: { anio: 2026, mes: 10, dia: 30 }, motivo: "fecha-de-envio" as const }] };
-    expect(sesionDeEscaneo(Array.from({ length: 8 }, () => envio))).toBeNull();
-    expect(sesionDeEscaneo(Array.from({ length: 8 }, () => ({ ...reciente(30), fecha: { anio: 2026, mes: 10, dia: 30 } })))).toBeNull();
-  });
-});
-
-describe("aceptableEnLote", () => {
-  const hoy = new Date(2026, 10, 4, 12);
-  const con = (motivo?: "fecha-reciente" | "fecha-de-envio" | "fecha-anotada", fecha: FechaCarta = { anio: 2019, mes: 8, dia: 14 }) => ({
-    fecha: null,
-    sugerencias: [{ fecha, ...(motivo ? { motivo } : {}) }],
+  it("al llegar al mínimo del mismo día, esa foto y las anteriores de ese día van en blanco", () => {
+    expect(MINIMO_SESION_ESCANEO).toBe(5);
+    const d = crearDetectorSesion(hoy);
+    for (const id of ["a", "b", "c", "d"]) expect(d.registrar(id, camara("2026-11-02"))).toEqual({ enBlanco: false, anteriores: [] });
+    expect(d.registrar("x", camara("2026-10-30"))).toEqual({ enBlanco: false, anteriores: [] });
+    expect(d.registrar("e", camara("2026-11-02"))).toEqual({ enBlanco: true, anteriores: ["a", "b", "c", "d"] });
+    expect(d.registrar("f", camara("2026-11-02"))).toEqual({ enBlanco: true, anteriores: [] });
+    // Otro día no se contagia.
+    expect(d.registrar("y", camara("2026-10-30"))).toEqual({ enBlanco: false, anteriores: [] });
   });
 
-  it("deja fuera las fechas recientes, que pueden ser de una copia, un escaneo o un reenvío", () => {
-    expect(aceptableEnLote(con("fecha-reciente", { anio: 2026, mes: 11, dia: 2 }), hoy)).toBe(false);
-    // Una foto antigua reenviada este año por WhatsApp: la fecha es la del envío.
-    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2026, mes: 10, dia: 20 }), hoy)).toBe(false);
-    expect(aceptableEnLote(con("fecha-anotada", { anio: 2026 }), hoy)).toBe(false);
-    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2025, mes: 11, dia: 6 }), hoy)).toBe(false);
-  });
-
-  it("acepta las otras pistas, si no son recientes", () => {
-    expect(aceptableEnLote(con("fecha-de-envio"), hoy)).toBe(true);
-    expect(aceptableEnLote(con("fecha-anotada"), hoy)).toBe(true);
-    expect(aceptableEnLote(con(), hoy)).toBe(true);
-    expect(aceptableEnLote(con("fecha-de-envio", { anio: 2025, mes: 10, dia: 1 }), hoy)).toBe(true);
-  });
-
-  it("no toca cartas con fecha ni cartas sin pistas", () => {
-    expect(aceptableEnLote({ ...con("fecha-de-envio"), fecha: { anio: 2019 } }, hoy)).toBe(false);
-    expect(aceptableEnLote({ fecha: null }, hoy)).toBe(false);
-    expect(aceptableEnLote({ fecha: null, sugerencias: [] }, hoy)).toBe(false);
+  it("idsEnSesionGuardada: en un mazo guardado, sugerencias recientes repetidas del mismo día", () => {
+    const anadida = new Date(2026, 10, 18, 12).getTime();
+    const carta = (id: string, dia: number, motivo: "fecha-reciente" | "fecha-de-envio" = "fecha-reciente") => ({
+      id,
+      fecha: null,
+      anadidaEn: anadida,
+      sugerencias: [{ fecha: { anio: 2026, mes: 10, dia }, motivo }],
+    });
+    const cartas = [...["a", "b", "c", "d", "e"].map((id) => carta(id, 25)), carta("f", 24), ...["g", "h", "i", "j", "k"].map((id) => carta(id, 20, "fecha-de-envio"))];
+    expect([...idsEnSesionGuardada(cartas)].sort()).toEqual(["a", "b", "c", "d", "e"]);
+    expect(idsEnSesionGuardada(cartas.slice(1))).toEqual(new Set());
   });
 });

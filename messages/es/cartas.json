@@ -1,10 +1,20 @@
 {
   "cartas": {
     "titulo": "Completa las cartas",
-    "texto": "Cada carta necesita su fecha. Añade una frase si quieres y encuadra la foto. Se guarda solo.",
+    "texto": "Revisa la fecha de cada carta y, si quieres, añade una frase. Se guarda solo.",
     "posicion": "Carta {actual} de {total}",
-    "configuradas": "{n} de {total} listas",
-    "siguientePendiente": "Siguiente pendiente",
+    "progreso": {
+      "faltan": "{n, plural, one {Te falta # carta por completar} other {Te faltan # cartas por completar}}",
+      "listas": "{n} de {total} cartas listas",
+      "siguiente": "Completar la siguiente"
+    },
+    "listo": {
+      "titulo": "¡Tu mazo está listo!",
+      "texto": "{n, plural, one {La carta tiene su fecha y está correcta.} other {Las # cartas tienen su fecha y están correctas.}} Ahora, elige el estilo.",
+      "tituloFaltan": "Todas las cartas están listas",
+      "faltanMinimo": "Para completar el pack, {n, plural, one {te falta # carta más} other {te faltan # cartas más}}: añade fotos o un recuerdo sin foto."
+    },
+    "vistaPrevia": "Vista previa de la carta",
     "estado": {
       "lista": "Carta lista",
       "pendiente": "Pendiente: {motivos}",
@@ -19,10 +29,20 @@
       "texto-vacio": "falta el texto",
       "texto-con-hueco": "completa lo que va entre corchetes"
     },
-    "tiraEtiqueta": "Todas las cartas",
-    "tiraItem": "{nombre}, {fecha}, {estado, select, lista {lista} other {pendiente}}",
     "cartaSinFoto": "Carta sin foto",
     "sinFechaCorta": "sin fecha",
+    "mazo": {
+      "titulo": "Tu mazo",
+      "ayuda": "Ordenado por fecha, como se jugará. Toca una carta para abrirla: las del punto amarillo están por completar.",
+      "sinFecha": "Sin fecha · {n}",
+      "carta": "{nombre}, {fecha}, {estado, select, lista {lista} other {por completar}}",
+      "anadirFotos": "Añadir más fotos",
+      "arrastrar": "o suéltalas aquí"
+    },
+    "sinFoto": {
+      "titulo": "¿Algún recuerdo sin foto?",
+      "otro": "Escribir el tuyo"
+    },
     "descripcion": "Frase del recuerdo (opcional)",
     "descripcionAyuda": "Sale en la cara de la fecha. Hasta {max} caracteres.",
     "descripcionContador": "{n} / {max}",
@@ -30,19 +50,14 @@
     "textoRecuerdo": "Texto del recuerdo",
     "textoRecuerdoAyuda": "Sale en las dos caras de la carta. Hasta {max} caracteres.",
     "completarHueco": "Completar <h>{hueco}</h>",
-    "estrella": "Recuerdo estrella",
-    "estrellaAyuda": "Quien la acierte, juega otra vez. Hasta {max} por mazo.",
-    "estrellaMax": "Ya tienes {max} recuerdos estrella.",
     "encuadrar": "Encuadrar",
     "girar": "Girar",
     "adornos": "Emojis",
     "borrarCarta": "Borrar carta",
     "borrada": "Carta borrada.",
-    "calidad": "Calidad de impresión",
-    "calidadBuena": "Buena ({ppp} ppp)",
-    "calidadJusta": "Justa ({ppp} ppp): puede verse algo borrosa",
+    "calidadJusta": "Foto con poca resolución ({ppp} ppp): puede imprimirse algo borrosa.",
     "calidadConfirmar": "Imprimir igualmente",
-    "calidadConfirmada": "Confirmado: se imprimirá así",
+    "calidadConfirmada": "Se imprimirá así",
     "sinCartas": "Aún no hay cartas. Añade fotos en el paso 1 o escribe un recuerdo sin foto.",
     "irAFotos": "Ir a las fotos",
     "atajos": "Atajos: ← y → para moverte entre cartas.",

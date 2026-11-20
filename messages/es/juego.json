@@ -90,11 +90,6 @@
     "mecanicas": {
       "titulo": "Iconos de la esquina",
       "texto": "Algunas cartas llevan un icono en la esquina. Esto es lo que hace cada uno.",
-      "estrella": {
-        "nombre": "Recuerdo estrella",
-        "clasico": "Si lo colocas bien, juegas otra vez.",
-        "historia": "Si lo colocáis bien, recuperáis una vida (nunca más de las del principio)."
-      },
       "comodin": {
         "nombre": "Comodín",
         "clasico": "Cuando falles y te quedes con más cartas que nadie, coge un comodín si queda alguno (uno por persona). Úsalo antes de colocar: pide una pista a quien hizo el mazo («¿antes o después de esta carta?») o cambia una de tus cartas por la primera del mazo. Después vuelve a la caja. Si quien hizo el mazo no está, solo vale el cambio.",

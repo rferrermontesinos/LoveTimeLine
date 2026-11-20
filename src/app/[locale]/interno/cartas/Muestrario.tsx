@@ -25,7 +25,7 @@ export interface MecanicaMuestrario {
 /**
  * Fotos de muestra de la web (public/muestras, de Pexels; créditos en public/muestras/creditos.json),
  * nunca fotos de clientes. Las claves son las de las cartas de ejemplo: «mar» es el viaje, «luces»
- * el recuerdo estrella y «montanas» la foto de la caja.
+ * la que lleva la frase también delante y «montanas» la foto de la caja.
  */
 const FOTOS = { mar: "/muestras/playa.jpg", luces: "/muestras/nochevieja.jpg", montanas: "/muestras/montana.jpg" } as const;
 type ClaveFoto = keyof typeof FOTOS;
@@ -38,7 +38,7 @@ const CARTAS_DEL_MAZO = 60;
 const CARAS: Cara[] = ["anverso", "reverso"];
 const TODAS = "todas";
 
-type ClaveSeccion = "foto" | "estrella" | "texto" | "textoLargo" | "portada" | "comodin" | "enBlanco" | "cajaPersonalizada" | "cajaGenerica";
+type ClaveSeccion = "foto" | "fraseDelante" | "texto" | "textoLargo" | "portada" | "comodin" | "enBlanco" | "cajaPersonalizada" | "cajaGenerica";
 /** Secciones con una nota debajo del título. */
 const CON_NOTA = ["textoLargo", "cajaPersonalizada", "cajaGenerica"] as const;
 const tieneNota = (id: ClaveSeccion): id is (typeof CON_NOTA)[number] => (CON_NOTA as readonly string[]).includes(id);
@@ -87,10 +87,10 @@ function mazoDeEjemplo(estilo: Estilo, idioma: string, imagenes: Imagenes): Mazo
   };
   const cartas: Carta[] = [
     foto("mar", { anio: 2019, mes: 8, dia: 14 }, { descripcion: e.foto }),
-    foto("luces", { anio: 2021, mes: 12 }, { descripcion: e.estrella, descripcionEnAnverso: true, destacada: true }),
+    foto("luces", { anio: 2021, mes: 12 }, { descripcion: e.fraseDelante, descripcionEnAnverso: true }),
     foto("montanas", { anio: 2015, mes: 5 }),
     nuevaCartaTexto("conocimos", e.texto, { anio: 2010, mes: 3, dia: 6 }, 0),
-    { ...nuevaCartaTexto("largo", e.textoLargo, { anio: 2016 }, 0), destacada: true },
+    nuevaCartaTexto("largo", e.textoLargo, { anio: 2016 }, 0),
   ];
   // Relleno que no se dibuja: solo cuenta en «2010–2021 · 60 recuerdos».
   for (let i = cartas.length; i < CARTAS_DEL_MAZO; i++) cartas.push(nuevaCartaTexto(`relleno-${i}`, "", { anio: 2010 + (i % 12) }, 0));
@@ -156,9 +156,9 @@ export function Muestrario({ mecanicas }: { mecanicas: MecanicaMuestrario[] }) {
 
   const muestras: Muestra[] = [
     { id: "foto", datos: () => ({ ...datosCarta(carta("mar"), null), foto: fotoDe(carta("mar"), imagenes) }) },
-    { id: "estrella", datos: () => ({ ...datosCarta(carta("luces"), icono("estrella")), foto: fotoDe(carta("luces"), imagenes) }) },
+    { id: "fraseDelante", datos: () => ({ ...datosCarta(carta("luces"), null), foto: fotoDe(carta("luces"), imagenes) }) },
     { id: "texto", datos: () => datosCarta(carta("conocimos"), null) },
-    { id: "textoLargo", datos: () => datosCarta(carta("largo"), icono("estrella")) },
+    { id: "textoLargo", datos: () => datosCarta(carta("largo"), null) },
     { id: "portada", datos: (cara) => ({ ...datosPortada(mazo, cara), foto: fotoDe(portada, imagenes) }) },
     { id: "comodin", datos: () => ({ tipo: "comodin", icono: icono("comodin") }) },
     { id: "enBlanco", datos: () => ({ tipo: "en-blanco", icono: icono("en-blanco") }) },

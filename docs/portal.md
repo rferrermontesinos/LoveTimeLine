@@ -1,6 +1,6 @@
 # Portal: arquitectura, decisiones y puesta en marcha
 
-Versión del 4 de noviembre de 2026, con los cambios que pidió Ricard ese mismo día (packs por tamaño, dos tipos de juego, fechas solo cuando son seguras, recuerdos sin foto, cartas sin franja de meses, caja personalizada, guardado en el dispositivo). Acompaña al prototipo navegable del portal. Lo que cambia el producto está en [especificacion.md](especificacion.md); aquí está cómo está hecho y qué queda por decidir.
+Versión del 20 de noviembre de 2026. Recoge los cambios que pidió Ricard el 4 de noviembre (packs por tamaño, dos tipos de juego, recuerdos sin foto, cartas sin franja de meses, caja personalizada, guardado en el dispositivo) y los del 20 de noviembre: pantallas de Fotos y Cartas más simples, fechas que se ponen solas en casi todas las fotos, el mazo entero a la vista en Cartas, cartas sin recuadros «?» y sin recuerdo estrella, y Estilo sin foto de portada ni tono. Acompaña al prototipo navegable del portal. Lo que cambia el producto está en [especificacion.md](especificacion.md); aquí está cómo está hecho y qué queda por decidir.
 
 ## Decisiones que esperan a Ricard
 
@@ -8,9 +8,9 @@ Versión del 4 de noviembre de 2026, con los cambios que pidió Ricard ese mismo
 | --- | --- | --- | --- |
 | 1 | **Las fotos no salen del dispositivo.** Se guardan en el navegador (IndexedDB) y el PDF de impresión se genera también en el navegador. Es una desviación del stack (`sharp` + `pdf-lib` en el servidor). | Para la prueba de los 4 socios no hace falta subir fotos de menores a ningún servidor, cuesta 0 € y funciona sin cuentas. El renderizador es el mismo en pantalla y en el PDF, así que lo que se ve es lo que se imprime. | Para clientes reales: subir originales a Supabase Storage (TUS, ya está `tus-js-client`) y generar el PDF en el servidor al confirmarse el pago. |
 | 2 | **Sin registro.** El borrador vive en el dispositivo, se guarda solo, se recupera al volver otro día y se puede seguir sin conexión. | Menos fricción para la prueba y nada que perder si se corta la conexión. | Pedir el email en el paso 4, antes de pagar, y sincronizar el borrador con Supabase. |
-| 3 | **Extras de juego gratis, extras opcionales de pago.** Recuerdos estrella, 2 comodines y 4 cartas en blanco van incluidos; segunda copia, envoltorio de regalo, envío urgente y caja personalizada se pagan. | Las mecánicas hacen el juego mejor sin pedir decisiones de compra; los extras suben el ticket medio. | Cualquiera se mueve entre las dos listas cambiando `supabase/catalogo.json`. |
+| 3 | **Extras de juego gratis, extras opcionales de pago.** 2 comodines y 4 cartas en blanco van incluidos (el recuerdo estrella se retiró el 20 de noviembre); segunda copia, envoltorio de regalo, envío urgente y caja personalizada se pagan. | Las mecánicas hacen el juego mejor sin pedir decisiones de compra; los extras suben el ticket medio. | Cualquiera se mueve entre las dos listas cambiando `supabase/catalogo.json`. |
 | 4 | **Precios propuestos** (pendientes de Pau): ver tabla de abajo. | Tres packs por tamaño con su claim; cada carta de más se cobra suelta, los avisos de oferta dicen cuándo sale a cuenta pasar al pack mayor y, en cuanto sale más barato, se aplica solo. | Los precios viven en la base de datos (`packs`, `ajustes_catalogo`, `extras`), nunca en el código. |
-| 5 | **Fechas: solo se rellenan cuando son seguras.** Una fecha con día de hace menos de 365 días no se rellena sola (`DIAS_FECHA_RECIENTE`); 5 fotos o más con el mismo día reciente avisan de una posible sesión de escaneo (`MINIMO_SESION_ESCANEO`); si la fecha escrita en el nombre no coincide con la de la cámara, aunque solo sea en el año o el mes, la carta queda en blanco con las dos como sugerencia; los contadores de cámara (`IMGP2015.JPG`) no cuentan como año, a cambio de que «Roma2014.jpg» se quede sin año. Las sugerencias recientes (de una copia, un escaneo o un reenvío por WhatsApp) no entran en «Usar las N fechas sugeridas»: se aceptan una a una, desde su carta (`aceptableEnLote`). En Cartas, «Siguiente» con la fecha en blanco lleva primero a ponerla; pulsándolo otra vez, se deja para luego. | Es lo que pidió Ricard: mejor en blanco que con la fecha en que se digitalizó la foto. | Cada umbral es una constante en `src/domain/fechas/`; el choque nombre/cámara puede limitarse a cuando el nombre trae el día. |
+| 5 | **Fechas: se ponen solas casi siempre; en blanco, solo las que seguramente son de preparar el mazo.** Quedan en blanco una fecha de cámara de los últimos 7 días (`DIAS_PREPARACION`), una de WhatsApp o de captura del último mes (`DIAS_PREPARACION_ENVIO`), 5 fotos de cámara o más del mismo día de las últimas 9 semanas en una subida, que serán fotos de fotos (`MINIMO_SESION_ESCANEO`, `DIAS_SESION_ESCANEO`), y un escaneo sin fecha escrita. Las de WhatsApp y las capturas más antiguas se ponen con solo el mes y llevan «≈» (aproximadas), sin frenar el pedido. La fecha del archivo nunca se pone sola. Los contadores de cámara (`IMGP2015.JPG`) no cuentan como año, a cambio de que «Roma2014.jpg» se quede sin año. | Ricard, 20 de noviembre: que el cliente pierda el menor tiempo posible, sin fechas que no sean (una foto con la fecha de hoy es, casi seguro, de pasársela para el mazo). | Cada umbral es una constante en `src/domain/fechas/`. CLAUDE.md dice que las fechas de confianza baja quedan «para revisar»: ahora las aproximadas llevan «≈» y una explicación en su carta, pero no piden confirmación; si se prefiere, pueden volver a pedirla. |
 | 6 | **Descarga del PDF en la confirmación solo durante el prototipo.** La controla `NEXT_PUBLIC_DESCARGA_PDF` en `config/prototipo.ts` (activa salvo que valga `0`), y solo con el pedido pagado. | Los 4 socios necesitan el PDF para las pruebas de imprenta; para clientes no se podrá descargar. | Con Supabase, el PDF se genera en el servidor y solo lo ve la administración. |
 
 ## Precios del prototipo
@@ -41,17 +41,25 @@ Dos tipos, en la web (`/como-jugar`) y en el folleto. Los textos están en `mess
 
 Cuántas personas caben según el pack (7 cartas cada una y algo de mazo para robar): Pequeño, de 2 a 4 (5 como mucho); Mediano, de 2 a 6; Grande, de 2 a 6 o por parejas.
 
-**Iconos de la esquina:** el recuerdo estrella (en el Clásico juegas otra vez; en Nuestra historia recuperáis una vida), el comodín (pista de quien hizo el mazo o cambio de carta) y la carta en blanco (para los recuerdos que salen jugando).
+**Iconos de la esquina:** el comodín (pista de quien hizo el mazo o cambio de carta) y la carta en blanco (para los recuerdos que salen jugando). El recuerdo estrella se retiró el 20 de noviembre: los mazos guardados que lo tenían lo pierden al abrirse, sin más cambios.
 
-## Fechas: solo cuando son seguras
+## Fechas: solas casi siempre
 
 `src/domain/fechas/proponer.ts` decide, en el navegador y sin guardar los metadatos en bruto:
 
-- **Se rellena sola** si es la fecha original de una cámara sin señales de escaneo, la del nombre que pone la cámara del móvil (`IMG_20190814_…`, `PXL_…`, `20190814_123045`) o una fecha escrita por una persona en el nombre («abuelos 1958», «2015-08 Menorca»).
-- **Solo se sugiere** (la carta queda en blanco con hasta dos fechas y su motivo) si es reciente, si viene de WhatsApp u otra mensajería, de una captura de pantalla, de la fecha del archivo o de una foto con señales de escaneo (escáneres, programas y apps de escaneo, carpetas «Escaneos»).
-- **Nunca se usa** la fecha de digitalización de un escaneo ni la de un reloj sin configurar.
+- **Se pone sola** la fecha de la cámara (la original de los datos de la foto, o la del nombre que pone el móvil: `IMG_20190814_…`, `PXL_…`, `20190814_123045`); la escrita por una persona en el nombre, en los metadatos o en la carpeta («abuelos 1958», «2015-08 Menorca», «Menorca 2015/»), que gana a la de la cámara si es anterior (una foto de una foto antigua) y, la de la carpeta, solo si es de 2 años antes o más; y, con solo el mes y la marca «≈», la de envío de WhatsApp u otra mensajería o la de una captura de pantalla de hace más de un mes. Un escáner que guarda la fecha original (1987) también la pone.
+- **Queda en blanco**, con la fecha que trae como sugerencia de un toque y su porqué, si seguramente es de preparar el mazo: cámara de los últimos 7 días, WhatsApp o captura del último mes, 5 o más fotos de cámara del mismo día de las últimas 9 semanas en una subida (fotos de fotos) o un escaneo sin fecha escrita.
+- **Nunca se pone sola** la fecha del archivo (es la de la copia o la descarga; como mucho se sugiere, y nunca la del último mes), la de digitalización de un escaneo ni la de un reloj sin configurar.
+- **Mazos ya guardados:** al abrirse con estas reglas, las cartas que quedaron en blanco con una sugerencia que ahora se pondría sola pasan a tenerla, una sola vez (`mejorarFechasGuardadas` en `src/lib/mazo/migrar.ts`). No se tocan las cartas con fecha ni las puestas a mano, y no se borra nada.
 
-Una carta está lista con una fecha válida y no futura, la frase dentro del límite y, si es un recuerdo sin foto, el texto completo (sin huecos como «[nombre]»). Hasta que lo están todas, Estilo y Pedido se bloquean y todo lleva a la siguiente pendiente (`src/domain/mazo/configuracion.ts`).
+Una carta está lista con una fecha válida y no futura, la frase dentro del límite y, si es un recuerdo sin foto, el texto completo (sin huecos como «[nombre]»). Estilo y Pedido se abren en cuanto hay alguna carta; lo que espera a que estén todas listas es el pago (`src/domain/mazo/configuracion.ts`). En Cartas, un aviso grande dice cuántas faltan, con «Completar la siguiente», o que el mazo está listo; en Estilo y Pedido lo dice la barra de abajo.
+
+## Pantallas del configurador
+
+1. **Fotos:** el permiso (si se intenta añadir fotos sin él, se resalta y dice qué falta), elegir fotos o una carpeta o arrastrarlas, y la cuadrícula ordenada por fecha con las que no tienen al final. Una sola herramienta: «Seleccionar», para poner la misma fecha a varias o borrarlas.
+2. **Cartas:** el aviso de cuántas faltan; la carta abierta, con sus dos caras y sus herramientas (encuadrar, girar, emojis, borrar) a un lado y su fecha y su frase al otro, a la misma altura; y debajo el mazo entero como se jugará, por años y con las que no tienen fecha al final, «Añadir más fotos» (también soltándolas) y, discretas, ideas de recuerdos sin foto («El día que nos conocimos»…). La calidad de impresión solo aparece, en una línea, si la foto se queda corta.
+3. **Estilo:** colores, título, dedicatoria, idioma del mazo, caja y extras de juego. La foto de portada es automática (la más reciente con fecha) y las fotos salen siempre con su color.
+4. **Pedido:** el pack, la línea del tiempo (la misma vista del mazo que en Cartas), las comprobaciones, los extras y el pago, que no se activa hasta que todas las cartas están listas.
 
 ## Cómo está hecho
 
@@ -150,13 +158,13 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 
 | Qué | Cómo | Estado |
 | --- | --- | --- |
-| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla) | `pnpm test` (Vitest) | 627 pruebas en 44 archivos |
-| Configurador de principio a fin (empezar en Fotos con un pack, fechas sugeridas y recientes, «Siguiente» con la fecha en blanco, recuerdo sin foto, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 18 |
+| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla) | `pnpm test` (Vitest) | 653 pruebas en 45 archivos |
+| Configurador de principio a fin (empezar en Fotos con un pack, fechas solas y aproximadas, la misma fecha a varias, fechas de preparar el mazo y fotos de fotos, Estilo y Pedido con cartas pendientes, «Siguiente» con la fecha en blanco, recuerdo sin foto desde las ideas, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 22 |
 | Volver sin conexión y service worker tras un despliegue | `tests/e2e/sin-conexion.spec.ts` | 4 |
 | Portada, «Cómo se juega», créditos de las fotos y rutas internas cerradas | `tests/e2e/paginas.spec.ts` | 32 |
 | Migración, semilla y RLS | `pnpm db:test` | 19 comprobaciones |
 
-Las pruebas de Playwright (`pnpm test:e2e`, 56 en total entre escritorio y móvil; 4 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera un PDF de impresión con datos ficticios: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
+Las pruebas de Playwright (`pnpm test:e2e`, 58 en total entre escritorio y móvil; 5 se saltan a propósito porque solo tienen sentido en uno de los dos) compilan la web con `NEXT_PUBLIC_DESCARGA_PDF=1`. `pnpm print:sample` genera un PDF de impresión con datos ficticios: recorre el portal como un cliente con fotos sintéticas y deja en `salidas/` un mazo con portada y dedicatoria, una carta con frase, un recuerdo sin foto, las cartas de las mecánicas y la caja personalizada (`--sin-caja` la quita).
 
 ## Siguientes pasos
 

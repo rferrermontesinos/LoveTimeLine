@@ -1,14 +1,25 @@
 import { esFechaDeRelojPorDefecto, primeraFechaUtil, type MetadatosFecha, type ValorFecha } from "./exif";
 import { senalesDeEscaneo, type SenalEscaneo } from "./escaneo";
-import { aIso, ANIO_MINIMO, diferenciaDias, esFutura, fechaDeInstante, precisionDe, rangoDias, type FechaCarta } from "./fecha";
-import { fechaDesdeNombre, type FechaDesdeNombre } from "./nombre-archivo";
+import { aIso, ANIO_MINIMO, conPrecision, diferenciaDias, esFutura, fechaDeInstante, precisionDe, rangoDias, type FechaCarta } from "./fecha";
+import { fechaDesdeCarpeta, fechaDesdeNombre, type FechaDesdeNombre } from "./nombre-archivo";
 
-export type FuenteFecha = "exif" | "nombre" | "archivo" | "manual";
+export type FuenteFecha = "exif" | "nombre" | "carpeta" | "archivo" | "manual";
 /** Fuentes que se detectan solas (todas menos la puesta a mano). */
 export type FuenteDetectada = Exclude<FuenteFecha, "manual">;
 export type Confianza = "alta" | "media" | "baja";
 
-/** Por qué una fecha queda en blanco o solo se sugiere. Se muestra al cliente en lenguaje llano. */
+/**
+ * De qué pista sale una fecha puesta sola, que dice cuánto fiarse de ella:
+ * - camara: la que guarda la cámara al hacer la foto (fecha original con datos de cámara, o el
+ *   nombre que pone el móvil, como IMG_20190814_123045);
+ * - metadatos: otra fecha de los metadatos (original sin datos de cámara, la anotada por un
+ *   programa de fotos o la original que guarda un escáner);
+ * - escrito: la que escribió una persona en el nombre del archivo o de la carpeta;
+ * - envio: la de envío o de captura (WhatsApp, capturas de pantalla), aproximada: solo el mes.
+ */
+export type PistaFecha = "camara" | "metadatos" | "escrito" | "envio";
+
+/** Por qué una fecha queda en blanco (o, en mazos antiguos, solo se sugería). Se explica en lenguaje llano. */
 export type MotivoRevision =
   | "fecha-del-archivo"
   // Solo en mazos guardados antes del 4 de noviembre de 2026, cuando las fechas dudosas se
@@ -23,27 +34,30 @@ export type MotivoRevision =
   | "fecha-de-envio"
   | "captura-de-pantalla"
   | "sin-datos-de-camara"
-  | "fecha-digitalizacion";
+  | "fecha-digitalizacion"
+  /** Muchas fotos de cámara del mismo día reciente en una subida: seguramente fotos de fotos. */
+  | "sesion-de-escaneo";
 
-/** Fecha segura: se rellena sola. */
+/** Fecha que se pone sola. */
 export interface FechaSegura {
   fecha: FechaCarta;
   fuente: FuenteDetectada;
   confianza: Confianza;
+  pista: PistaFecha;
 }
 
-/** Fecha posible que no se rellena sola: el cliente la acepta o escribe otra. */
+/** Fecha posible que no se pone sola: el cliente la usa con un toque o escribe otra. */
 export interface SugerenciaPropuesta {
   fecha: FechaCarta;
   fuente: FuenteDetectada;
-  /** Por qué no es segura, explicado al cliente. */
+  /** Por qué no se ha puesto sola, explicado al cliente. */
   motivo: MotivoRevision;
 }
 
 export interface ResultadoFecha {
-  /** Solo cuando estamos seguros. Si es null, la carta queda en blanco. */
+  /** La fecha que se pone sola. Si es null, la carta queda en blanco. */
   automatica: FechaSegura | null;
-  /** Como mucho MAX_SUGERENCIAS, la mejor primero. Nunca se rellenan solas. */
+  /** Solo con la carta en blanco: como mucho MAX_SUGERENCIAS, la mejor primero. */
   sugerencias: SugerenciaPropuesta[];
   /** Por qué queda en blanco (sin fecha automática). */
   motivo?: MotivoRevision;
@@ -54,41 +68,46 @@ export interface ResultadoFecha {
 }
 
 /**
- * Una fecha con día de hace menos de estos días es «reciente» y nunca se rellena sola: quien
- * digitaliza este año fotos antiguas con el móvil obtiene una foto «de cámara» con la fecha de
- * hoy. Con un mes no bastaría: las copias de hace unos meses seguirían colándose.
+ * Una fecha de cámara de los días antes de subir la foto no se pone sola: lo normal es que sea la
+ * de preparar el mazo (una foto de una foto antigua hecha con el móvil, una copia, un reenvío), no
+ * la del recuerdo. Ricard, 20-11-2026: «si algunas fotos tienen fecha de hoy, seguramente es porque
+ * se las ha pasado para preparar el mazo».
  */
-export const DIAS_FECHA_RECIENTE = 365;
+export const DIAS_PREPARACION = 7;
+/**
+ * Lo mismo para las fechas de envío (WhatsApp, Telegram…) y de las capturas: un reenvío del último
+ * mes puede ser para el mazo, y entonces la fecha real de la foto se ha perdido.
+ */
+export const DIAS_PREPARACION_ENVIO = 31;
+/** En un escaneo, una fecha escrita que puede ser del último año puede ser la del escaneo. */
+const DIAS_ESCANEO = 365;
+/** Una carpeta con una fecha de otra época (2 años o más antes que la cámara) es la del recuerdo: una foto de una foto. */
+const ANIOS_CARPETA_OTRA_EPOCA = 2;
 export const MAX_SUGERENCIAS = 2;
 /** Días de margen entre dos fechas que deberían coincidir (zonas horarias, fotos de madrugada). */
 const MARGEN_DIAS = 1;
 
 export interface EntradaPropuesta {
   nombreArchivo: string;
-  /** Ruta dentro de la carpeta elegida o soltada («Escaneos/abuelos.jpg»); por defecto, el nombre. */
+  /** Ruta dentro de la carpeta elegida o soltada («Menorca 2015/IMG_1234.jpg»); por defecto, el nombre. */
   rutaArchivo?: string;
   exif?: MetadatosFecha | null;
-  /** File.lastModified, en milisegundos. */
+  /** File.lastModified, en milisegundos. Solo se sugiere, nunca se pone sola. */
   ultimaModificacion?: number | null;
+  /** El momento de la subida: las ventanas de preparación se cuentan desde aquí. */
   hoy: Date;
-  /** Para ajustar el umbral de «reciente»; por defecto DIAS_FECHA_RECIENTE. */
-  diasReciente?: number;
 }
 
-function diasHastaHoy(f: FechaCarta, hoy: Date): number {
-  return rangoDias(fechaDeInstante(hoy))[0] - rangoDias(f)[0];
-}
-
-/** Fecha con día de hace menos de `dias` días. Las de solo año o mes nunca son recientes. */
-export function esFechaReciente(f: FechaCarta, hoy: Date, dias = DIAS_FECHA_RECIENTE): boolean {
-  return precisionDe(f) === "dia" && diasHastaHoy(f, hoy) < dias;
+/** Fecha con día de hace menos de `dias` días. Las de solo año o mes nunca lo son. */
+export function esFechaReciente(f: FechaCarta, hoy: Date, dias = DIAS_PREPARACION): boolean {
+  return precisionDe(f) === "dia" && rangoDias(fechaDeInstante(hoy))[0] - rangoDias(f)[0] < dias;
 }
 
 /**
- * La fecha, con la precisión que tenga, puede caer en los últimos `dias` días: «2026», «octubre de
- * 2026» o el 30 de octubre de 2026 (con día, es lo mismo que esFechaReciente).
+ * La fecha, con la precisión que tenga, puede caer en los últimos `dias` días: «2026», «noviembre
+ * de 2026» o el 18 de noviembre de 2026 (con día, es lo mismo que esFechaReciente).
  */
-export function puedeSerReciente(f: FechaCarta, hoy: Date, dias = DIAS_FECHA_RECIENTE): boolean {
+export function puedeSerReciente(f: FechaCarta, hoy: Date, dias = DIAS_PREPARACION): boolean {
   return rangoDias(fechaDeInstante(hoy))[0] - rangoDias(f)[1] < dias;
 }
 
@@ -107,29 +126,38 @@ export function fechasCompatibles(a: FechaCarta, b: FechaCarta): boolean {
 }
 
 /** `a` es claramente anterior a `b` (más de un día, o sin solaparse si no tienen día). */
-function anterior(a: FechaCarta, b: FechaCarta): boolean {
+export function anterior(a: FechaCarta, b: FechaCarta): boolean {
   return !fechasCompatibles(a, b) && rangoDias(a)[0] < rangoDias(b)[0];
 }
 
+interface Candidata {
+  fecha: FechaCarta;
+  fuente: FuenteDetectada;
+  pista: PistaFecha;
+}
+
+const CONFIANZA: Record<PistaFecha, Confianza> = { camara: "alta", metadatos: "media", escrito: "media", envio: "baja" };
+
 /**
- * Decide la fecha de una foto. Solo se rellena sola cuando es segura:
- * A) fecha original de una cámara (DateTimeOriginal con marca, modelo o exposición), sin señales
- *    de escaneo, sin digitalizarse después, no reciente y sin contradecir la fecha del nombre;
- * B) sin fecha original (o con una que coincide), el nombre que pone la cámara del móvil
- *    (IMG_/PXL_ AAAAMMDD_hhmmss, Samsung, Dropbox), sin señales de escaneo y no reciente;
- * C) una fecha escrita por una persona en el nombre («abuelos 1958», «2015-08 Menorca»), aunque
- *    la foto parezca escaneada, salvo que sea reciente con día, choque con una fecha de cámara
- *    fiable o, en un escaneo, tenga forma de fecha de máquina o pueda ser del último año (entonces
- *    será la del escaneo: «foto escaneada 2026» en «Escaneos/»).
- * Si no, la carta queda en blanco con hasta dos sugerencias, cada una con su motivo. Nunca se
- * sugieren fechas de digitalización de un escaneo, fechas de reloj sin configurar ni la fecha del
- * archivo si es reciente.
+ * Decide la fecha de una foto. Se pone sola casi siempre; solo queda en blanco cuando la única
+ * pista es la de preparar el mazo, porque una fecha equivocada impresa es peor que una en blanco:
+ *
+ * 1. La fecha de la cámara (original, o el nombre que pone el móvil), salvo en un escaneo (sería la
+ *    del escaneo) o si es de los últimos DIAS_PREPARACION días antes de subirla (foto de una foto,
+ *    copia o reenvío para el mazo).
+ * 2. Una fecha escrita por una persona en el nombre o en los metadatos («abuelos 1958») gana a la de
+ *    la cámara si es anterior: es una foto de una foto antigua, que solo se digitaliza después.
+ *    La de la carpeta («Menorca 2015/») gana solo si es de otra época (2 años o más antes).
+ * 3. Sin fecha de cámara, la escrita por una persona (nombre, metadatos o carpeta).
+ * 4. Sin nada mejor, la de envío o de captura (WhatsApp, capturas) con solo el mes, si es de hace
+ *    más de un mes: las recientes son, casi siempre, reenvíos para el mazo que han perdido la fecha.
+ *
+ * La fecha del archivo nunca se pone sola (es la de la copia o la descarga): como mucho se sugiere.
  */
 export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
   const { hoy } = e;
-  const dias = e.diasReciente ?? DIAS_FECHA_RECIENTE;
   const meta = e.exif ?? null;
-  const reciente = (f: FechaCarta) => esFechaReciente(f, hoy, dias);
+  const ruta = e.rutaArchivo || e.nombreArchivo;
 
   let relojPorDefecto = false;
   const leer = (valores: (ValorFecha | undefined)[]) => {
@@ -142,97 +170,103 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
   const modificada = leer([meta?.ModifyDate, meta?.XmpModifyDate]);
   const anotada = leer([meta?.IptcDateCreated, meta?.DateCreated]);
   const nombre: FechaDesdeNombre | null = fechaDesdeNombre(e.nombreArchivo, { hoy });
+  const carpeta = fechaDesdeCarpeta(ruta, { hoy });
 
-  const senales = senalesDeEscaneo(meta, e.rutaArchivo || e.nombreArchivo);
+  const senales = senalesDeEscaneo(meta, ruta);
+  const conSenales = senales.length > 0;
   const camara = !!(meta?.Make || meta?.Model || meta?.tieneExposicion);
-  // La fecha original es anterior a la digitalización: se escaneó o copió más tarde.
-  const digitalizadaDespues = !!(original && digitalizada && anterior(original, digitalizada));
-  const escaneo = senales.length > 0 || digitalizadaDespues;
-  // Solo las fechas de cámara o escritas por una persona pueden contradecir a la original:
-  // las de mensajería y capturas son, por naturaleza, posteriores. Choca con cualquier precisión
-  // («verano 2015» frente a una cámara del 14-8-2019), no solo con otro día como decía el encargo:
-  // así no se rellena sola una fecha de cámara que la persona contradice (reloj mal puesto, foto en
-  // papel fotografiada con cámara años después). Pendiente de que lo confirme Ricard; para bloquear
-  // solo con otro día basta con exigir aquí precisionDe(nombre.fecha) === "dia".
-  const nombreChoca = !!(original && nombre && (nombre.origen === "camara" || nombre.origen === "escrito") && !fechasCompatibles(original, nombre.fecha));
-  const originalFiable = !!(original && camara && !escaneo && !reciente(original));
-  // En un escaneo, una fecha del nombre con forma de máquina o que puede ser del último año es,
-  // seguramente, la del escaneo: ni se rellena ni se sugiere.
-  const nombreDelEscaneo = !!(escaneo && nombre && (PATRONES_DE_MAQUINA.has(nombre.patron) || puedeSerReciente(nombre.fecha, hoy, dias)));
+  // Cuándo se digitalizó: la fecha de digitalización o, en un escaneo sin ella, la de modificación.
+  const fechaEscaneo = digitalizada ?? (conSenales ? modificada : null);
+  // La fecha original es anterior a la digitalización: se escaneó o se copió más tarde, y la
+  // original es la que guardó (o apuntó) quien la digitalizó.
+  const digitalizadaDespues = !!(original && fechaEscaneo && anterior(original, fechaEscaneo));
+  const escaneo = conSenales || digitalizadaDespues;
+  const preparando = (f: FechaCarta) => puedeSerReciente(f, hoy, DIAS_PREPARACION);
 
-  const segura = (fecha: FechaCarta, fuente: FuenteDetectada, confianza: Confianza): ResultadoFecha => ({
-    automatica: { fecha, fuente, confianza },
+  const resultado = (c: Candidata): ResultadoFecha => ({
+    automatica: { fecha: c.fecha, fuente: c.fuente, confianza: CONFIANZA[c.pista], pista: c.pista },
     sugerencias: [],
     escaneo,
     senales,
   });
 
-  // A) Fecha original de cámara.
-  if (original && originalFiable && !nombreChoca) return segura(original, "exif", "alta");
-  // B) Nombre de la cámara del móvil, sin original o con una que coincide.
-  if (nombre?.origen === "camara" && !escaneo && !reciente(nombre.fecha) && (!original || fechasCompatibles(original, nombre.fecha))) {
-    return segura(nombre.fecha, "nombre", "media");
-  }
-  // C) Fecha escrita por una persona en el nombre.
-  if (nombre?.origen === "escrito" && !reciente(nombre.fecha) && !nombreDelEscaneo && !(originalFiable && nombreChoca)) {
-    return segura(nombre.fecha, "nombre", "media");
+  // 1. Fecha de la cámara.
+  let deCamara: Candidata | null = null;
+  if (original && (!conSenales || digitalizadaDespues)) {
+    // Con señales de escaneo, solo vale la original anterior al escaneo: la apuntó quien escaneó.
+    deCamara = { fecha: original, fuente: "exif", pista: camara && !conSenales ? "camara" : "metadatos" };
+  } else if (nombre?.origen === "camara" && !conSenales) {
+    deCamara = { fecha: nombre.fecha, fuente: "nombre", pista: "camara" };
+  } else if (!original && digitalizada && camara && !escaneo) {
+    // Sin original, la de creación de una cámara (xmp:CreateDate de Lightroom, por ejemplo).
+    deCamara = { fecha: digitalizada, fuente: "exif", pista: "camara" };
   }
 
-  // Sin fecha segura: sugerencias, de la mejor a la peor.
-  const candidatas: SugerenciaPropuesta[] = [];
-  const sugerir = (fecha: FechaCarta, fuente: FuenteDetectada, motivo: MotivoRevision) => candidatas.push({ fecha, fuente, motivo });
-  // En un escaneo sin fecha de digitalización, la de modificación hace de referencia.
-  const referenciaDigital = digitalizada ?? (escaneo ? modificada : null);
+  // 2. Fechas escritas por una persona: en el nombre del archivo y en los metadatos (IPTC o photoshop:DateCreated).
+  const escritaEnNombre: Candidata | null =
+    nombre?.origen === "escrito" &&
+    !esFechaReciente(nombre.fecha, hoy, DIAS_PREPARACION) &&
+    // En un escaneo, una fecha con forma de máquina o que puede ser del último año es la del escaneo.
+    !(escaneo && (PATRONES_DE_MAQUINA.has(nombre.patron) || puedeSerReciente(nombre.fecha, hoy, DIAS_ESCANEO)))
+      ? { fecha: nombre.fecha, fuente: "nombre", pista: "escrito" }
+      : null;
+  const anotadaUtil: Candidata | null =
+    anotada &&
+    !(fechaEscaneo && fechasCompatibles(anotada, fechaEscaneo)) &&
+    !(escaneo && puedeSerReciente(anotada, hoy, DIAS_ESCANEO)) &&
+    !esFechaReciente(anotada, hoy, DIAS_PREPARACION)
+      ? { fecha: anotada, fuente: "exif", pista: "metadatos" }
+      : null;
+  const escrita = escritaEnNombre ?? anotadaUtil;
+  const deCarpeta: Candidata | null = carpeta && !preparando(carpeta) ? { fecha: carpeta, fuente: "carpeta", pista: "escrito" } : null;
 
-  // 1. La foto guarda una fecha original anterior a cuando se digitalizó.
-  if (original && referenciaDigital && anterior(original, referenciaDigital)) sugerir(original, "exif", "digitalizada-despues");
-  // 2. Fecha anotada (IPTC o photoshop:DateCreated) que no es la de la digitalización.
-  if (anotada && !(referenciaDigital && fechasCompatibles(anotada, referenciaDigital)) && !(escaneo && reciente(anotada))) {
-    sugerir(anotada, "exif", "fecha-anotada");
+  if (deCamara) {
+    // Una fecha escrita anterior a la de la cámara: una foto de una foto antigua («abuelos 1958»).
+    if (escrita && anterior(escrita.fecha, deCamara.fecha)) return resultado(escrita);
+    if (deCarpeta && deCamara.fecha.anio - deCarpeta.fecha.anio >= ANIOS_CARPETA_OTRA_EPOCA) return resultado(deCarpeta);
+    if (!preparando(deCamara.fecha)) return resultado(deCamara);
+    // Cámara de estos días: vale lo que haya escrito una persona; si no, en blanco.
+    const otra = escrita ?? deCarpeta;
+    if (otra) return resultado(otra);
+    return enBlanco("fecha-reciente", [{ fecha: deCamara.fecha, fuente: deCamara.fuente, motivo: "fecha-reciente" }]);
   }
-  if (original && !escaneo) {
-    // 3. Original reciente: puede ser una foto de una foto antigua.
-    if (reciente(original)) sugerir(original, "exif", "fecha-reciente");
-    // 4. La original y el nombre no coinciden: primero la que escribió una persona.
-    if (nombre && nombreChoca) {
-      const deNombre = () => sugerir(nombre.fecha, "nombre", "exif-y-nombre-no-coinciden");
-      const deOriginal = () => sugerir(original, "exif", "exif-y-nombre-no-coinciden");
-      if (nombre.origen === "escrito") {
-        deNombre();
-        deOriginal();
-      } else {
-        deOriginal();
-        deNombre();
-      }
+
+  // 3. Sin cámara: lo escrito por una persona.
+  const otra = escrita ?? deCarpeta;
+  if (otra) return resultado(otra);
+
+  // 4. Envío o captura: solo el mes, y solo si no puede ser de preparar el mazo.
+  if (nombre && !conSenales && (nombre.origen === "mensajeria" || nombre.origen === "captura")) {
+    if (!puedeSerReciente(nombre.fecha, hoy, DIAS_PREPARACION_ENVIO)) {
+      return resultado({ fecha: conPrecision(nombre.fecha, "mes"), fuente: "nombre", pista: "envio" });
     }
-    // 5. Original sin datos de cámara: puede ser la de una copia o una edición.
-    if (!camara) sugerir(original, "exif", "sin-datos-de-camara");
+    return enBlanco(nombre.origen === "mensajeria" ? "fecha-de-envio" : "captura-de-pantalla", []);
   }
-  // 6. Fecha del nombre: de envío, de una captura o reciente.
-  if (nombre && !escaneo) {
-    if (nombre.origen === "mensajeria") sugerir(nombre.fecha, "nombre", "fecha-de-envio");
-    else if (nombre.origen === "captura") sugerir(nombre.fecha, "nombre", "captura-de-pantalla");
-    else if ((nombre.origen === "camara" || nombre.origen === "escrito") && reciente(nombre.fecha)) sugerir(nombre.fecha, "nombre", "fecha-reciente");
-  }
-  // 7. Solo la fecha de digitalización, en una foto de cámara que no parece escaneada.
-  if (!original && digitalizada && camara && !escaneo) {
-    sugerir(digitalizada, "exif", reciente(digitalizada) ? "fecha-reciente" : "fecha-digitalizacion");
-  }
-  // 8. Último recurso: la fecha del archivo, si es antigua y no es un escaneo (sería la del escaneo o posterior).
-  if (candidatas.length === 0 && !escaneo && e.ultimaModificacion !== undefined && e.ultimaModificacion !== null && Number.isFinite(e.ultimaModificacion)) {
-    const f = fechaDeInstante(new Date(e.ultimaModificacion));
-    if (f.anio >= ANIO_MINIMO && !esFutura(f, hoy) && !esFechaDeRelojPorDefecto(f) && !reciente(f)) sugerir(f, "archivo", "fecha-del-archivo");
+  // Una fecha de estos días escrita en el nombre («2026-11-19 mazo»): seguramente la de prepararlo.
+  if (nombre?.origen === "escrito" && !escaneo && esFechaReciente(nombre.fecha, hoy, DIAS_PREPARACION)) {
+    return enBlanco("fecha-reciente", [{ fecha: nombre.fecha, fuente: "nombre", motivo: "fecha-reciente" }]);
   }
 
-  const vistas = new Set<string>();
-  const sugerencias = candidatas
-    .filter((s) => {
+  // En blanco. Como pista, la fecha del archivo si es antigua y no es un escaneo (sería la del
+  // escaneo o posterior); nunca la de estos días, que es la de la copia.
+  const sugerencias: SugerenciaPropuesta[] = [];
+  if (!escaneo && e.ultimaModificacion !== undefined && e.ultimaModificacion !== null && Number.isFinite(e.ultimaModificacion)) {
+    const f = fechaDeInstante(new Date(e.ultimaModificacion));
+    if (f.anio >= ANIO_MINIMO && !esFutura(f, hoy) && !esFechaDeRelojPorDefecto(f) && !puedeSerReciente(f, hoy, DIAS_PREPARACION_ENVIO)) {
+      sugerencias.push({ fecha: f, fuente: "archivo", motivo: "fecha-del-archivo" });
+    }
+  }
+  const motivo: MotivoRevision | undefined = escaneo ? "posible-escaneo" : relojPorDefecto ? "reloj-de-camara" : undefined;
+  return enBlanco(motivo, sugerencias);
+
+  function enBlanco(motivoBlanco: MotivoRevision | undefined, lista: SugerenciaPropuesta[]): ResultadoFecha {
+    const vistas = new Set<string>();
+    const unicas = lista.filter((s) => {
       const iso = aIso(s.fecha);
       if (vistas.has(iso)) return false;
       vistas.add(iso);
       return true;
-    })
-    .slice(0, MAX_SUGERENCIAS);
-  const motivo: MotivoRevision | undefined = escaneo ? "posible-escaneo" : (sugerencias[0]?.motivo ?? (relojPorDefecto ? "reloj-de-camara" : undefined));
-  return { automatica: null, sugerencias, motivo, escaneo, senales };
+    });
+    return { automatica: null, sugerencias: unicas.slice(0, MAX_SUGERENCIAS), motivo: motivoBlanco, escaneo, senales };
+  }
 }

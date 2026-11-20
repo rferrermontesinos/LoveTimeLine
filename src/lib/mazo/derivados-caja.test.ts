@@ -89,9 +89,10 @@ describe("esCajaPersonalizada", () => {
 
 describe("fotoCaja", () => {
   it("por defecto, la foto de la portada con el recorte del reverso", () => {
-    // Sin portada elegida, la portada es la primera estrella con foto.
-    expect(fotoCaja(mazo())).toEqual({ id: "b", ancho: 2000, recorte: foto("b", 0).recorteReverso });
-    expect(fotoCaja(mazo({ portadaId: "c" }))?.id).toBe("c");
+    // Sin portada elegida, la portada es la foto con fecha más reciente.
+    expect(fotoCaja(mazo())).toEqual({ id: "c", ancho: 2000, recorte: foto("c", 0).recorteReverso });
+    // Un mazo guardado con una portada elegida la conserva.
+    expect(fotoCaja(mazo({ portadaId: "a" }))?.id).toBe("a");
   });
 
   it("la carta elegida para la caja, aunque la portada sea otra", () => {

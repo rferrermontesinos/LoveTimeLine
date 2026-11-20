@@ -40,7 +40,7 @@ export const MUESTRAS = {
   furgoneta: { ...fotosMuestra("furgoneta"), fecha: { anio: 2019, mes: 8 }, paletaId: "cobalto" },
   acampada: { ...fotosMuestra("acampada"), fecha: { anio: 2020, mes: 8 }, paletaId: "verde" },
   cumple: { ...fotosMuestra("cumple"), fecha: { anio: 2021, mes: 3, dia: 14 }, paletaId: "rojo" },
-  boda: { ...fotosMuestra("boda"), fecha: { anio: 2022, mes: 6, dia: 18 }, paletaId: "rosa", icono: "estrella" },
+  boda: { ...fotosMuestra("boda"), fecha: { anio: 2022, mes: 6, dia: 18 }, paletaId: "rosa" },
   nochevieja: { ...fotosMuestra("nochevieja"), fecha: { anio: 2023, mes: 12, dia: 31 }, paletaId: "noche" },
   casa: { ...fotosMuestra("casa"), fecha: { anio: 2024, mes: 4 }, paletaId: "cobalto" },
 } satisfies Record<string, CartaMuestra>;

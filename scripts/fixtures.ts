@@ -2,7 +2,7 @@
  * Genera fotos de prueba sintéticas (formas de colores, sin personas) en tests/fixtures/generadas/.
  * Los nombres siguen los patrones que el portal reconoce, para probar la lectura de fechas.
  * Aparte, en la subcarpeta escaner/, unas pocas «de escáner» y «fotos de fotos» con fechas
- * relativas al día en que se generan, para probar que esas fechas no se rellenan solas.
+ * relativas al día en que se generan, para probar cuáles se rellenan solas y cuáles no.
  * Nunca uses fotos reales en los tests.
  *
  *   pnpm fixtures                 → 42 fotos (lo justo para el pack pequeño y un poco más) y escaner/
@@ -60,10 +60,12 @@ function nombre(i: number): { nombre: string; exif?: string } {
     case 1:
       return { nombre: `PXL_${f}_1830${dos(i % 60)}123.jpg` };
     case 2:
+      // WhatsApp: la fecha es la del envío. Como es de hace años, se rellena sola con el mes (aproximada).
       return { nombre: `IMG-${f}-WA${String(i).padStart(4, "0")}.jpg` };
     case 3:
       return { nombre: `${anio}-${dos(mes)}-${dos(dia)} excursion ${i}.jpg` };
     case 4:
+      // Captura de pantalla: igual, el mes de la captura.
       return { nombre: `Screenshot_${anio}-${dos(mes)}-${dos(dia)}-12-00-${dos(i % 60)}.png` };
     case 5:
       return { nombre: `verano ${anio} (${i}).jpg` };
@@ -99,7 +101,7 @@ function fotosDeEscaner(hoy: Date): FotoEscaner[] {
     { nombre: "escaneo-001.jpg", ifd0: ESCANER_PLANO, ifd2: { DateTimeDigitized: fechaExif(escaneo) }, modificada: escaneo },
     // Escaneada, pero con el año escrito por una persona en el nombre: se rellena (1958).
     { nombre: "abuelos 1958.jpg", ifd0: ESCANER_PLANO, ifd2: { DateTimeDigitized: fechaExif(escaneo) }, modificada: escaneo },
-    // Escáner de fotos que guarda la fecha original anotada: se sugiere el 14 de junio de 1987.
+    // Escáner de fotos que guarda la fecha original anotada: se rellena sola (junio de 1987).
     {
       nombre: "boda tios.jpg",
       ifd0: ESCANER_FOTOS,
@@ -108,8 +110,8 @@ function fotosDeEscaner(hoy: Date): FotoEscaner[] {
     },
     // Nombre que pone Google Drive al escanear: ni fecha ni sugerencia.
     { nombre: `Scanned_${fechaCompacta(hace(5))}-1000.jpg`, modificada: hace(5) },
-    // Cinco fotos de fotos hechas con el móvil el mismo día: fecha reciente sugerida y aviso de
-    // «parece una sesión de escaneo».
+    // Cinco fotos de fotos hechas con el móvil el mismo día: en blanco, con esa fecha reciente
+    // como sugerencia y el aviso de «parece una sesión de escaneo».
     ...Array.from({ length: 5 }, (_, k): FotoEscaner => {
       const momento = hace(2, k * 7);
       return {

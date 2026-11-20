@@ -11,17 +11,17 @@ import { Chip, Interruptor, Micro } from "@/components/ui/Piezas";
 import { MAX_DEDICATORIA, MAX_TITULO } from "@/domain/mazo/validar";
 import { textoEn } from "@/domain/precios/tipos";
 import { IDIOMAS_MAZO, nombreDeIdioma } from "@/lib/carta/textos";
-import { ESTILOS, TONOS, obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
-import { useUrlFoto } from "@/lib/fotos/useUrlFoto";
+import { ESTILOS, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
 import { useMazo } from "@/lib/mazo/contexto";
 import { cartaPortada, fotoCaja } from "@/lib/mazo/derivados";
-import { esFoto, type CampoMazo, type CartaFoto, type Mazo } from "@/lib/mazo/tipos";
+import type { CampoMazo, Mazo } from "@/lib/mazo/tipos";
 import { BloqueCaja } from "./BloqueCaja";
 import { useCrear } from "./contexto";
 
 /**
- * Paso 3: colores (la elección principal), título, dedicatoria, portada, caja, tono, idioma y
- * mecánicas gratis, con la vista previa al lado. El estilo solo se elige si hay más de uno.
+ * Paso 3: colores (la elección principal), título, dedicatoria, caja, idioma y mecánicas gratis,
+ * con la vista previa al lado. El estilo solo se elige si hay más de uno. La foto de la portada y
+ * el tono de las fotos ya no se eligen (20-11-2026): la portada lleva la foto más reciente.
  */
 export function PasoEstilo() {
   const t = useTranslations("estilo");
@@ -35,16 +35,13 @@ export function PasoEstilo() {
   if (!mazo) return null;
   const estilo = obtenerEstilo(mazo.estiloId);
   const paleta = obtenerPaleta(estilo, mazo.paletaId);
-  const plantilla = obtenerPlantilla(estilo.plantilla);
   const cambiar = <C extends CampoMazo>(campo: C, valor: Mazo[C]) => despachar({ tipo: "cambiar", campo, valor });
   const portada = cartaPortada(mazo);
-  const fotos = mazo.cartas.filter(esFoto);
   const muestra = mazo.cartas.find((c) => c.fecha && c.id !== portada?.id) ?? mazo.cartas.find((c) => c.id !== portada?.id) ?? portada;
   const mecanicas = catalogo.mecanicas.filter((m) => m.activo).sort((a, b) => a.orden - b.orden);
   const versionPortada = portada ? (versiones[portada.id] ?? 0) : 0;
   const idFotoCaja = fotoCaja(mazo)?.id;
   const versionCaja = idFotoCaja ? (versiones[idFotoCaja] ?? 0) : 0;
-  const filtro = (tono: Tono) => plantilla.tonosFoto[tono].filtro;
 
   return (
     <div className="space-y-6">
@@ -181,43 +178,7 @@ export function PasoEstilo() {
             </p>
           </Bloque>
 
-          {/* La portada solo puede llevar una foto: los recuerdos sin foto no se ofrecen. */}
-          <Bloque titulo={t("portada")} ayuda={fotos.length ? t("portadaAyuda") : t("sinFotos")}>
-            {fotos.length > 0 && (
-              <div role="radiogroup" aria-label={t("portada")} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-3 pt-1 sm:mx-0 sm:px-1">
-                {fotos.map((c) => (
-                  <MiniPortada
-                    key={c.id}
-                    carta={c}
-                    nombre={`${id}-portada`}
-                    activa={portada?.id === c.id}
-                    alElegir={() => cambiar("portadaId", c.id)}
-                    version={versiones[c.id] ?? 0}
-                    filtro={filtro(mazo.tono)}
-                  />
-                ))}
-              </div>
-            )}
-          </Bloque>
-
           <BloqueCaja />
-
-          <Bloque titulo={t("tono")}>
-            <div role="radiogroup" aria-label={t("tono")} className="flex flex-wrap gap-3">
-              {TONOS.map((tono) => (
-                <OpcionTono
-                  key={tono}
-                  nombre={`${id}-tono`}
-                  activo={mazo.tono === tono}
-                  alElegir={() => cambiar("tono", tono)}
-                  etiqueta={t(`tonos.${tono}`)}
-                  carta={portada}
-                  version={versionPortada}
-                  filtro={filtro(tono)}
-                />
-              ))}
-            </div>
-          </Bloque>
 
           <Bloque titulo={t("idiomaMazo")} ayuda={t("idiomaMazoAyuda")}>
             <div role="radiogroup" aria-label={t("idiomaMazo")} className="inline-flex flex-wrap gap-1 rounded-[14px] bg-papel-2 p-1">
@@ -312,37 +273,5 @@ function Figura({ etiqueta, children }: { etiqueta: string; children: ReactNode 
       {children}
       <figcaption className="tipo-micro mt-2 text-micro text-tinta-2">{etiqueta}</figcaption>
     </figure>
-  );
-}
-
-function MiniPortada({ carta, nombre, activa, alElegir, version, filtro }: { carta: CartaFoto; nombre: string; activa: boolean; alElegir: () => void; version: number; filtro: string }) {
-  const url = useUrlFoto(carta.id, "mini", version);
-  return (
-    <Opcion nombre={nombre} activo={activa} alElegir={alElegir} etiqueta={carta.descripcion || carta.nombreArchivo}>
-      <span className={`relative block h-20 w-20 shrink-0 snap-start overflow-hidden rounded-[12px] bg-papel-3 transition-shadow ${activa ? "ring-[3px] ring-tinta ring-offset-2 ring-offset-papel" : ""}`}>
-        {url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt="" className="h-full w-full object-cover" style={{ filter: filtro }} draggable={false} />
-        )}
-        {activa && <Marca />}
-      </span>
-    </Opcion>
-  );
-}
-
-function OpcionTono({ nombre, activo, alElegir, etiqueta, carta, version, filtro }: { nombre: string; activo: boolean; alElegir: () => void; etiqueta: string; carta: CartaFoto | null; version: number; filtro: string }) {
-  const url = useUrlFoto(carta?.id ?? null, "mini", version);
-  return (
-    <Opcion nombre={nombre} activo={activo} alElegir={alElegir} etiqueta={etiqueta}>
-      <span className="flex w-24 flex-col items-center gap-2">
-        <span className={`block h-24 w-24 overflow-hidden rounded-[14px] bg-gradient-to-br from-rosa via-amarillo to-cobalto transition-shadow ${activo ? "ring-[3px] ring-tinta ring-offset-2 ring-offset-papel" : ""}`} style={url ? undefined : { filter: filtro }}>
-          {url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={url} alt="" className="h-full w-full object-cover" style={{ filter: filtro }} draggable={false} />
-          )}
-        </span>
-        <span className={`text-center text-sm ${activo ? "font-bold" : "text-tinta-2"}`}>{etiqueta}</span>
-      </span>
-    </Opcion>
   );
 }

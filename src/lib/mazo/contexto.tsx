@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
-import { almacenDisponible, borrarFotos, borrarTodo, cargarMazo, escribirMazo, idsDeFotos } from "@/lib/almacen/idb";
+import { almacenDisponible, borrarFotos, borrarTodo, cargarMazo, escribirMazo, hayMazoGuardado, idsDeFotos } from "@/lib/almacen/idb";
 import { pedirAlmacenPersistente } from "@/lib/almacen/persistencia";
 import { fotosSueltas } from "./derivados";
 import {
@@ -171,8 +171,10 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     (async () => {
       const ok = await almacenDisponible();
       const mazo = ok ? await cargarMazo() : null;
+      // Un mazo guardado que no se puede leer: sus fotos se quedan donde están (ver abajo).
+      const ilegible = ok && !mazo && (await hayMazoGuardado());
       // Las fotos que ya había al abrir: entre ellas se buscan las sueltas (abajo).
-      const fotosAlAbrir = ok ? await idsDeFotos() : new Set<string>();
+      const fotosAlAbrir = ok && !ilegible ? await idsDeFotos() : new Set<string>();
       if (!vivo) return;
       setAlmacenOk(ok);
       sinAlmacen.current = !ok;

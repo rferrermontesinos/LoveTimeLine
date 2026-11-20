@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { cartasPendientes, puedeIrAEstilo, siguientePendiente } from "@/domain/mazo/configuracion";
+import { cartasPendientes, mazoConfigurado, pasoMaximo, siguientePendiente } from "@/domain/mazo/configuracion";
+import { ordenarPorFecha } from "@/domain/mazo/ordenar";
 import { cotizar, normalizarSeleccion, type Cotizacion } from "@/domain/precios/cotizar";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { accionNormalizar } from "@/lib/mazo/arranque";
@@ -15,25 +16,29 @@ interface ValorCrear {
   iconos: Map<string, string>;
   /** Hoy, para las reglas de fechas (se fija al abrir el configurador). */
   hoy: Date;
-  /** Ids de las cartas por completar, en el orden del mazo. */
+  /** Ids de las cartas por completar, por fecha (las que no tienen, al final). */
   pendientes: string[];
-  /** Todas las cartas están listas (y hay al menos una): se puede pasar a Estilo y Pedido. */
-  puedeAvanzar: boolean;
+  /** Todas las cartas están listas (y hay al menos una): se puede pagar. */
+  todasListas: boolean;
+  /** Paso más avanzado al que se puede ir: Estilo y Pedido, en cuanto hay alguna carta. */
+  pasoMax: Paso;
+  /** En Estilo y Pedido, con cartas por completar: la barra de abajo avisa de cuántas faltan. */
+  avisoPendientes: boolean;
   /** Paso que se muestra: el guardado, como mucho el permitido. */
   pasoActual: Paso;
   /** Carta abierta en el paso 2. Se guarda con el mazo: al volver otro día, sigue abierta. */
   cartaActiva: string | null;
   setCartaActiva: (id: string | null) => void;
   /**
-   * Cambia de paso. A Estilo o Pedido con cartas pendientes, lleva a la primera pendiente. Con
-   * `ancla`, el paso nuevo lleva a ese bloque en vez de empezar arriba (por ejemplo, «caja»).
+   * Cambia de paso (sin cartas, Estilo y Pedido se quedan en Cartas). Con `ancla`, el paso nuevo
+   * lleva a ese bloque en vez de empezar arriba (por ejemplo, «caja»).
    */
   irAPaso: (p: Paso, cartaId?: string, ancla?: AnclaPaso) => void;
   /** Bloque al que ha pedido ir el último cambio de paso, si alguno. */
   ancla: AnclaPaso | null;
   /**
-   * Abre en el paso 2 la siguiente carta pendiente después de la indicada (o la primera). Desde
-   * otro paso, la página empieza arriba; dentro del paso 2, sube `avisoFecha`.
+   * Abre en el paso 2 la siguiente carta pendiente, por fecha, después de la indicada (o la
+   * primera). Desde otro paso, la página empieza arriba; dentro del paso 2, sube `avisoFecha`.
    */
   irASiguientePendiente: (desdeId?: string | null) => void;
   /**
@@ -111,16 +116,19 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
 
   const iconos = useMemo(() => (mazo ? iconosDelMazo(mazo, catalogo) : new Map<string, string>()), [mazo, catalogo]);
 
-  // La regla de paso, en un solo sitio: a Estilo y Pedido solo con todas las cartas listas.
+  // Las reglas de paso, en un solo sitio: a Estilo y Pedido en cuanto hay cartas; el pago, solo
+  // con todas listas. Las pendientes van por fecha, como el mazo que se ve en Cartas.
   const cartas = mazo?.cartas;
-  const pendientes = useMemo(() => (cartas ? cartasPendientes(cartas, hoy) : []), [cartas, hoy]);
-  const puedeAvanzar = useMemo(() => !!cartas && puedeIrAEstilo(cartas, hoy), [cartas, hoy]);
-  const pasoMax: Paso = puedeAvanzar ? 4 : 2;
+  const porFecha = useMemo(() => (cartas ? ordenarPorFecha(cartas) : []), [cartas]);
+  const pendientes = useMemo(() => cartasPendientes(porFecha, hoy), [porFecha, hoy]);
+  const todasListas = useMemo(() => mazoConfigurado(porFecha, hoy), [porFecha, hoy]);
+  const pasoMax: Paso = pasoMaximo(porFecha);
   const pasoGuardado = mazo?.paso ?? 1;
   const pasoActual = Math.min(pasoGuardado, pasoMax) as Paso;
+  const avisoPendientes = pasoActual >= 3 && porFecha.length > 0 && !todasListas;
 
-  // Un paso guardado más allá del permitido (al volver otro día, al deshacer en Estilo…) se
-  // corrige, para que no salte solo a Estilo al completar la última carta.
+  // Un paso guardado más allá del permitido (al borrar todas las cartas, al deshacer…) se
+  // corrige, para que no salte solo a Estilo al añadir la primera.
   useEffect(() => {
     if (pasoGuardado > pasoMax) despachar({ tipo: "cambiar", campo: "paso", valor: pasoMax });
   }, [pasoGuardado, pasoMax, despachar]);
@@ -132,15 +140,16 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
       iconos,
       hoy,
       pendientes,
-      puedeAvanzar,
+      todasListas,
+      pasoMax,
+      avisoPendientes,
       pasoActual,
       cartaActiva,
       setCartaActiva,
       irAPaso: (p, cartaId, anclaPedida) => {
         const bloqueado = p > pasoMax;
         const destino = bloqueado ? pasoMax : p;
-        const carta = cartaId ?? (bloqueado ? pendientes[0] : undefined);
-        if (carta) setCartaActiva(carta);
+        if (cartaId) setCartaActiva(cartaId);
         const conAncla = !bloqueado && anclaPedida ? anclaPedida : null;
         setAncla(conAncla);
         despachar({ tipo: "cambiar", campo: "paso", valor: destino });
@@ -149,11 +158,10 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
       },
       ancla,
       irASiguientePendiente: (desdeId) => {
-        if (!cartas) return;
-        const desde = desdeId ? cartas.findIndex((c) => c.id === desdeId) : -1;
-        const i = siguientePendiente(cartas, desde, hoy);
+        const desde = desdeId ? porFecha.findIndex((c) => c.id === desdeId) : -1;
+        const i = siguientePendiente(porFecha, desde, hoy);
         if (i < 0) return;
-        setCartaActiva(cartas[i]!.id);
+        setCartaActiva(porFecha[i]!.id);
         if (pasoGuardado !== 2) despachar({ tipo: "cambiar", campo: "paso", valor: 2 });
         if (pasoActual === 2) setAvisoFecha((n) => n + 1);
         else subir();
@@ -170,7 +178,7 @@ export function ProveedorCrear({ catalogo, children }: { catalogo: Catalogo; chi
       },
       recuerdoAnadido,
     }),
-    [catalogo, cotizacion, iconos, hoy, pendientes, puedeAvanzar, pasoActual, pasoMax, pasoGuardado, cartas, cartaActiva, setCartaActiva, despachar, avisoFecha, versiones, ancla, recuerdo, recuerdoAnadido],
+    [catalogo, cotizacion, iconos, hoy, pendientes, todasListas, pasoMax, avisoPendientes, pasoActual, pasoGuardado, porFecha, cartaActiva, setCartaActiva, despachar, avisoFecha, versiones, ancla, recuerdo, recuerdoAnadido],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

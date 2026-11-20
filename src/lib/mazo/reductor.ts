@@ -1,7 +1,8 @@
 import { conPrecision, type FechaCarta } from "@/domain/fechas/fecha";
 import { ordenarPorFecha } from "@/domain/mazo/ordenar";
 import { ESTILO_POR_DEFECTO, obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
-import { VERSION_MAZO, type CambiosCarta, type CampoMazo, type Carta, type FotoCaja, type Mazo, type Pedido } from "./tipos";
+import type { MotivoRevision } from "@/domain/fechas/proponer";
+import { POLITICA_FECHAS, VERSION_MAZO, type CambiosCarta, type CampoMazo, type Carta, type FotoCaja, type Mazo, type Pedido } from "./tipos";
 
 export interface EstadoMazo {
   estado: "cargando" | "listo";
@@ -39,6 +40,12 @@ export type Accion =
    */
   | { tipo: "aceptarSugerencia"; ids: string[]; indice?: number }
   | { tipo: "confirmarFecha"; id: string }
+  /**
+   * La fecha puesta sola pasa a ser una sugerencia y la carta queda en blanco: las fotos de una
+   * sesión de fotos de fotos que se detecta a mitad de la subida. No toca las fechas puestas a
+   * mano. Es parte de la importación: no se deshace, y «Deshacer» no devuelve esas fechas.
+   */
+  | { tipo: "fechaASugerencia"; ids: string[]; motivo: MotivoRevision }
   | { tipo: "ordenarPorFecha" }
   | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
   /** Foto de la caja personalizada (null: la de la portada). */
@@ -127,6 +134,7 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       extras: [],
       consentimientoFotos: null,
       paso: 1,
+      politicaFechas: POLITICA_FECHAS,
       cartas: [],
       pedido: null,
     };
@@ -191,6 +199,16 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         return { ...c, fecha: s.fecha, fuente: s.fuente, confianza: "alta", revisar: false, motivo: undefined, sugerencias: [] };
       });
       return aceptadas ? conHistorial(e, { ...m, cartas }) : e;
+    }
+    case "fechaASugerencia": {
+      const ids = new Set(a.ids);
+      const enBlanco = (c: Carta): Carta => {
+        const { fecha, fuente } = c;
+        if (!ids.has(c.id) || !fecha || !fuente || fuente === "manual") return c;
+        return { ...c, fecha: null, fuente: null, confianza: null, revisar: false, motivo: a.motivo, sugerencias: [{ fecha, fuente, motivo: a.motivo }] };
+      };
+      const pasado = e.pasado.map((p) => ({ ...p, cartas: p.cartas.map(enBlanco) }));
+      return { ...conHistorial(e, { ...m, cartas: m.cartas.map(enBlanco) }, false), pasado };
     }
     case "confirmarFecha":
       return conHistorial(e, {

@@ -18,6 +18,15 @@ const FUENTE_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sa
 const ANCHO = 300;
 const ALTO = Math.round((ANCHO * PRINT.carta.altoMm) / PRINT.carta.anchoMm);
 
+let medidor: CanvasRenderingContext2D | null | undefined;
+/** Ancho del emoji con la fuente de este sistema, medido como lo mide Konva. */
+function anchoEmoji(emoji: string, tam: number): number {
+  if (medidor === undefined) medidor = document.createElement("canvas").getContext("2d");
+  if (!medidor) return tam * 1.3;
+  medidor.font = `${tam}px ${FUENTE_EMOJI}`;
+  return medidor.measureText(emoji).width || tam * 1.3;
+}
+
 /**
  * Emojis sobre la cara de la foto, con react-konva: arrastrar, escalar y girar.
  * Las posiciones se guardan relativas a la carta, así se imprimen igual a 300 ppp.
@@ -81,6 +90,10 @@ export default function EditorAdornos({
           <Layer>
             {adornos.map((a) => {
               const tam = a.tamano * ANCHO;
+              // Sin ancho fijo: Konva corta el texto que no cabe en su caja, y el emoji de Apple (en
+              // un Mac) es más ancho que el de otros sistemas, así que desaparecía. Se centra con su
+              // ancho medido, como lo dibuja la carta (dibujar.ts, centrado en x e y).
+              const ancho = anchoEmoji(a.emoji, tam);
               return (
                 <Text
                   key={a.id}
@@ -91,12 +104,10 @@ export default function EditorAdornos({
                   text={a.emoji}
                   fontFamily={FUENTE_EMOJI}
                   fontSize={tam}
-                  width={tam * 1.3}
-                  height={tam * 1.2}
-                  align="center"
-                  verticalAlign="middle"
-                  offsetX={(tam * 1.3) / 2}
-                  offsetY={(tam * 1.2) / 2}
+                  lineHeight={1}
+                  wrap="none"
+                  offsetX={ancho / 2}
+                  offsetY={tam / 2}
                   x={a.x * ANCHO}
                   y={a.y * ALTO}
                   rotation={a.giro}

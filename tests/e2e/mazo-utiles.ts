@@ -3,7 +3,7 @@
  */
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const CARPETA = path.join(process.cwd(), "tests", "fixtures", "generadas");
 
@@ -19,17 +19,45 @@ export function fotos(): string[] {
 }
 
 /**
- * Las fotos que el portal no fecha solo, aunque propone una fecha (ver scripts/fixtures.ts): las
- * que no la llevan en el nombre ni en sus datos («foto-7.jpg», la del archivo), las de WhatsApp
- * («IMG-…-WA0001.jpg», la del envío) y las capturas de pantalla («Screenshot_…», la de la captura).
+ * Las fotos que se quedan sin fecha al subirlas (ver scripts/fixtures.ts): las que no la llevan en
+ * el nombre ni en sus datos («foto-7.jpg»). La fecha del archivo solo se sugiere: suele ser la de
+ * una copia, no la del recuerdo.
  */
-export function soloSugeridas(archivo: string): boolean {
-  return /^(foto-\d+\.jpg|IMG-\d{8}-WA\d+\.jpg|Screenshot_)/.test(path.basename(archivo));
+export function sinFechaAlSubir(archivo: string): boolean {
+  return /^foto-\d+\.jpg$/.test(path.basename(archivo));
 }
 
-/** Las fotos que salen ya con su fecha (de la cámara o del nombre): sus cartas quedan listas. */
+/**
+ * Las que salen con una fecha aproximada, solo el mes: las de WhatsApp («IMG-…-WA0001.jpg», la del
+ * envío) y las capturas de pantalla («Screenshot_…», la de la captura), todas de hace años.
+ */
+export function aproximada(archivo: string): boolean {
+  return /^(IMG-\d{8}-WA\d+\.jpg|Screenshot_)/.test(path.basename(archivo));
+}
+
+/** Las fotos que salen ya con su fecha (de la cámara, del nombre o, aproximada, del envío): sus cartas quedan listas. */
 export function conFecha(archivo: string): boolean {
-  return !soloSugeridas(archivo);
+  return !sinFechaAlSubir(archivo);
+}
+
+/**
+ * En Fotos, pone el mismo año a todas las que no tienen fecha, como lo haría el cliente:
+ * «Seleccionar», tocarlas, «Poner fecha» y el año. Devuelve cuántas eran.
+ */
+export async function ponerAnioALasSinFecha(page: Page, anio: number): Promise<number> {
+  const grupo = page.getByTestId("fotos-sin-fecha");
+  const sinFecha = await grupo.getByRole("button").all();
+  await page.getByRole("button", { name: "Seleccionar", exact: true }).click();
+  for (const carta of sinFecha) await carta.click();
+  await expect(page.getByText(`${sinFecha.length} seleccionadas`)).toBeVisible();
+  await page.getByRole("button", { name: "Poner fecha", exact: true }).click();
+  const dialogo = page.getByRole("dialog", { name: "Poner la misma fecha" });
+  await dialogo.getByRole("radio", { name: "Solo el año" }).click();
+  await dialogo.getByLabel("Año").fill(String(anio));
+  await dialogo.getByRole("button", { name: `Poner esta fecha a ${sinFecha.length} fotos` }).click();
+  await expect(dialogo).toBeHidden();
+  await expect(grupo).toBeHidden();
+  return sinFecha.length;
 }
 
 /** La línea del pie que dice si el mazo está guardado en el dispositivo. */

@@ -7,13 +7,15 @@ import { Aviso } from "@/components/ui/Piezas";
 import { aIso, precisionDe, type FechaCarta } from "@/domain/fechas/fecha";
 import { fechaLegible } from "@/domain/fechas/formato";
 import { useMazo } from "@/lib/mazo/contexto";
+import { esAproximada } from "@/lib/mazo/derivados";
 import type { Carta } from "@/lib/mazo/tipos";
 import { SelectorFecha } from "./SelectorFecha";
 
 /**
- * La fecha de la carta abierta en el paso 2, con foto o sin ella. Solo viene puesta cuando es
- * segura; si no, el campo está en blanco y aquí se explica por qué, con las fechas sugeridas para
- * usarlas con un toque. Escribirla a mano descarta las sugerencias.
+ * La fecha de la carta abierta en el paso 2, con foto o sin ella, y de dónde sale. Si es
+ * aproximada (el mes en que se envió la foto por mensajería), lo dice. Si no se ha podido saber,
+ * el campo está en blanco y aquí se explica por qué, con las fechas sugeridas para usarlas con un
+ * toque. Escribirla a mano descarta las sugerencias.
  */
 export function FechaDeCarta({ carta, hoy }: { carta: Carta; hoy: Date }) {
   const t = useTranslations("fechas");
@@ -56,7 +58,16 @@ export function FechaDeCarta({ carta, hoy }: { carta: Carta; hoy: Date }) {
 
       {carta.fecha ? (
         <>
-          {carta.fuente && <p className="text-sm text-tinta-2">{t(`fuente.${carta.fuente}`)}</p>}
+          {esAproximada(carta) ? (
+            <p className="text-sm text-tinta-2">
+              <span aria-hidden="true" className="font-semibold text-tinta">
+                ≈{" "}
+              </span>
+              {t("aproximada")}
+            </p>
+          ) : (
+            carta.fuente && <p className="text-sm text-tinta-2">{t(`fuente.${carta.fuente}`)}</p>
+          )}
           {/* Solo en mazos guardados antes de que las fechas dudosas dejaran de rellenarse solas. */}
           {carta.revisar && (
             <Aviso

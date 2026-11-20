@@ -27,8 +27,8 @@ const MODOS = [
 
 const PARTES = ["preparacion", "turno", "final"] as const;
 
+/** Las cartas especiales que se explican, si el catálogo las tiene activas (la estrella se retiró el 20-11-2026). */
 const MECANICAS = [
-  { id: "estrella", clave: "estrella" },
   { id: "comodin", clave: "comodin" },
   { id: "en-blanco", clave: "enBlanco" },
 ] as const;
@@ -184,7 +184,7 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
           <h2 className="tipo-titular text-3xl">{t("mecanicas.titulo")}</h2>
           <p className="mt-3 max-w-2xl text-md text-tinta-2">{t("mecanicas.texto")}</p>
           <ul className="mt-6 grid gap-3 md:grid-cols-3">
-            {MECANICAS.map((m) => (
+            {MECANICAS.filter((m) => catalogo.mecanicas.some((x) => x.id === m.id && x.activo)).map((m) => (
               <li key={m.id} className="rounded-[var(--radius-carta)] bg-blanco p-5">
                 <div className="flex items-center gap-3">
                   <IconoMecanica icono={iconoDe(m.id)} />

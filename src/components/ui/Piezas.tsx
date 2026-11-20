@@ -127,3 +127,12 @@ export function Seccion({ id, children, className = "", etiqueta }: { id?: strin
     </section>
   );
 }
+
+/** La × de un aviso que se puede cerrar: 40 px (44 en el móvil), con su nombre accesible. */
+export function CerrarAviso({ etiqueta, alCerrar }: { etiqueta: string; alCerrar: () => void }) {
+  return (
+    <button type="button" onClick={alCerrar} aria-label={etiqueta} title={etiqueta} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl leading-none hover:bg-papel-2 max-sm:h-11 max-sm:w-11">
+      <span aria-hidden="true">×</span>
+    </button>
+  );
+}

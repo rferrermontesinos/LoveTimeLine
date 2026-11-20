@@ -280,8 +280,8 @@ function foto(lz: Lienzo, datos: DatosCarta, cara: Cara, x: number, y: number, w
 }
 
 /**
- * Pestaña de esquina con su valor («?» o el año) y, debajo, el hueco del icono. Sin valor
- * (reverso del comodín y de la carta en blanco), la pestaña se encoge alrededor del icono.
+ * Pestaña de esquina con su valor (el «?» de la portada y de la caja) y, debajo, el hueco del
+ * icono. Sin valor (las cartas del juego, solo con su icono), se encoge alrededor del icono.
  */
 function pestana(lz: Lienzo, valor: string, tamanoValor: number, icono: string | null | undefined, girada: boolean) {
   const { ctx, op } = lz;
@@ -317,6 +317,14 @@ function pestana(lz: Lienzo, valor: string, tamanoValor: number, icono: string |
   }
   hueco(lz, p.margenIzquierdo, topIcono, d, icono);
   ctx.restore();
+}
+
+/**
+ * Las cartas del juego ya no llevan pestañas con «?» ni con el año (20-11-2026): solo el icono de
+ * su mecánica, si tienen alguna, en una pestaña pequeña arriba a la izquierda.
+ */
+function pestanaIcono(lz: Lienzo, icono: string | null | undefined) {
+  if (icono) pestana(lz, "", lz.op.plantilla.pestana.tamanoValorReverso, icono, false);
 }
 
 function hueco(lz: Lienzo, x: number, y: number, diametro: number, icono: string | null | undefined) {
@@ -477,13 +485,13 @@ function textoAjustado(
   return { base: base + (a.lineas.length - 1) * paso, ajuste: a };
 }
 
-/** Pestaña con el año y el icono, año grande abajo a la izquierda y día y mes a la derecha. */
+/** El icono de la carta, si lo tiene, el año grande abajo a la izquierda y el día y el mes a la derecha. */
 function bloqueFecha(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
   const r = op.plantilla.reverso;
   const fecha = d.fecha ?? null;
   const textoFecha = fecha ? textoFechaCarta(fecha, op.idioma) : { anio: "····", linea: "" };
-  pestana(lz, textoFecha.anio, op.plantilla.pestana.tamanoValorReverso, d.icono, false);
+  pestanaIcono(lz, d.icono);
 
   const sa = r.anio.tamano;
   fuente(lz, "titular", sa);
@@ -531,8 +539,7 @@ function anversoFoto(lz: Lienzo, d: DatosCarta) {
   }
 
   adornos(lz, d);
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, false);
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, true);
+  pestanaIcono(lz, d.icono);
   pregunta(lz, op.estilo.colores.papel);
 }
 
@@ -561,8 +568,7 @@ function anversoTexto(lz: Lienzo, d: DatosCarta) {
   const t = op.plantilla.texto.anverso;
   rellenarTodo(lz, sup.fondo);
   textoAjustado(lz, d.texto ?? "", t, { ...t.zona, abajo: H - t.zona.abajo }, { texto: sup.texto, marca: sup.acento });
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, false);
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, true);
+  pestanaIcono(lz, d.icono);
   pregunta(lz, sup.texto);
 }
 
@@ -695,8 +701,7 @@ function anversoComodin(lz: Lienzo, d: DatosCarta) {
   ctx.fillStyle = sup.texto;
   ctx.textAlign = "center";
   ctx.fillText(op.textos.comodin.toLocaleUpperCase(op.idioma), lz.X(W / 2), lz.X(H - g.titulo.abajo));
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, false);
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, true);
+  pestanaIcono(lz, d.icono);
 }
 
 function reversoComodin(lz: Lienzo, d: DatosCarta) {
@@ -706,7 +711,7 @@ function reversoComodin(lz: Lienzo, d: DatosCarta) {
   rellenarTodo(lz, op.paleta.fondo);
   panelSuperior(lz, op.plantilla.reverso.altoFoto, sup.fondo);
   if (d.icono) dibujarIcono(lz, d.icono, lz.X(W / 2), lz.X(g.centroArte), lz.L(g.tamanoArte), sup.acento);
-  pestana(lz, "", op.plantilla.pestana.tamanoValorReverso, d.icono, false);
+  pestanaIcono(lz, d.icono);
 
   fuente(lz, "titular", g.titulo.tamano);
   ctx.fillStyle = op.paleta.texto;
@@ -743,8 +748,7 @@ function anversoEnBlanco(lz: Lienzo, d: DatosCarta) {
   ctx.fillStyle = tinta;
   lineas.forEach((l, i) => etiqueta(lz, l, W / 2, primera + i * paso, av.tamano, av.espaciado, true));
 
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, false);
-  pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, d.icono, true);
+  pestanaIcono(lz, d.icono);
   pregunta(lz, tinta);
 }
 
@@ -755,7 +759,7 @@ function reversoEnBlanco(lz: Lienzo, d: DatosCarta) {
   const margen = Z;
   rellenarTodo(lz, op.paleta.fondo);
   panelSuperior(lz, op.plantilla.reverso.altoFoto, papel);
-  pestana(lz, "", op.plantilla.pestana.tamanoValorReverso, d.icono, false);
+  pestanaIcono(lz, d.icono);
 
   // Frase: etiqueta y líneas para escribir, donde iría la foto.
   const f = g.frase;

@@ -44,11 +44,11 @@
     "cambiarFotoCaja": "Change photo",
     "sinFotoCaja": "No photo yet: upload one or pick one from your deck.",
     "elegirFotoCaja": "Choose a photo",
-    "sinFecha": "No date",
     "yaPedido": "You’ve already ordered this deck. You can keep editing it and download the file again.",
     "yaPedidoSinDescarga": "You’ve already ordered this deck.",
     "verPedido": "See the order",
     "bloquea": "Before paying, fix what’s marked in red.",
+    "faltanCartas": "{n, plural, one {To pay, first finish the card that’s left.} other {To pay, first finish the # cards that are left.}}",
     "faltaConfirmar": "Tick the review box to pay.",
     "pagoCancelado": "You cancelled the payment. Your deck is still here, just as it was.",
     "total": "Total"

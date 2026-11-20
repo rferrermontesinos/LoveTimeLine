@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { aIso } from "./fecha";
 import { esFechaDeRelojPorDefecto, leerFechaMetadato, metadatosDesdeExifr, primeraFechaUtil, type MetadatosFecha } from "./exif";
-import { DIAS_FECHA_RECIENTE, esFechaReciente, fechasCompatibles, proponerFecha, puedeSerReciente, type EntradaPropuesta, type ResultadoFecha } from "./proponer";
+import { DIAS_PREPARACION, DIAS_PREPARACION_ENVIO, esFechaReciente, fechasCompatibles, proponerFecha, puedeSerReciente, type EntradaPropuesta, type ResultadoFecha } from "./proponer";
 
 const hoy = new Date("2026-11-04T10:00:00");
 const proponer = (e: Omit<EntradaPropuesta, "hoy">) => proponerFecha({ hoy, ...e });
@@ -110,20 +110,20 @@ describe("metadatosDesdeExifr", () => {
   });
 });
 
-describe("proponerFecha: se rellena sola solo si es segura", () => {
-  it("A) fecha original de una cámara: exif, confianza alta", () => {
+describe("proponerFecha: la fecha de la cámara se pone sola", () => {
+  it("fecha original de una cámara: exif, confianza alta, pista cámara", () => {
     const r = proponer({ nombreArchivo: "DSC01234.JPG", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00", DateTimeDigitized: "2019:08:14 18:30:00" } });
-    expect(r.automatica).toEqual({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta" });
+    expect(r.automatica).toEqual({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta", pista: "camara" });
     expect(r.sugerencias).toEqual([]);
     expect(r.escaneo).toBe(false);
   });
 
-  it("A) una cámara con un programa de edición sigue siendo una cámara (Snapseed)", () => {
+  it("una cámara con un programa de edición sigue siendo una cámara (Snapseed)", () => {
     const r = proponer({ nombreArchivo: "foto.jpg", exif: { Make: "samsung", Model: "SM-G991B", Software: "Snapseed", DateTimeOriginal: "2021:05:01 12:00:00" } });
     expect(isoAuto(r)).toBe("2021-05-01");
   });
 
-  it("A) el nombre más vago que coincide no impide la fecha completa de la cámara", () => {
+  it("el nombre más vago que coincide no impide la fecha completa de la cámara", () => {
     const r = proponer({ nombreArchivo: "verano 2019.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00" } });
     expect(isoAuto(r)).toBe("2019-08-14");
   });
@@ -134,38 +134,183 @@ describe("proponerFecha: se rellena sola solo si es segura", () => {
     ["20190814_123045.jpg", "2019-08-14"],
     ["IMG20190814123045.jpg", "2019-08-14"],
     ["2019-08-14 12.30.45.jpg", "2019-08-14"],
-  ])("B) nombre de la cámara del móvil sin fecha original: %s → nombre, media", (nombreArchivo, iso) => {
+  ])("nombre de la cámara del móvil sin fecha original: %s → nombre, alta", (nombreArchivo, iso) => {
     const r = proponer({ nombreArchivo, exif: null, ultimaModificacion: hoy.getTime() });
-    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "media" });
+    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "alta", pista: "camara" });
     expect(isoAuto(r)).toBe(iso);
   });
 
-  it("B) si la fecha original es la de un reloj sin configurar, vale el nombre de la cámara", () => {
+  it("si la fecha original es la de un reloj sin configurar, vale el nombre de la cámara", () => {
     const r = proponer({ nombreArchivo: "IMG_20150814_120000.jpg", exif: { ...CANON, DateTimeOriginal: "2000:01:01 00:00:00" } });
     expect(isoAuto(r)).toBe("2015-08-14");
   });
 
+  it("la original sin datos de cámara (copia, programa de fotos) también se pone sola, con confianza media", () => {
+    const r = proponer({ nombreArchivo: "foto.jpg", exif: { DateTimeOriginal: "2012:05:05 10:00:00" } });
+    expect(r.automatica).toEqual({ fecha: { anio: 2012, mes: 5, dia: 5 }, fuente: "exif", confianza: "media", pista: "metadatos" });
+  });
+
+  it("sin original, la de creación de una cámara (Lightroom)", () => {
+    const r = proponer({ nombreArchivo: "DSC00001.jpg", exif: { ...CANON, DateTimeDigitized: "2012:05:05 10:00:00" } });
+    expect(r.automatica).toMatchObject({ fuente: "exif", confianza: "alta", pista: "camara" });
+    expect(isoAuto(r)).toBe("2012-05-05");
+  });
+
+  it("si el nombre de la cámara dice otro día, vale la original", () => {
+    const r = proponer({ nombreArchivo: "IMG_20150101_120000.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 12:00:00" } });
+    expect(isoAuto(r)).toBe("2019-08-14");
+  });
+
+  it("un día de diferencia entre la original y el nombre se tolera (zonas horarias)", () => {
+    const r = proponer({ nombreArchivo: "IMG_20190815_003000.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 23:30:00" } });
+    expect(isoAuto(r)).toBe("2019-08-14");
+  });
+
+  it.each<[string, MetadatosFecha]>([
+    ["IMGP2015.JPG", { Make: "PENTAX", Model: "PENTAX K-5", tieneExposicion: true }],
+    ["SDIM2001.JPG", { Make: "SIGMA", Model: "SIGMA dp2 Quattro", tieneExposicion: true }],
+    ["100_1987.JPG", { Make: "EASTMAN KODAK COMPANY", Model: "KODAK EASYSHARE C513 DIGITAL CAMERA", tieneExposicion: true }],
+  ])("%s: el contador de la cámara no choca con su fecha ni se toma por un año", (nombreArchivo, camara) => {
+    const conCamara = proponer({ nombreArchivo, exif: { ...camara, DateTimeOriginal: "2019:08:14 18:30:00" } });
+    expect(conCamara.automatica).toMatchObject({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta" });
+    // Reexportada sin metadatos: ni el «año» del contador ni nada.
+    const sinExif = proponer({ nombreArchivo });
+    expect(sinExif.automatica).toBeNull();
+    expect(sinExif.sugerencias).toEqual([]);
+  });
+
+  it("una fecha de reloj sin configurar no se usa y lo explica", () => {
+    const r = proponer({ nombreArchivo: "DSC00001.jpg", exif: { ...CANON, DateTimeOriginal: "2001:01:01 00:00:00" } });
+    expect(r).toMatchObject({ automatica: null, sugerencias: [], motivo: "reloj-de-camara" });
+  });
+});
+
+describe("proponerFecha: fechas escritas por una persona", () => {
   it.each([
     ["abuelos 1958.jpg", "1958"],
     ["2015-08 Menorca.jpg", "2015-08"],
     ["Boda 14-08-2019.jpg", "2019-08-14"],
     ["14 de agosto de 2019.jpg", "2019-08-14"],
     ["2019-08-14 playa.jpg", "2019-08-14"],
-  ])("C) fecha escrita por una persona: %s → %s", (nombreArchivo, iso) => {
+  ])("en el nombre: %s → %s", (nombreArchivo, iso) => {
     const r = proponer({ nombreArchivo });
-    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "media" });
+    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "media", pista: "escrito" });
     expect(isoAuto(r)).toBe(iso);
   });
 
-  it("C) «abuelos 1958» se rellena aunque la foto venga de un escáner", () => {
-    const r = proponer({ nombreArchivo: "abuelos 1958.jpg", rutaArchivo: "Escaneos/abuelos 1958.jpg", exif: { ...EPSON, DateTimeDigitized: "2026:10:30 10:00:00" } });
-    expect(isoAuto(r)).toBe("1958");
-    expect(r.escaneo).toBe(true);
+  it("anterior a la de la cámara, gana: es una foto de una foto antigua", () => {
+    expect(isoAuto(proponer({ nombreArchivo: "verano 2015.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00" } }))).toBe("2015");
+    expect(isoAuto(proponer({ nombreArchivo: "Menorca 2019-07.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00" } }))).toBe("2019-07");
+    // Una foto antigua fotografiada con el móvil hace unos días, con el año en el nombre.
+    expect(isoAuto(proponer({ nombreArchivo: "verano 2015.jpg", exif: { ...IPHONE, DateTimeOriginal: "2026:11:02 18:00:00" } }))).toBe("2015");
   });
 
-  it("C) una foto antigua fotografiada con el móvil y con el año escrito en el nombre: vale el nombre", () => {
-    const r = proponer({ nombreArchivo: "verano 2015.jpg", exif: { ...IPHONE, DateTimeOriginal: "2026:10:30 18:00:00" } });
-    expect(isoAuto(r)).toBe("2015");
+  it("posterior a la de la cámara, no: la cámara no digitaliza el futuro", () => {
+    const r = proponer({ nombreArchivo: "Navidad 2020.jpg", exif: { ...CANON, DateTimeOriginal: "2019:12:24 21:00:00" } });
+    expect(isoAuto(r)).toBe("2019-12-24");
+  });
+
+  it("anotada en los metadatos (IPTC o photoshop:DateCreated), también", () => {
+    const r = proponer({ nombreArchivo: "foto.jpg", exif: { IptcDateCreated: "19870614" } });
+    expect(r.automatica).toMatchObject({ fuente: "exif", confianza: "media", pista: "metadatos" });
+    expect(isoAuto(r)).toBe("1987-06-14");
+  });
+
+  it("de estos días, con día, no: seguramente es la de preparar el mazo", () => {
+    const r = proponer({ nombreArchivo: "2026-11-02 abuelos.jpg" });
+    expect(r.automatica).toBeNull();
+    expect(isoSugerencias(r)).toEqual(["2026-11-02 nombre fecha-reciente"]);
+    expect(r.motivo).toBe("fecha-reciente");
+    // Con solo el mes o el año, sí: lo escribió alguien que sabía cuándo fue.
+    expect(isoAuto(proponer({ nombreArchivo: "2026-11 Menorca.jpg" }))).toBe("2026-11");
+    expect(isoAuto(proponer({ nombreArchivo: "verano 2026.jpg" }))).toBe("2026");
+    // Con día, de hace más de una semana, también.
+    expect(isoAuto(proponer({ nombreArchivo: "2026-10-20 cena.jpg" }))).toBe("2026-10-20");
+  });
+});
+
+describe("proponerFecha: la carpeta", () => {
+  it.each([
+    ["Menorca 2015/foto.jpg", "2015"],
+    ["Fotos/2019/2019-08-14/foto.jpg", "2019-08-14"],
+    ["Takeout/Google Fotos/Fotos de 2019/foto.jpg", "2019"],
+    ["Menorca, 14 de agosto de 2019/foto.jpg", "2019-08-14"],
+    ["Fotos 2019.08/foto.jpg", "2019-08"],
+  ])("sin otra pista, vale la fecha de la carpeta: %s → %s", (rutaArchivo, iso) => {
+    const r = proponer({ nombreArchivo: "foto.jpg", rutaArchivo });
+    expect(r.automatica).toMatchObject({ fuente: "carpeta", confianza: "media", pista: "escrito" });
+    expect(isoAuto(r)).toBe(iso);
+  });
+
+  it("el nombre del archivo va antes que la carpeta", () => {
+    expect(isoAuto(proponer({ nombreArchivo: "abuelos 1958.jpg", rutaArchivo: "Fotos 1990/abuelos 1958.jpg" }))).toBe("1958");
+  });
+
+  it("no valen las carpetas de mensajería, capturas, la cámara o escaneos, ni las de estos días", () => {
+    for (const rutaArchivo of [
+      "WhatsApp Images 2019/foto.jpg",
+      "Screenshots 2019/foto.jpg",
+      "Capturas 2019/foto.jpg",
+      "DCIM/100APPLE/foto.jpg",
+      "Escaneos 2019/foto.jpg",
+      "Para el mazo 2026/foto.jpg",
+      "2026-11-03/foto.jpg",
+    ]) {
+      expect(proponer({ nombreArchivo: "foto.jpg", rutaArchivo }).automatica, rutaArchivo).toBeNull();
+    }
+  });
+
+  it("con fecha de cámara, la carpeta solo gana si es de otra época (2 años o más antes)", () => {
+    const camara = { ...CANON, DateTimeOriginal: "2016:01:02 10:00:00" };
+    expect(isoAuto(proponer({ nombreArchivo: "IMG_0001.JPG", rutaArchivo: "Viaje 2015/IMG_0001.JPG", exif: camara }))).toBe("2016-01-02");
+    expect(isoAuto(proponer({ nombreArchivo: "IMG_0001.JPG", rutaArchivo: "Abuelos 1960/IMG_0001.JPG", exif: camara }))).toBe("1960");
+  });
+
+  it("una foto de una foto de estos días, en una carpeta con su año: vale la carpeta", () => {
+    const r = proponer({ nombreArchivo: "IMG_4521.HEIC", rutaArchivo: "Boda 2001/IMG_4521.HEIC", exif: { ...IPHONE, DateTimeOriginal: "2026:11:03 18:00:00" } });
+    expect(isoAuto(r)).toBe("2001");
+  });
+});
+
+describe("proponerFecha: días de preparar el mazo", () => {
+  it("una semana: con día, de los últimos 7 días contando hoy", () => {
+    expect(DIAS_PREPARACION).toBe(7);
+    expect(esFechaReciente({ anio: 2026, mes: 11, dia: 4 }, hoy)).toBe(true);
+    expect(esFechaReciente({ anio: 2026, mes: 10, dia: 29 }, hoy)).toBe(true);
+    expect(esFechaReciente({ anio: 2026, mes: 10, dia: 28 }, hoy)).toBe(false);
+    expect(esFechaReciente({ anio: 2026, mes: 11 }, hoy)).toBe(false);
+  });
+
+  it("puedeSerReciente mira el último día del periodo", () => {
+    expect(puedeSerReciente({ anio: 2026 }, hoy)).toBe(true);
+    expect(puedeSerReciente({ anio: 2026, mes: 11 }, hoy)).toBe(true);
+    expect(puedeSerReciente({ anio: 2026, mes: 10 }, hoy)).toBe(true); // llega al 31-10
+    expect(puedeSerReciente({ anio: 2026, mes: 9 }, hoy)).toBe(false);
+    expect(puedeSerReciente({ anio: 2025 }, hoy, 365)).toBe(true); // llega al 31-12-2025
+    expect(puedeSerReciente({ anio: 2024 }, hoy, 365)).toBe(false);
+  });
+
+  it("iPhone de estos días: en blanco, con su fecha como sugerencia", () => {
+    const r = proponer({ nombreArchivo: "IMG_4521.HEIC", exif: { ...IPHONE, DateTimeOriginal: "2026:11:01 18:00:00", DateTimeDigitized: "2026:11:01 18:00:00" } });
+    expect(r.automatica).toBeNull();
+    expect(isoSugerencias(r)).toEqual(["2026-11-01 exif fecha-reciente"]);
+    expect(r.motivo).toBe("fecha-reciente");
+  });
+
+  it("de hoy, también (Ricard: «si tienen fecha de hoy, seguramente se las ha pasado para el mazo»)", () => {
+    const r = proponer({ nombreArchivo: "IMG_20261104_093000.jpg" });
+    expect(r.automatica).toBeNull();
+    expect(isoSugerencias(r)).toEqual(["2026-11-04 nombre fecha-reciente"]);
+  });
+
+  it("de hace más de una semana, ya se pone sola (las sesiones de fotos de fotos se miran aparte)", () => {
+    expect(isoAuto(proponer({ nombreArchivo: "IMG_4521.HEIC", exif: { ...IPHONE, DateTimeOriginal: "2026:10:20 18:00:00" } }))).toBe("2026-10-20");
+    expect(isoAuto(proponer({ nombreArchivo: "IMG_20260801_100000.jpg" }))).toBe("2026-08-01");
+  });
+
+  it("si la original y el nombre coinciden y son de estos días, sale una sola sugerencia", () => {
+    const r = proponer({ nombreArchivo: "IMG_20261102_180000.jpg", exif: { ...IPHONE, DateTimeOriginal: "2026:11:02 18:00:00" } });
+    expect(r.sugerencias).toHaveLength(1);
   });
 });
 
@@ -180,33 +325,33 @@ describe("proponerFecha: escaneos", () => {
     }
   });
 
-  it("un escáner que copia la fecha del escaneo en la original tampoco la sugiere", () => {
+  it("un escáner que copia la fecha del escaneo en la original tampoco la usa", () => {
     const r = proponer({ nombreArchivo: "Scan_0002.jpg", exif: { ...EPSON, DateTimeOriginal: "2024:03:01 10:00:00", DateTimeDigitized: "2024:03:01 10:00:00" } });
     expect(r.automatica).toBeNull();
     expect(r.sugerencias).toEqual([]);
   });
 
-  it("original de 1987 y digitalizada en 2026: sugiere 1987 (digitalizada después)", () => {
+  it("original de 1987 y digitalizada en 2026: vale 1987, la que apuntó quien la digitalizó", () => {
     const r = proponer({ nombreArchivo: "DSC00001.jpg", exif: { DateTimeOriginal: "1987:06:01 00:00:00", DateTimeDigitized: "2026:10:30 10:00:00" } });
-    expect(r.automatica).toBeNull();
-    expect(isoSugerencias(r)).toEqual(["1987-06-01 exif digitalizada-despues"]);
-    expect(r.motivo).toBe("posible-escaneo");
+    expect(r.automatica).toMatchObject({ fuente: "exif", confianza: "media", pista: "metadatos" });
+    expect(isoAuto(r)).toBe("1987-06-01");
     expect(r.escaneo).toBe(true);
   });
 
   it("sin fecha de digitalización, la de modificación sirve de referencia en un escaneo", () => {
     const r = proponer({ nombreArchivo: "foto.jpg", exif: { ...EPSON, DateTimeOriginal: "1987:06:01 00:00:00", ModifyDate: "2026:10:31 09:00:00" } });
-    expect(isoSugerencias(r)).toEqual(["1987-06-01 exif digitalizada-despues"]);
+    expect(isoAuto(r)).toBe("1987-06-01");
   });
 
-  it("IPTC «19870000» en un escaneo: sugiere 1987 como fecha anotada", () => {
+  it("IPTC «19870000» en un escaneo: vale 1987, la fecha anotada", () => {
     const r = proponer({ nombreArchivo: "FastFoto_0001.jpg", exif: { Software: "FastFoto", IptcDateCreated: "19870000", IptcDigitalCreationDate: "20261030" } });
-    expect(isoSugerencias(r)).toEqual(["1987 exif fecha-anotada"]);
-    expect(r.motivo).toBe("posible-escaneo");
+    expect(isoAuto(r)).toBe("1987");
+    expect(r.escaneo).toBe(true);
   });
 
-  it("la fecha anotada igual a la del escaneo no se sugiere", () => {
+  it("la fecha anotada igual a la del escaneo no se usa", () => {
     const r = proponer({ nombreArchivo: "foto.jpg", exif: { ...EPSON, DateCreated: "2026-10-30", DateTimeDigitized: "2026:10:30 10:00:00" } });
+    expect(r.automatica).toBeNull();
     expect(r.sugerencias).toEqual([]);
   });
 
@@ -244,7 +389,7 @@ describe("proponerFecha: escaneos", () => {
     expect(r.senales).toContain("nombre-escaneo");
   });
 
-  it("en un escaneo, el año del escaneo escrito en el nombre no se rellena ni se sugiere", () => {
+  it("en un escaneo, el año del escaneo escrito en el nombre no se usa", () => {
     for (const anio of [2026, 2025]) {
       const r = proponer({
         nombreArchivo: `foto escaneada ${anio}.jpg`,
@@ -255,11 +400,11 @@ describe("proponerFecha: escaneos", () => {
       expect(r.sugerencias).toEqual([]);
       expect(r.motivo).toBe("posible-escaneo");
     }
-    // Fuera de un escaneo, un año escrito se rellena aunque sea el de este año.
+    // Fuera de un escaneo, un año escrito se pone aunque sea el de este año.
     expect(isoAuto(proponer({ nombreArchivo: "foto escaneada 2026.jpg" }))).toBe("2026");
   });
 
-  it("en un escaneo, una fecha con forma de máquina en el nombre tampoco se rellena", () => {
+  it("en un escaneo, una fecha con forma de máquina en el nombre tampoco se usa", () => {
     const r = proponer({ nombreArchivo: "Documento 20150612-1000.jpg", rutaArchivo: "Escaneos/Documento 20150612-1000.jpg" });
     expect(r.automatica).toBeNull();
     expect(r.sugerencias).toEqual([]);
@@ -267,12 +412,18 @@ describe("proponerFecha: escaneos", () => {
     expect(isoAuto(proponer({ nombreArchivo: "Documento 20150612-1000.jpg" }))).toBe("2015-06-12");
   });
 
-  it("en un escaneo, las fechas que escribe una persona y no pueden ser del escaneo se siguen rellenando", () => {
+  it("en un escaneo, las fechas que escribe una persona y no pueden ser del escaneo se siguen usando", () => {
     const enEscaneos = (nombreArchivo: string) => proponer({ nombreArchivo, rutaArchivo: `Escaneos/${nombreArchivo}`, exif: { ...EPSON, DateTimeDigitized: "2026:10:30 10:00:00" } });
     expect(isoAuto(enEscaneos("abuelos 1958.jpg"))).toBe("1958");
     expect(isoAuto(enEscaneos("abuelos 2024.jpg"))).toBe("2024");
     expect(isoAuto(enEscaneos("Boda 14-08-2019.jpg"))).toBe("2019-08-14");
     expect(isoAuto(enEscaneos("2015-08 Menorca.jpg"))).toBe("2015-08");
+  });
+
+  it("«abuelos 1958» vale aunque la foto venga de un escáner", () => {
+    const r = proponer({ nombreArchivo: "abuelos 1958.jpg", rutaArchivo: "Escaneos/abuelos 1958.jpg", exif: { ...EPSON, DateTimeDigitized: "2026:10:30 10:00:00" } });
+    expect(isoAuto(r)).toBe("1958");
+    expect(r.escaneo).toBe(true);
   });
 
   it("la carpeta de escaneos basta para no fiarse del nombre de la cámara ni de la fecha del archivo", () => {
@@ -296,95 +447,69 @@ describe("proponerFecha: escaneos", () => {
   });
 });
 
-describe("proponerFecha: fechas recientes", () => {
-  it("el umbral es de un año, solo para fechas con día", () => {
-    expect(DIAS_FECHA_RECIENTE).toBe(365);
-    expect(esFechaReciente({ anio: 2025, mes: 11, dia: 5 }, hoy)).toBe(true);
-    expect(esFechaReciente({ anio: 2025, mes: 11, dia: 4 }, hoy)).toBe(false);
-    expect(esFechaReciente({ anio: 2026, mes: 10 }, hoy)).toBe(false);
-    expect(esFechaReciente({ anio: 2026, mes: 10, dia: 1 }, hoy, 30)).toBe(false);
-  });
-
-  it("iPhone con fecha reciente: sugerencia, no se rellena", () => {
-    const r = proponer({ nombreArchivo: "IMG_4521.HEIC", exif: { ...IPHONE, DateTimeOriginal: "2026:10:30 18:00:00", DateTimeDigitized: "2026:10:30 18:00:00" } });
-    expect(r.automatica).toBeNull();
-    expect(isoSugerencias(r)).toEqual(["2026-10-30 exif fecha-reciente"]);
-    expect(r.motivo).toBe("fecha-reciente");
-  });
-
-  it("en un escaneo, puede ser reciente cualquier fecha cuyo periodo toque el último año", () => {
-    expect(puedeSerReciente({ anio: 2026 }, hoy)).toBe(true);
-    expect(puedeSerReciente({ anio: 2025 }, hoy)).toBe(true); // llega al 31-12-2025
-    expect(puedeSerReciente({ anio: 2024 }, hoy)).toBe(false);
-    expect(puedeSerReciente({ anio: 2025, mes: 11 }, hoy)).toBe(true);
-    expect(puedeSerReciente({ anio: 2025, mes: 10 }, hoy)).toBe(false);
-    // Con día, igual que esFechaReciente.
-    expect(puedeSerReciente({ anio: 2025, mes: 11, dia: 5 }, hoy)).toBe(true);
-    expect(puedeSerReciente({ anio: 2025, mes: 11, dia: 4 }, hoy)).toBe(false);
-  });
-
-  it("el umbral se puede ajustar", () => {
-    const r = proponerFecha({ nombreArchivo: "IMG_4521.HEIC", exif: { ...IPHONE, DateTimeOriginal: "2026:08:01 18:00:00" }, hoy, diasReciente: 30 });
-    expect(isoAuto(r)).toBe("2026-08-01");
-  });
-
-  it("nombre de cámara reciente: sugerencia", () => {
-    const r = proponer({ nombreArchivo: "IMG_20261030_100000.jpg" });
-    expect(isoSugerencias(r)).toEqual(["2026-10-30 nombre fecha-reciente"]);
-  });
-
-  it("una fecha reciente con día escrita en el nombre se sugiere, pero el mes o el año se rellenan", () => {
-    expect(isoSugerencias(proponer({ nombreArchivo: "2026-10-30 abuelos.jpg" }))).toEqual(["2026-10-30 nombre fecha-reciente"]);
-    expect(isoAuto(proponer({ nombreArchivo: "2026-10 Menorca.jpg" }))).toBe("2026-10");
-  });
-
-  it("si la original y el nombre coinciden y son recientes, sale una sola sugerencia", () => {
-    const r = proponer({ nombreArchivo: "IMG_20261030_180000.jpg", exif: { ...IPHONE, DateTimeOriginal: "2026:10:30 18:00:00" } });
-    expect(r.sugerencias).toHaveLength(1);
-  });
-});
-
-describe("proponerFecha: mensajería y capturas, solo sugerencias", () => {
+describe("proponerFecha: WhatsApp, mensajería y capturas", () => {
   it.each([
-    ["IMG-20190814-WA0001.jpg", "2019-08-14", "fecha-de-envio"],
-    ["IMG-20261102-WA0007.jpg", "2026-11-02", "fecha-de-envio"],
-    ["WhatsApp Image 2019-08-14 at 12.30.45.jpeg", "2019-08-14", "fecha-de-envio"],
-    ["Imagen de WhatsApp 2023-11-02 a las 19.25.31_2a0b0f4c.jpg", "2023-11-02", "fecha-de-envio"],
-    ["Imatge de WhatsApp 2023-11-02 a les 19.25.31_2a0b0f4c.jpg", "2023-11-02", "fecha-de-envio"],
-    ["Image WhatsApp 2023-11-02 à 19.25.31_2a0b0f4c.jpg", "2023-11-02", "fecha-de-envio"],
-    // Reciente o no, sigue siendo la fecha de envío.
-    ["Imagen de WhatsApp 2026-10-02 a las 19.25.31_2a0b0f4c.jpg", "2026-10-02", "fecha-de-envio"],
-    ["photo_2019-08-14_12-30-45.jpg", "2019-08-14", "fecha-de-envio"],
-    ["signal-2019-08-14-123045.jpg", "2019-08-14", "fecha-de-envio"],
-    ["FB_IMG_1565786400000.jpg", "2019-08-14", "fecha-de-envio"],
-    ["1565786400000.jpg", "2019-08-14", "fecha-de-envio"],
-    ["Screenshot_2019-08-14-12-30-45.png", "2019-08-14", "captura-de-pantalla"],
-    ["Captura de pantalla 2019-08-14 a las 12.30.45.png", "2019-08-14", "captura-de-pantalla"],
-  ])("%s → sugerencia %s (%s)", (nombreArchivo, iso, motivo) => {
+    ["IMG-20190814-WA0001.jpg", "2019-08"],
+    ["WhatsApp Image 2019-08-14 at 12.30.45.jpeg", "2019-08"],
+    ["Imagen de WhatsApp 2023-11-02 a las 19.25.31_2a0b0f4c.jpg", "2023-11"],
+    ["Imatge de WhatsApp 2023-11-02 a les 19.25.31_2a0b0f4c.jpg", "2023-11"],
+    ["Image WhatsApp 2023-11-02 à 19.25.31_2a0b0f4c.jpg", "2023-11"],
+    ["photo_2019-08-14_12-30-45.jpg", "2019-08"],
+    ["signal-2019-08-14-123045.jpg", "2019-08"],
+    ["FB_IMG_1565786400000.jpg", "2019-08"],
+    ["1565786400000.jpg", "2019-08"],
+    ["Screenshot_2019-08-14-12-30-45.png", "2019-08"],
+    ["Captura de pantalla 2019-08-14 a las 12.30.45.png", "2019-08"],
+  ])("de hace más de un mes: %s → solo el mes, %s, aproximada", (nombreArchivo, iso) => {
     const r = proponer({ nombreArchivo, ultimaModificacion: new Date("2020-01-01T10:00:00").getTime() });
-    expect(r.automatica).toBeNull();
-    expect(isoSugerencias(r)).toEqual([`${iso} nombre ${motivo}`]);
-    expect(r.motivo).toBe(motivo);
+    expect(r.automatica).toMatchObject({ fuente: "nombre", confianza: "baja", pista: "envio" });
+    expect(isoAuto(r)).toBe(iso);
+  });
+
+  it.each([
+    ["IMG-20261102-WA0007.jpg", "fecha-de-envio"],
+    ["WhatsApp Image 2026-11-04 at 09.15.02.jpeg", "fecha-de-envio"],
+    ["Imagen de WhatsApp 2026-10-10 a las 19.25.31_2a0b0f4c.jpg", "fecha-de-envio"],
+    ["Screenshot_2026-11-01-12-30-45.png", "captura-de-pantalla"],
+  ])("del último mes: %s → en blanco, sin sugerencia (la fecha real se perdió al reenviarla)", (nombreArchivo, motivo) => {
+    const r = proponer({ nombreArchivo, ultimaModificacion: hoy.getTime() });
+    expect(r).toMatchObject({ automatica: null, sugerencias: [], motivo });
+  });
+
+  it("el último mes son DIAS_PREPARACION_ENVIO días", () => {
+    expect(DIAS_PREPARACION_ENVIO).toBe(31);
+    expect(proponer({ nombreArchivo: "IMG-20261005-WA0001.jpg" }).automatica).toBeNull();
+    expect(isoAuto(proponer({ nombreArchivo: "IMG-20261003-WA0001.jpg" }))).toBe("2026-10");
+  });
+
+  it("enviada como documento conserva los datos de la cámara: vale la original", () => {
+    const r = proponer({ nombreArchivo: "IMG-20261102-WA0007.jpg", exif: { ...IPHONE, DateTimeOriginal: "2018:07:21 20:00:00" } });
+    expect(isoAuto(r)).toBe("2018-07-21");
+  });
+
+  it("guardada en una carpeta con su fecha: vale la carpeta", () => {
+    const r = proponer({ nombreArchivo: "IMG-20261102-WA0007.jpg", rutaArchivo: "Boda Ana 2014/IMG-20261102-WA0007.jpg" });
+    expect(isoAuto(r)).toBe("2014");
   });
 });
 
-describe("proponerFecha: fecha del archivo, último recurso", () => {
-  it("antigua: sugerencia de confianza baja", () => {
+describe("proponerFecha: la fecha del archivo solo se sugiere", () => {
+  it("antigua: sugerencia, nunca se pone sola", () => {
     const r = proponer({ nombreArchivo: "foto.jpg", ultimaModificacion: new Date("2016-07-10T12:00:00").getTime() });
     expect(r.automatica).toBeNull();
     expect(isoSugerencias(r)).toEqual(["2016-07-10 archivo fecha-del-archivo"]);
   });
 
-  it("reciente: ni se muestra", () => {
+  it("del último mes: ni se muestra (es la de la copia)", () => {
     const r = proponer({ nombreArchivo: "foto.jpg", ultimaModificacion: hoy.getTime() });
     expect(r).toMatchObject({ automatica: null, sugerencias: [], motivo: undefined, escaneo: false });
-    const haceMeses = proponer({ nombreArchivo: "foto.jpg", ultimaModificacion: new Date("2026-03-01T10:00:00").getTime() });
-    expect(haceMeses.sugerencias).toEqual([]);
+    const haceSemanas = proponer({ nombreArchivo: "foto.jpg", ultimaModificacion: new Date("2026-10-15T10:00:00").getTime() });
+    expect(haceSemanas.sugerencias).toEqual([]);
   });
 
-  it("no se ofrece si hay pistas mejores", () => {
+  it("no se ofrece si la foto ya tiene fecha", () => {
     const r = proponer({ nombreArchivo: "IMG-20190814-WA0001.jpg", ultimaModificacion: new Date("2020-01-01T10:00:00").getTime() });
-    expect(r.sugerencias).toHaveLength(1);
+    expect(r.sugerencias).toEqual([]);
   });
 
   it("ni la de un reloj a cero", () => {
@@ -394,75 +519,6 @@ describe("proponerFecha: fecha del archivo, último recurso", () => {
 
   it("sin nada, en blanco y sin motivo", () => {
     expect(proponer({ nombreArchivo: "foto.jpg" })).toEqual({ automatica: null, sugerencias: [], motivo: undefined, escaneo: false, senales: [] });
-  });
-});
-
-describe("proponerFecha: dudas", () => {
-  it("la original de cámara y el año escrito en el nombre no coinciden: sugiere los dos, primero el escrito", () => {
-    const r = proponer({ nombreArchivo: "verano 2015.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00" } });
-    expect(r.automatica).toBeNull();
-    expect(isoSugerencias(r)).toEqual(["2015 nombre exif-y-nombre-no-coinciden", "2019-08-14 exif exif-y-nombre-no-coinciden"]);
-  });
-
-  // Decisión pendiente de Ricard: el encargo solo pedía bloquear con otro día; también se bloquea
-  // con un año o un mes escritos que no coinciden, para no rellenar sola una fecha que la persona contradice.
-  it("un mes escrito que no coincide con la cámara también la deja en blanco, primero el escrito", () => {
-    const r = proponer({ nombreArchivo: "Menorca 2019-07.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 18:30:00" } });
-    expect(r.automatica).toBeNull();
-    expect(isoSugerencias(r)).toEqual(["2019-07 nombre exif-y-nombre-no-coinciden", "2019-08-14 exif exif-y-nombre-no-coinciden"]);
-  });
-
-  it.each<[string, MetadatosFecha]>([
-    ["IMGP2015.JPG", { Make: "PENTAX", Model: "PENTAX K-5", tieneExposicion: true }],
-    ["SDIM2001.JPG", { Make: "SIGMA", Model: "SIGMA dp2 Quattro", tieneExposicion: true }],
-    ["100_1987.JPG", { Make: "EASTMAN KODAK COMPANY", Model: "KODAK EASYSHARE C513 DIGITAL CAMERA", tieneExposicion: true }],
-  ])("%s: el contador de la cámara no choca con su fecha ni se toma por un año", (nombreArchivo, camara) => {
-    const conCamara = proponer({ nombreArchivo, exif: { ...camara, DateTimeOriginal: "2019:08:14 18:30:00" } });
-    expect(conCamara.automatica).toEqual({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta" });
-    // Reexportada sin metadatos: ni el «año» del contador ni nada.
-    const sinExif = proponer({ nombreArchivo });
-    expect(sinExif.automatica).toBeNull();
-    expect(sinExif.sugerencias).toEqual([]);
-  });
-
-  it("si el nombre de la cámara dice otro día, primero la original", () => {
-    const r = proponer({ nombreArchivo: "IMG_20150101_120000.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 12:00:00" } });
-    expect(isoSugerencias(r)).toEqual(["2019-08-14 exif exif-y-nombre-no-coinciden", "2015-01-01 nombre exif-y-nombre-no-coinciden"]);
-  });
-
-  it("un día de diferencia entre la original y el nombre se tolera (zonas horarias)", () => {
-    const r = proponer({ nombreArchivo: "IMG_20190815_003000.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 23:30:00" } });
-    expect(isoAuto(r)).toBe("2019-08-14");
-  });
-
-  it("original sin datos de cámara: sugerencia", () => {
-    const r = proponer({ nombreArchivo: "foto.jpg", exif: { DateTimeOriginal: "2012:05:05 10:00:00" } });
-    expect(isoSugerencias(r)).toEqual(["2012-05-05 exif sin-datos-de-camara"]);
-  });
-
-  it("si coincide con el nombre de la cámara, la original sin datos de cámara se rellena con el nombre", () => {
-    const r = proponer({ nombreArchivo: "PXL_20120505_100000000.jpg", exif: { DateTimeOriginal: "2012:05:05 10:00:00" } });
-    expect(isoAuto(r)).toBe("2012-05-05");
-  });
-
-  it("solo la fecha de digitalización de una cámara: sugerencia", () => {
-    const r = proponer({ nombreArchivo: "DSC00001.jpg", exif: { ...CANON, DateTimeDigitized: "2012:05:05 10:00:00" } });
-    expect(isoSugerencias(r)).toEqual(["2012-05-05 exif fecha-digitalizacion"]);
-  });
-
-  it("una fecha de reloj sin configurar no se sugiere y lo explica", () => {
-    const r = proponer({ nombreArchivo: "DSC00001.jpg", exif: { ...CANON, DateTimeOriginal: "2001:01:01 00:00:00" } });
-    expect(r).toMatchObject({ automatica: null, sugerencias: [], motivo: "reloj-de-camara" });
-  });
-
-  it("como mucho dos sugerencias, sin repetir fechas", () => {
-    const r = proponer({
-      nombreArchivo: "IMG-20200101-WA0001.jpg",
-      exif: { DateTimeOriginal: "2026:10:01 10:00:00", DateCreated: "1999" },
-      ultimaModificacion: new Date("2018-01-01T10:00:00").getTime(),
-    });
-    expect(r.sugerencias).toHaveLength(2);
-    expect(new Set(r.sugerencias.map((s) => aIso(s.fecha))).size).toBe(2);
   });
 });
 

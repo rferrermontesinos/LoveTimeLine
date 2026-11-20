@@ -55,7 +55,7 @@ export interface MecanicaFolleto {
 /** Colores de los dos tipos de juego, como en «Cómo se juega». */
 const COLOR_MODO = { clasico: "#FFC93C", historia: "#22A861" } as const;
 /** Clave de cada mecánica en juego.json (`mecanicas.<clave>`). */
-const CLAVE_MECANICA: Record<string, "estrella" | "comodin" | "enBlanco"> = { estrella: "estrella", comodin: "comodin", "en-blanco": "enBlanco" };
+const CLAVE_MECANICA: Record<string, "comodin" | "enBlanco"> = { comodin: "comodin", "en-blanco": "enBlanco" };
 
 const PANEL = "relative h-[88mm] w-[63mm] shrink-0 overflow-hidden";
 const CUERPO = "text-[6.8pt] leading-[1.3]";

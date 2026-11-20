@@ -49,7 +49,7 @@ const mazo = (n: number, cambios: Partial<Mazo> = {}): Mazo => ({
   caja: null,
   tono: "original",
   idiomaMazo: "es",
-  mecanicas: ["estrella", "comodin", "en-blanco"],
+  mecanicas: ["comodin", "en-blanco"],
   extras: [],
   consentimientoFotos: 1,
   paso: 4,

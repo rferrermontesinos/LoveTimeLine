@@ -1,10 +1,20 @@
 {
   "cartas": {
     "titulo": "Complete your cards",
-    "texto": "Every card needs a date. Add a line if you like and frame the photo. It saves itself.",
+    "texto": "Check each card’s date and add a line if you like. It saves itself.",
     "posicion": "Card {actual} of {total}",
-    "configuradas": "{n} of {total} ready",
-    "siguientePendiente": "Next unfinished",
+    "progreso": {
+      "faltan": "{n, plural, one {# card left to finish} other {# cards left to finish}}",
+      "listas": "{n} of {total} cards ready",
+      "siguiente": "Finish the next one"
+    },
+    "listo": {
+      "titulo": "Your deck is ready!",
+      "texto": "{n, plural, one {Your card has its date and is all set.} other {All # cards have their date and are all set.}} Next, choose the style.",
+      "tituloFaltan": "Every card is ready",
+      "faltanMinimo": "To fill your pack, you need {n, plural, one {# more card} other {# more cards}}: add photos or a memory without a photo."
+    },
+    "vistaPrevia": "Card preview",
     "estado": {
       "lista": "Card ready",
       "pendiente": "Unfinished: {motivos}",
@@ -19,10 +29,20 @@
       "texto-vacio": "the text is missing",
       "texto-con-hueco": "fill in the part in brackets"
     },
-    "tiraEtiqueta": "All cards",
-    "tiraItem": "{nombre}, {fecha}, {estado, select, lista {ready} other {unfinished}}",
     "cartaSinFoto": "Card without a photo",
     "sinFechaCorta": "no date",
+    "mazo": {
+      "titulo": "Your deck",
+      "ayuda": "Sorted by date, as it will be played. Tap a card to open it: the ones with a yellow dot still need finishing.",
+      "sinFecha": "No date · {n}",
+      "carta": "{nombre}, {fecha}, {estado, select, lista {ready} other {to finish}}",
+      "anadirFotos": "Add more photos",
+      "arrastrar": "or drop them here"
+    },
+    "sinFoto": {
+      "titulo": "A memory without a photo?",
+      "otro": "Write your own"
+    },
     "descripcion": "A line about the memory (optional)",
     "descripcionAyuda": "Shown on the date side. Up to {max} characters.",
     "descripcionContador": "{n} / {max}",
@@ -30,19 +50,14 @@
     "textoRecuerdo": "Memory text",
     "textoRecuerdoAyuda": "Shown on both sides of the card. Up to {max} characters.",
     "completarHueco": "Fill in <h>{hueco}</h>",
-    "estrella": "Star memory",
-    "estrellaAyuda": "Whoever places it correctly plays again. Up to {max} per deck.",
-    "estrellaMax": "You already have {max} star memories.",
     "encuadrar": "Frame",
     "girar": "Rotate",
     "adornos": "Emojis",
     "borrarCarta": "Delete card",
     "borrada": "Card deleted.",
-    "calidad": "Print quality",
-    "calidadBuena": "Good ({ppp} ppi)",
-    "calidadJusta": "Fair ({ppp} ppi): it may look a bit blurry",
+    "calidadJusta": "Low-resolution photo ({ppp} ppi): it may print a bit blurry.",
     "calidadConfirmar": "Print it anyway",
-    "calidadConfirmada": "Confirmed: it will print like this",
+    "calidadConfirmada": "It will print like this",
     "sinCartas": "No cards yet. Add photos in step 1 or write a memory without a photo.",
     "irAFotos": "Go to photos",
     "atajos": "Shortcuts: ← and → to move between cards.",

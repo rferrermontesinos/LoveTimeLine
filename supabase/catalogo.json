@@ -239,7 +239,7 @@
     {
       "id": "estrella",
       "orden": 1,
-      "activo": true,
+      "activo": false,
       "tipo": "icono",
       "icono": "estrella",
       "asignacion": "manual",

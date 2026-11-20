@@ -1,14 +1,11 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PRINT } from "@config/print";
 import { VistaCaja } from "@/components/carta/VistaCaja";
-import { VistaCarta } from "@/components/carta/VistaCarta";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso, Interruptor } from "@/components/ui/Piezas";
-import { fechaLegible } from "@/domain/fechas/formato";
-import { agruparPorAnio, ordenarPorFecha } from "@/domain/mazo/ordenar";
 import { GRAVEDAD, validarMazo, type Aviso as AvisoMazo } from "@/domain/mazo/validar";
 import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
@@ -16,8 +13,9 @@ import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
 import { esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, paraValidar } from "@/lib/mazo/derivados";
 import { esFoto, esTexto } from "@/lib/mazo/tipos";
-import type { Carta, Pedido } from "@/lib/mazo/tipos";
+import type { Pedido } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
+import { LineaDelMazo } from "./LineaDelMazo";
 import { OfertasPedido } from "./Ofertas";
 import { OpcionesPack } from "./SelectorPack";
 import { useSinConexion } from "./SinConexion";
@@ -42,7 +40,7 @@ export function PasoPedido() {
   const router = useRouter();
   const id = useId();
   const { mazo, despachar, guardarAhora, guardado } = useMazo();
-  const { catalogo, cotizacion, iconos, irAPaso, versiones, abrirRecuerdo } = useCrear();
+  const { catalogo, cotizacion, irAPaso, versiones, abrirRecuerdo, pendientes, todasListas } = useCrear();
   const hoy = useMemo(() => new Date(), []);
   const [revisado, setRevisado] = useState(false);
   const [pagando, setPagando] = useState(false);
@@ -63,13 +61,14 @@ export function PasoPedido() {
         : null,
     [mazo, cotizacion, catalogo, hoy],
   );
-  const grupos = useMemo(() => (mazo ? agruparPorAnio(ordenarPorFecha(mazo.cartas)) : []), [mazo]);
+  const sinCompletar = useMemo(() => new Set(pendientes), [pendientes]);
 
   if (!mazo || !cotizacion || !validacion) return null;
 
   const dinero = (cents: number) => formatearImporte(cents, cotizacion.moneda, locale);
   const bloqueantes = validacion.avisos.filter((a) => GRAVEDAD[a.tipo] === "bloquea");
-  const puedePagar = validacion.puedePagar && cotizacion.sePuedePagar;
+  // Se puede llegar aquí con cartas por completar, pero no pagar.
+  const puedePagar = validacion.puedePagar && cotizacion.sePuedePagar && todasListas;
   // Sin conexión no se llega a Stripe; con el mazo cambiado en otra pestaña, esta no puede guardar el pedido.
   const enConflicto = guardado.tipo === "conflicto";
   const extras = catalogo.extras.filter((x) => x.activo).sort((a, b) => a.orden - b.orden);
@@ -216,22 +215,7 @@ export function PasoPedido() {
               </h2>
               <p className="mt-1 text-sm text-tinta-2">{t("lineaTemporalAyuda")}</p>
             </div>
-            <ol className="mesa flex flex-wrap items-start gap-x-4 gap-y-6 rounded-[24px] p-4 sm:p-6">
-              {grupos.map((g) => (
-                <li key={g.anio ?? "sin-fecha"} className="min-w-0 max-w-full space-y-2">
-                  <h3 className={`tipo-titular border-t-2 pt-1.5 text-lg leading-none ${g.anio === null ? "border-rojo text-rojo-texto" : "border-tinta"}`}>
-                    {g.anio ?? t("sinFecha")}
-                  </h3>
-                  <ul className="flex flex-wrap gap-2">
-                    {g.cartas.map((c) => (
-                      <CartaLinea key={c.id} carta={c} alPulsar={() => irAPaso(2, c.id)} locale={locale}>
-                        <VistaCarta carta={c} mazo={mazo} cara="reverso" icono={iconos.get(c.id) ?? null} version={versiones[c.id] ?? 0} />
-                      </CartaLinea>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+            <LineaDelMazo mazo={mazo} pendientes={sinCompletar} alPulsar={(cartaId) => irAPaso(2, cartaId)} />
           </section>
 
           {/* Comprobaciones */}
@@ -350,7 +334,9 @@ export function PasoPedido() {
               {pagando ? t("pagando") : t("pagarPrueba", { total: dinero(cotizacion.totalCents) })}
             </Boton>
             <p id={`${id}-estado-pago`} className="mt-2 min-h-5 text-sm" aria-live="polite">
-              {!puedePagar && bloqueantes.length > 0 ? (
+              {!todasListas ? (
+                <span className="text-rojo-texto">{t("faltanCartas", { n: pendientes.length })}</span>
+              ) : !puedePagar && bloqueantes.length > 0 ? (
                 <span className="text-rojo-texto">{t("bloquea")}</span>
               ) : sinConexion ? (
                 <span className="text-tinta-2" data-testid="motivo-sin-conexion">
@@ -372,19 +358,5 @@ export function PasoPedido() {
         </aside>
       </div>
     </div>
-  );
-}
-
-function CartaLinea({ carta, alPulsar, locale, children }: { carta: Carta; alPulsar: () => void; locale: string; children: ReactNode }) {
-  const tc = useTranslations("comun");
-  const fecha = carta.fecha ? fechaLegible(carta.fecha, locale) : "";
-  return (
-    <li className="w-[4.6rem] sm:w-[5.6rem]">
-      <button type="button" onClick={alPulsar} className="block w-full rounded-[10px] text-left transition-transform hover:-translate-y-0.5" aria-label={`${tc("reverso")}${fecha ? `: ${fecha}` : ""}${carta.descripcion ? `. ${carta.descripcion}` : ""}`}>
-        <span aria-hidden="true" className="pointer-events-none block">
-          {children}
-        </span>
-      </button>
-    </li>
   );
 }

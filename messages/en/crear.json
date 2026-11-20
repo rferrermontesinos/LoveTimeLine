@@ -17,7 +17,7 @@
       "estilo": "Style",
       "pedido": "Order",
       "paso": "Step {n} of 4",
-      "bloqueado": "Finish every card to continue"
+      "bloqueado": "Add a photo to continue"
     },
     "barra": {
       "siguienteCartas": "Next: cards",

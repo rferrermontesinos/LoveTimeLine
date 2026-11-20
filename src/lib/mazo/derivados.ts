@@ -1,6 +1,6 @@
 import { PRINT } from "@config/print";
 import { pppEfectivo, recorteCentrado, recorteReversoDesdeAnverso, type Rect } from "@/domain/imagen/recorte";
-import { rangoAnios } from "@/domain/mazo/ordenar";
+import { ordenarPorFecha, rangoAnios } from "@/domain/mazo/ordenar";
 import type { CartaParaValidar } from "@/domain/mazo/validar";
 import { asignarIconos, type MecanicaIcono } from "@/domain/mecanicas/asignar";
 import type { Catalogo, Extra } from "@/domain/precios/tipos";
@@ -123,14 +123,21 @@ export function iconosDelMazo(mazo: Pick<Mazo, "mecanicas" | "cartas">, catalogo
   );
 }
 
-export function maxEstrellas(catalogo: Catalogo): number {
-  return catalogo.mecanicas.find((m) => m.id === "estrella")?.maxCartas ?? 5;
-}
-
-/** Foto de la portada: la elegida, si no la primera estrella con foto, si no la primera con foto. */
+/**
+ * Foto de la portada. Ya no se elige (20-11-2026): es la foto con fecha más reciente, o la primera
+ * si ninguna tiene fecha. Un mazo guardado con una portada elegida la conserva.
+ */
 export function cartaPortada(mazo: Pick<Mazo, "cartas" | "portadaId">): CartaFoto | null {
   const fotos = mazo.cartas.filter(esFoto);
-  return fotos.find((c) => c.id === mazo.portadaId) ?? fotos.find((c) => c.destacada) ?? fotos[0] ?? null;
+  const elegida = fotos.find((c) => c.id === mazo.portadaId);
+  if (elegida) return elegida;
+  const conFecha = ordenarPorFecha(fotos.filter((c) => c.fecha));
+  return conFecha[conFecha.length - 1] ?? fotos[0] ?? null;
+}
+
+/** Fecha puesta sola que solo es aproximada: el mes de un reenvío o de una captura de hace tiempo. */
+export function esAproximada(c: Pick<Carta, "fecha" | "confianza" | "fuente">): boolean {
+  return !!c.fecha && c.confianza === "baja" && c.fuente !== "manual";
 }
 
 /** «2012–2026 · 43 recuerdos» en el idioma del mazo. */

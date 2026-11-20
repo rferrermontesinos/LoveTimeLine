@@ -31,7 +31,7 @@
       "reverso": "Detrás",
       "secciones": {
         "foto": "Recuerdo con foto",
-        "estrella": "Recuerdo estrella",
+        "fraseDelante": "Recuerdo con la frase también delante",
         "texto": "Recuerdo sin foto",
         "textoLargo": "Recuerdo sin foto, largo",
         "portada": "Portada",
@@ -42,7 +42,7 @@
         "iconos": "Iconos de la esquina"
       },
       "notas": {
-        "textoLargo": "90 caracteres, el máximo, y recuerdo estrella.",
+        "textoLargo": "90 caracteres, el máximo.",
         "cajaPersonalizada": "Extra de pago: se imprime con el pedido, con la foto elegida.",
         "cajaGenerica": "Packaging de stock: no va en el archivo de impresión. Siempre con la paleta por defecto."
       },
@@ -50,7 +50,7 @@
         "titulo": "Ana y Leo",
         "dedicatoria": "Para Ana y Leo, que siguen sumando recuerdos. Con cariño, la familia.",
         "foto": "Nuestro primer viaje juntos, Menorca",
-        "estrella": "Cena de aniversario",
+        "fraseDelante": "Cena de aniversario",
         "texto": "El día que nos conocimos",
         "textoLargo": "La noche que se fue la luz en todo el barrio y cenamos a la luz de las velas en la terraza"
       }

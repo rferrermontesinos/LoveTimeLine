@@ -1,4 +1,4 @@
-import { esNombreDeEscaneo } from "./escaneo";
+import { esNombreDeEscaneo, PATRONES_CARPETA_ESCANEO, sinDiacriticos } from "./escaneo";
 import { ANIO_MINIMO, crearFecha, esFutura, type FechaCarta } from "./fecha";
 
 /**
@@ -123,6 +123,28 @@ export function origenDeNombre(nombreArchivo: string, patron?: FechaDesdeNombre[
 export function fechaDesdeNombre(nombreArchivo: string, opciones: { hoy: Date }): FechaDesdeNombre | null {
   const encontrada = buscarFecha(nombreArchivo, opciones.hoy);
   return encontrada ? { ...encontrada, origen: origenDeNombre(nombreArchivo, encontrada.patron) } : null;
+}
+
+/** Carpetas que no dicen nada del recuerdo: las de mensajería, las de capturas y las de la cámara (DCIM, 100APPLE). */
+const RE_CARPETA_SIN_FECHA = /whats[\s_-]?app|telegram|signal|messenger|screen[\s_-]?shots?|capturas?(?!\p{L})|^dcim$|^\d{3}[a-z_]{5}$/iu;
+
+/**
+ * Fecha escrita en el nombre de una carpeta de la ruta («Menorca 2015/IMG_1234.jpg», «2019/2019-08-14/…»,
+ * «Fotos de 2019/» de Google Takeout), de la más cercana a la foto a la más lejana. Solo cuenta lo
+ * que escribe una persona: no valen las carpetas de mensajería, capturas, escaneos o de la cámara.
+ * Sin carpetas en la ruta, null.
+ */
+export function fechaDesdeCarpeta(rutaArchivo: string, opciones: { hoy: Date }): FechaCarta | null {
+  const carpetas = rutaArchivo.normalize("NFC").split(/[\\/]/).slice(0, -1).reverse();
+  for (const carpeta of carpetas) {
+    const limpia = carpeta.trim();
+    const sinTildes = sinDiacriticos(limpia);
+    if (!limpia || RE_CARPETA_SIN_FECHA.test(sinTildes) || PATRONES_CARPETA_ESCANEO.some((re) => re.test(sinTildes))) continue;
+    // Se lee como el nombre de un archivo: con una extensión postiza, «Fotos 2019.08» no pierde su mes.
+    const encontrada = buscarFecha(`${limpia}.jpg`, opciones.hoy);
+    if (encontrada && encontrada.patron !== "marca-tiempo") return encontrada.fecha;
+  }
+  return null;
 }
 
 function buscarFecha(nombreArchivo: string, hoy: Date): Omit<FechaDesdeNombre, "origen"> | null {

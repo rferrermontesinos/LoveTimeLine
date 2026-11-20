@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { desdeIso, type FechaCarta } from "../fechas/fecha";
-import { cartaConfigurada, cartasPendientes, pasoMaximo, pendientesDeCarta, puedeIrAEstilo, rangoHueco, siguientePendiente, tieneHueco, type CartaParaConfigurar } from "./configuracion";
+import { cartaConfigurada, cartasPendientes, mazoConfigurado, pasoMaximo, pendientesDeCarta, rangoHueco, siguientePendiente, tieneHueco, type CartaParaConfigurar } from "./configuracion";
 import { siguienteQue } from "./ordenar";
 
 const hoy = new Date("2026-11-04T10:00:00");
@@ -61,14 +61,18 @@ describe("cartaConfigurada", () => {
   });
 });
 
-describe("puedeIrAEstilo", () => {
+describe("mazoConfigurado", () => {
   it("hace falta al menos una carta y ninguna pendiente", () => {
-    expect(puedeIrAEstilo([], hoy)).toBe(false);
-    expect(puedeIrAEstilo([foto("2019"), foto("2020-01")], hoy)).toBe(true);
-    expect(puedeIrAEstilo([foto("2019"), foto(null)], hoy)).toBe(false);
-    expect(puedeIrAEstilo([foto("2019"), texto("1950", "Nació [nombre]")], hoy)).toBe(false);
-    expect(pasoMaximo([foto("2019"), foto(null)], hoy)).toBe(2);
-    expect(pasoMaximo([foto("2019")], hoy)).toBe(4);
+    expect(mazoConfigurado([], hoy)).toBe(false);
+    expect(mazoConfigurado([foto("2019"), foto("2020-01")], hoy)).toBe(true);
+    expect(mazoConfigurado([foto("2019"), foto(null)], hoy)).toBe(false);
+    expect(mazoConfigurado([foto("2019"), texto("1950", "Nació [nombre]")], hoy)).toBe(false);
+  });
+
+  it("deja ir a Estilo y Pedido en cuanto hay cartas, aunque falte alguna por completar", () => {
+    expect(pasoMaximo([])).toBe(2);
+    expect(pasoMaximo([foto("2019"), foto(null)])).toBe(4);
+    expect(pasoMaximo([foto("2019")])).toBe(4);
   });
 
   it("lista las pendientes en orden y salta a la siguiente", () => {

@@ -4,7 +4,7 @@ import type { Rect } from "@/domain/imagen/recorte";
 import type { Adorno } from "@/lib/carta/tipos";
 import type { Tono } from "@/lib/estilos";
 
-/** Fecha posible que no se rellena sola porque no es segura. El cliente la acepta o pone otra. */
+/** Fecha posible que no se ha puesto sola. El cliente la acepta o pone otra. */
 export interface SugerenciaFecha {
   fecha: FechaCarta;
   fuente: Exclude<FuenteFecha, "manual">;
@@ -22,11 +22,11 @@ export interface CartaBase {
   revisar: boolean;
   /** Por qué la fecha está en blanco o hay que revisarla. */
   motivo?: MotivoRevision;
-  /** Fechas posibles, la mejor primero. Nunca se ponen solas. */
+  /** Con la carta en blanco, fechas posibles que el cliente usa con un toque, la mejor primero. */
   sugerencias?: SugerenciaFecha[];
   /** Frase de la carta: opcional con foto, obligatoria sin foto. Máximo 90 caracteres. */
   descripcion: string;
-  /** Recuerdo estrella. */
+  /** Recuerdo estrella, retirado el 20 de noviembre de 2026: se guarda, pero ya no se usa ni se muestra. */
   destacada: boolean;
   anadidaEn: number;
 }
@@ -106,6 +106,13 @@ export interface Pedido {
 
 export const VERSION_MAZO = 2;
 
+/**
+ * Reglas de fechas con las que se revisaron las cartas del mazo. 2: las del 20 de noviembre de
+ * 2026, que ponen sola casi cualquier fecha salvo las de preparar el mazo. Los mazos anteriores se
+ * revisan una vez al abrirlos (ver mejorarFechasGuardadas), sin tocar las fechas que ya tenían.
+ */
+export const POLITICA_FECHAS = 2;
+
 export interface Mazo {
   version: typeof VERSION_MAZO;
   id: string;
@@ -129,6 +136,8 @@ export interface Mazo {
   paso: Paso;
   /** Carta abierta en el paso 2, para volver a ella otro día. Opcional: los mazos antiguos no la traen. */
   cartaAbierta?: string | null;
+  /** Ver POLITICA_FECHAS. Opcional: los mazos antiguos no la traen. */
+  politicaFechas?: number;
   cartas: Carta[];
   pedido: Pedido | null;
 }

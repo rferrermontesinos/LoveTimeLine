@@ -90,11 +90,6 @@
     "mecanicas": {
       "titulo": "Corner icons",
       "texto": "Some cards have an icon in the corner. Here’s what each one does.",
-      "estrella": {
-        "nombre": "Star memory",
-        "clasico": "Place it correctly and you play again.",
-        "historia": "Place it correctly and you win back a life (never more than you started with)."
-      },
       "comodin": {
         "nombre": "Joker",
         "clasico": "When you miss and end up with more cards than anyone else, take a joker if there’s one left (one each). Use it before placing a card: ask the person who made the deck for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. Then it goes back in the box. If the deck maker isn’t there, only the swap works.",

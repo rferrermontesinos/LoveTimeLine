@@ -35,6 +35,18 @@ export async function cargarMazo(): Promise<Mazo | null> {
   }
 }
 
+/**
+ * Hay algo guardado como mazo, se pueda leer o no. Si no se puede (una versión futura, un dato
+ * estropeado), sus fotos no se tocan: mejor fotos de más en el dispositivo que perder un mazo.
+ */
+export async function hayMazoGuardado(): Promise<boolean> {
+  try {
+    return (await get(CLAVE_MAZO, t())) !== undefined;
+  } catch {
+    return true;
+  }
+}
+
 /** El almacén está lleno: el navegador no deja guardar más en este dispositivo. */
 export function esErrorDeEspacio(e: unknown): boolean {
   if (!e || typeof e !== "object") return false;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { DESCARGA_PDF } from "@config/prototipo";
 import { Boton, BotonEnlace } from "@/components/ui/Boton";
-import { Aviso, Franja } from "@/components/ui/Piezas";
+import { Aviso, CerrarAviso, Franja } from "@/components/ui/Piezas";
 import { packPorDefecto } from "@/domain/precios/cotizar";
 import { textoEn, type Catalogo } from "@/domain/precios/tipos";
 import { nuevoId } from "@/lib/importar/procesar";
@@ -17,6 +17,7 @@ import { BarraAccion, BarraPasos } from "./Barras";
 import { ProveedorCrear, useCrear } from "./contexto";
 import { DialogoRecuerdo } from "./DialogoRecuerdo";
 import { AvisoGuardado, LineaGuardado, useAhora } from "./EstadoGuardado";
+import { ProveedorImportacion, SoltarFotos, useImportacion } from "./importacion";
 import { PasoCartas } from "./PasoCartas";
 import { PasoEstilo } from "./PasoEstilo";
 import { PasoFotos } from "./PasoFotos";
@@ -34,7 +35,9 @@ export function Configurador({ catalogo }: { catalogo: Catalogo }) {
   return (
     <ProveedorMazo>
       <ProveedorCrear catalogo={catalogo}>
-        <Contenido />
+        <ProveedorImportacion>
+          <Contenido />
+        </ProveedorImportacion>
       </ProveedorCrear>
     </ProveedorMazo>
   );
@@ -44,7 +47,8 @@ function Contenido() {
   const t = useTranslations();
   const locale = useLocale();
   const { estado, mazo, despachar, almacenOk, reiniciarTodo, alAbrir } = useMazo();
-  const { catalogo, pasoActual, puedeAvanzar, recuerdo, cerrarRecuerdo, recuerdoAnadido } = useCrear();
+  const { catalogo, pasoActual, avisoPendientes, recuerdo, cerrarRecuerdo, recuerdoAnadido, irAPaso } = useCrear();
+  const { intentosSinPermiso, cerrarResumen } = useImportacion();
   const [borrando, setBorrando] = useState(false);
   // `?pack=` y `?pago=` se leen en el navegador (no como props del servidor) y una sola vez, al
   // abrir: en cuanto se usan salen de la URL, y la página guardada de esa entrada del historial
@@ -75,6 +79,22 @@ function Contenido() {
     const limpia = urlSinParametros(window.location.href, ["pago"]);
     if (limpia) window.history.replaceState(null, "", limpia);
   }, [listo, pagoCancelado, despachar]);
+
+  // Fotos elegidas o soltadas sin el permiso desde otro paso (Cartas): a Fotos, donde está la casilla.
+  const intentoVisto = useRef(intentosSinPermiso);
+  useEffect(() => {
+    if (intentosSinPermiso === intentoVisto.current) return;
+    intentoVisto.current = intentosSinPermiso;
+    if (pasoActual !== 1) irAPaso(1);
+  }, [intentosSinPermiso, pasoActual, irAPaso]);
+
+  // El resumen de la última subida se queda en el paso donde se vio: al cambiar de paso, se cierra.
+  const pasoVisto = useRef(pasoActual);
+  useEffect(() => {
+    if (pasoVisto.current === pasoActual) return;
+    pasoVisto.current = pasoActual;
+    cerrarResumen();
+  }, [pasoActual, cerrarResumen]);
 
   // Ctrl/Cmd + Z deshace los cambios del mazo, salvo mientras se escribe (ahí manda el deshacer del navegador).
   useEffect(() => {
@@ -130,8 +150,9 @@ function Contenido() {
       : null;
   const avisoCancelado = !pasoCambiado && !canceladoCerrado && pagoCancelado && !pagado;
 
-  // Con cartas pendientes, la barra inferior crece con el aviso de las que faltan: más hueco abajo.
-  const conAvisoAbajo = pasoActual === 2 && mazo.cartas.length > 0 && !puedeAvanzar;
+  // Con cartas pendientes en Estilo o Pedido, la barra inferior crece con el aviso de las que
+  // faltan: más hueco abajo.
+  const conAvisoAbajo = avisoPendientes;
 
   return (
     <>
@@ -206,7 +227,7 @@ function Contenido() {
           </Aviso>
         )}
 
-        {/* Como mucho, el paso permitido: con cartas pendientes, Estilo y Pedido no se muestran. */}
+        {/* Como mucho, el paso permitido: sin cartas, Estilo y Pedido no se muestran. */}
         {pasoActual === 1 && <PasoFotos />}
         {pasoActual === 2 && <PasoCartas />}
         {pasoActual === 3 && <PasoEstilo />}
@@ -220,6 +241,8 @@ function Contenido() {
         </footer>
       </main>
       <BarraAccion />
+      {/* Soltar fotos en cualquier punto de la página, en Fotos y en Cartas. */}
+      <SoltarFotos activo={pasoActual <= 2} />
       {recuerdo && <DialogoRecuerdo key={recuerdo.clave} abierto={recuerdo.abierto} idea={recuerdo.idea} alCerrar={cerrarRecuerdo} />}
       {/* Confirma al lector de pantalla el recuerdo sin foto recién añadido, desde cualquier paso. */}
       <p role="status" className="sr-only">
@@ -265,10 +288,3 @@ function AvisoReanudar({ guardado, mazo, ocupado, alEmpezarOtro, alCerrar }: { g
   );
 }
 
-function CerrarAviso({ etiqueta, alCerrar }: { etiqueta: string; alCerrar: () => void }) {
-  return (
-    <button type="button" onClick={alCerrar} aria-label={etiqueta} title={etiqueta} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl leading-none hover:bg-papel-2 max-sm:h-11 max-sm:w-11">
-      <span aria-hidden="true">×</span>
-    </button>
-  );
-}

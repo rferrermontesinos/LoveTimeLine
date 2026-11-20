@@ -1,7 +1,6 @@
 /**
- * Cuándo una carta está «lista» (configurada) y si se puede pasar a Estilo y Pedido. Es la
- * única regla: la usan el carrusel de cartas, la barra de pasos, la barra inferior y el
- * configurador para no dejar avanzar con cartas pendientes.
+ * Cuándo una carta está «lista» (configurada) y si lo está el mazo entero. Es la única regla: la
+ * usan el paso de cartas, la barra inferior y el pedido, que no deja pagar con cartas pendientes.
  */
 import { esFechaValida, esFutura, type FechaCarta } from "../fechas/fecha";
 import { MAX_DESCRIPCION } from "./limites";
@@ -77,14 +76,17 @@ export function cartasPendientes(cartas: readonly (CartaParaConfigurar & { id: s
   return cartas.filter((c) => !cartaConfigurada(c, hoy)).map((c) => c.id);
 }
 
-/** Se puede pasar a Estilo (y a Pedido) con al menos una carta y ninguna pendiente. */
-export function puedeIrAEstilo(cartas: readonly CartaParaConfigurar[], hoy: Date): boolean {
+/** El mazo está listo para pagar: al menos una carta y ninguna pendiente. */
+export function mazoConfigurado(cartas: readonly CartaParaConfigurar[], hoy: Date): boolean {
   return cartas.length > 0 && cartas.every((c) => cartaConfigurada(c, hoy));
 }
 
-/** Paso más avanzado al que se puede ir: Fotos y Cartas siempre; Estilo y Pedido, con todo listo. */
-export function pasoMaximo(cartas: readonly CartaParaConfigurar[], hoy: Date): 2 | 4 {
-  return puedeIrAEstilo(cartas, hoy) ? 4 : 2;
+/**
+ * Paso más avanzado al que se puede ir: Fotos y Cartas siempre; Estilo y Pedido, en cuanto hay
+ * alguna carta, aunque falten por completar (lo que espera a que estén todas es el pago).
+ */
+export function pasoMaximo(cartas: readonly unknown[]): 2 | 4 {
+  return cartas.length > 0 ? 4 : 2;
 }
 
 /** Índice de la siguiente carta pendiente después de `desde` (da la vuelta al final), o -1. */

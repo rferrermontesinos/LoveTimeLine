@@ -22,13 +22,13 @@ const PASOS: { n: Paso; clave: "fotos" | "cartas" | "estilo" | "pedido" }[] = [
 ];
 
 /**
- * Los cuatro pasos. Estilo y Pedido no están disponibles mientras falte alguna carta por
- * completar: siguen enfocables y, al pulsarlos, llevan a la primera carta pendiente.
+ * Los cuatro pasos. Estilo y Pedido no están disponibles hasta que haya alguna carta: siguen
+ * enfocables y, al pulsarlos, llevan a Cartas.
  */
 export function BarraPasos() {
   const t = useTranslations("crear.pasos");
   const { mazo } = useMazo();
-  const { irAPaso, pasoActual, puedeAvanzar } = useCrear();
+  const { irAPaso, pasoActual, pasoMax } = useCrear();
   const idBloqueo = useId();
   if (!mazo) return null;
   return (
@@ -37,7 +37,7 @@ export function BarraPasos() {
         {PASOS.map(({ n, clave }) => {
           const actual = pasoActual === n;
           const hecho = pasoActual > n;
-          const bloqueado = n >= 3 && !puedeAvanzar;
+          const bloqueado = n > pasoMax;
           return (
             <li key={n} className="flex-1">
               <button
@@ -69,16 +69,16 @@ export function BarraPasos() {
 
 /**
  * Barra inferior fija: el pack (con su selector), cuántas cartas llevas frente al mínimo, una
- * línea de oferta si la hay, el total y el siguiente paso. En el paso de cartas, si falta alguna
- * por completar, «Siguiente: estilo» se desactiva y la barra dice cuántas faltan, con un botón
- * para ir a la siguiente (y la oferta espera: primero, completar las cartas).
+ * línea de oferta si la hay, el total y el siguiente paso. En Estilo y Pedido, si falta alguna
+ * carta por completar, la barra dice cuántas, con un botón para ir a la siguiente (y la oferta
+ * espera: primero, completar las cartas). En Cartas eso ya lo dice el aviso de arriba.
  */
 export function BarraAccion() {
   const t = useTranslations("crear");
   const tc = useTranslations("comun");
   const locale = useLocale();
   const { mazo, despachar } = useMazo();
-  const { cotizacion, irAPaso, pasoActual, pendientes, puedeAvanzar, cartaActiva, irASiguientePendiente } = useCrear();
+  const { cotizacion, irAPaso, pasoActual, pendientes, avisoPendientes, cartaActiva, irASiguientePendiente } = useCrear();
   const [dialogoPack, setDialogoPack] = useState(false);
   const idFaltan = useId();
   const textoDe = useTextoOferta();
@@ -91,8 +91,9 @@ export function BarraAccion() {
   };
   const s = siguiente[pasoActual];
   const completo = cotizacion.faltan === 0;
-  const bloqueado = pasoActual === 2 && mazo.cartas.length > 0 && !puedeAvanzar;
-  const desactivado = s ? (s.paso === 2 ? mazo.cartas.length === 0 : s.paso >= 3 && !puedeAvanzar) : false;
+  const bloqueado = avisoPendientes;
+  // Sin cartas no hay a dónde seguir: Cartas está vacío y Estilo y Pedido, cerrados.
+  const desactivado = mazo.cartas.length === 0;
   // En Pedido la oferta va en su propio bloque, con más detalle.
   const oferta = !bloqueado && pasoActual !== 4 ? ofertaPrincipal(cotizacion.ofertas) : null;
   return (

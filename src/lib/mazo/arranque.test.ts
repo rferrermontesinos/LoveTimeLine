@@ -62,12 +62,13 @@ describe("decidirArranque", () => {
 
 describe("accionNormalizar", () => {
   it("no hay nada que hacer con una selección vigente", () => {
-    expect(accionNormalizar({ packId: "mediano", extras: ["envoltorio-regalo"], mecanicas: ["estrella"] }, catalogo)).toBeNull();
+    expect(accionNormalizar({ packId: "mediano", extras: ["envoltorio-regalo"], mecanicas: ["comodin"] }, catalogo)).toBeNull();
   });
 
   it("quita extras y mecánicas retirados y apunta la selección de la que parte", () => {
-    const a = accionNormalizar({ packId: "pareja", extras: ["pack-retos", "envoltorio-regalo"], mecanicas: ["cuentalo", "estrella"] }, catalogo);
-    expect(a).toMatchObject({ packId: "pequeno", extras: ["envoltorio-regalo"], mecanicas: ["estrella"], desde: { packId: "pareja" } });
+    // La estrella se retiró el 20-11-2026: sale del mazo guardado como las demás retiradas.
+    const a = accionNormalizar({ packId: "pareja", extras: ["pack-retos", "envoltorio-regalo"], mecanicas: ["cuentalo", "estrella", "comodin"] }, catalogo);
+    expect(a).toMatchObject({ packId: "pequeno", extras: ["envoltorio-regalo"], mecanicas: ["comodin"], desde: { packId: "pareja" } });
   });
 
   it("el ?pack= del arranque no se pierde con un extra retirado en el mazo guardado", () => {
@@ -97,7 +98,7 @@ describe("accionNormalizar", () => {
 describe("accionCrearMazo", () => {
   it("lleva las mecánicas activas marcadas por defecto, en su orden, y crea el mazo en Fotos", () => {
     const accion = accionCrearMazo({ id: "m1", ahora: 1000, packId: "mediano", idiomaMazo: "en", titulo: "Our memories", catalogo });
-    expect(accion.mecanicas).toEqual(["estrella", "comodin", "en-blanco"]);
+    expect(accion.mecanicas).toEqual(["comodin", "en-blanco"]);
     const e = reductor(ESTADO_INICIAL, accion);
     expect(e.mazo).toMatchObject({ id: "m1", packId: "mediano", idiomaMazo: "en", titulo: "Our memories", paso: 1, paletaId: "rosa", cartas: [], caja: null, extras: [] });
     expect(e.pasado).toEqual([]);
@@ -105,7 +106,7 @@ describe("accionCrearMazo", () => {
 
   it("una mecánica retirada no entra aunque esté marcada por defecto", () => {
     const sinComodin: Pick<Catalogo, "mecanicas"> = { mecanicas: catalogo.mecanicas.map((m) => (m.id === "comodin" ? { ...m, activo: false } : m)) };
-    expect(accionCrearMazo({ id: "m", ahora: 0, packId: "pequeno", idiomaMazo: "es", titulo: "t", catalogo: sinComodin }).mecanicas).toEqual(["estrella", "en-blanco"]);
+    expect(accionCrearMazo({ id: "m", ahora: 0, packId: "pequeno", idiomaMazo: "es", titulo: "t", catalogo: sinComodin }).mecanicas).toEqual(["en-blanco"]);
   });
 });
 

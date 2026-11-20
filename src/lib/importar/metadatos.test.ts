@@ -71,10 +71,10 @@ describe("leerMetadatos con exifr (integración)", () => {
     const meta = await leerMetadatos(datos);
     expect(meta).toMatchObject({ DateTimeOriginal: "2019:08:14 18:30:00", DateTimeDigitized: "2019:08:14 18:30:00", tieneExposicion: true });
     const r = proponerFecha({ nombreArchivo: "DSC01234.jpg", exif: meta, hoy });
-    expect(r.automatica).toEqual({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta" });
+    expect(r.automatica).toEqual({ fecha: { anio: 2019, mes: 8, dia: 14 }, fuente: "exif", confianza: "alta", pista: "camara" });
   });
 
-  it("original de 1987 escaneada en 2026, con XMP: sugiere 1987", async () => {
+  it("original de 1987 escaneada en 2026, con XMP: vale 1987, la que apuntó quien la digitalizó", async () => {
     const datos = await jpeg({
       exif: { IFD0: { Make: "EPSON", Model: "FF-680W" }, IFD2: { DateTimeOriginal: "1987:06:01 00:00:00", DateTimeDigitized: "2026:10:30 10:00:00" } },
       xmp: xmp('xmp:CreateDate="2026-10-30T10:00:00+01:00" xmp:CreatorTool="FastFoto"'),
@@ -82,11 +82,11 @@ describe("leerMetadatos con exifr (integración)", () => {
     const meta = await leerMetadatos(datos);
     expect(meta).toMatchObject({ XmpCreateDate: "2026-10-30T10:00:00+01:00", CreatorTool: "FastFoto" });
     const r = proponerFecha({ nombreArchivo: "FastFoto_0001.jpg", exif: meta, hoy });
-    expect(r.automatica).toBeNull();
-    expect(r.sugerencias.map((s) => [aIso(s.fecha), s.motivo])).toEqual([["1987-06-01", "digitalizada-despues"]]);
+    expect(r.automatica && aIso(r.automatica.fecha)).toBe("1987-06-01");
+    expect(r.escaneo).toBe(true);
   });
 
-  it("IPTC «19870000» y el historial XMP de un programa de escaneo", async () => {
+  it("IPTC «19870000» y el historial XMP de un programa de escaneo: vale 1987, la fecha anotada", async () => {
     const datos = await jpeg({
       xmp: xmp("", '<xmpMM:History><rdf:Seq><rdf:li stEvt:action="created" stEvt:softwareAgent="VueScan 9.8"/></rdf:Seq></xmpMM:History>'),
       iptc: [
@@ -98,8 +98,8 @@ describe("leerMetadatos con exifr (integración)", () => {
     const meta = await leerMetadatos(datos);
     expect(meta).toMatchObject({ IptcDateCreated: "19870000", IptcDigitalCreationDate: "20261030", OriginatingProgram: "VueScan", ProgramasHistorial: ["VueScan 9.8"] });
     const r = proponerFecha({ nombreArchivo: "abuela.jpg", exif: meta, hoy });
-    expect(r.sugerencias.map((s) => [aIso(s.fecha), s.motivo])).toEqual([["1987", "fecha-anotada"]]);
-    expect(r.motivo).toBe("posible-escaneo");
+    expect(r.automatica && aIso(r.automatica.fecha)).toBe("1987");
+    expect(r.escaneo).toBe(true);
   });
 
   it("una imagen sin metadatos o que no es una imagen no rompe la lectura", async () => {

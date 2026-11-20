@@ -4,7 +4,7 @@
  */
 import { expect, test, type Page } from "@playwright/test";
 import catalogo from "../../supabase/catalogo.json";
-import { fotos, guardado, soloSugeridas } from "./mazo-utiles";
+import { fotos, guardado, ponerAnioALasSinFecha } from "./mazo-utiles";
 
 const pequeno = catalogo.packs.find((p) => p.id === "pequeno")!;
 
@@ -55,16 +55,18 @@ async function esperarServiceWorker(page: Page) {
 test("sin conexión, el configurador se vuelve a abrir con el mazo tal cual y no deja pagar", async ({ page, context }) => {
   test.setTimeout(240_000);
 
-  // Un mazo con el mínimo del pack cubierto, ya en Pedido.
+  // Un mazo con el mínimo del pack cubierto y todas las cartas con fecha, ya en Pedido.
   await page.goto("/es/crear?pack=pequeno");
   await page.getByRole("checkbox", { name: /Tengo permiso/ }).check();
   const archivos = fotos();
   expect(archivos.length).toBeGreaterThanOrEqual(pequeno.cartas);
   await page.getByTestId("entrada-fotos").setInputFiles(archivos);
   await expect(page.getByText(`${archivos.length} fotos añadidas`)).toBeVisible({ timeout: 120_000 });
-  await page.getByRole("button", { name: `Usar las ${archivos.filter(soloSugeridas).length} fechas sugeridas` }).click();
+  await ponerAnioALasSinFecha(page, 2016);
   await page.getByRole("button", { name: "Siguiente: cartas" }).click();
-  await page.getByRole("button", { name: "Siguiente: estilo" }).click();
+  const listo = page.getByTestId("mazo-listo");
+  await expect(listo).toContainText("¡Tu mazo está listo!");
+  await listo.getByRole("button", { name: /Siguiente: estilo/ }).click();
   await page.getByRole("button", { name: "Siguiente: pedido" }).click();
   await expect(page.getByRole("heading", { name: "Revisa y haz el pedido" })).toBeVisible();
   await expect(guardado(page)).toHaveText(/Guardado en este dispositivo/);

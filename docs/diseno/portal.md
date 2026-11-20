@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Estado** | Prototipo navegable, **pendiente de validación de Marc** |
-| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard) |
+| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard); tercera versión el 20 de noviembre, con Fotos y Cartas más simples |
 | **Validado por Marc** | — (fecha cuando lo valide) |
 | **Base** | Dirección visual D «Naipe» (v3), la de las cartas, ver el lienzo de dirección visual |
 
@@ -11,7 +11,7 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 
 ## Idea
 
-**Cálido, lúdico y de mesa.** El portal se comporta como una mesa de juego: fondo de papel, cartas con sombra como si estuvieran apoyadas y piezas que salen de la propia carta (la pestaña de esquina con «?», los iconos de la esquina y el año grande). Nada de corazones ni ilustraciones infantiles: el romanticismo lo ponen las fotos. La franja de meses se ha quitado de las cartas y de la web a petición de Ricard; la esquina se queda.
+**Cálido, lúdico y de mesa.** El portal se comporta como una mesa de juego: fondo de papel, cartas con sombra como si estuvieran apoyadas y piezas que salen de la propia carta (la pestaña de esquina con «?», los iconos de la esquina y el año grande). Nada de corazones ni ilustraciones infantiles: el romanticismo lo ponen las fotos. La franja de meses se ha quitado de las cartas y de la web a petición de Ricard. Desde el 20 de noviembre, en las cartas que se juegan la pestaña solo aparece si lleva un icono (comodín o carta en blanco): sin el recuadro «?» en la cara de la foto ni en la de la fecha. La pestaña con «?» se queda como marca en la portada y la caja.
 
 ## Tokens
 
@@ -34,7 +34,7 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 
 **Formas:** radio de carta de 18 px (≈ 3 mm a escala), controles de 14 px, botones en píldora y pestaña de esquina con el radio solo abajo a la derecha. Sombras solo en las cartas.
 
-**Iconos de la esquina:** estrella (recuerdo estrella), gorro de bufón (comodín) y lápiz (carta en blanco), dibujados como rutas en una caja de 24 × 24 con trazos y huecos de 2 unidades o más para imprimirse bien a 2,8 mm. La web pinta exactamente los mismos.
+**Iconos de la esquina:** gorro de bufón (comodín) y lápiz (carta en blanco), dibujados como rutas en una caja de 24 × 24 con trazos y huecos de 2 unidades o más para imprimirse bien a 2,8 mm. La web pinta exactamente los mismos.
 
 ## Pantallas para validar
 
@@ -42,20 +42,20 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 | --- | --- |
 | Portada | Los tres packs a primera vista con su claim y precio, «Continuar mi mazo», abanico de cartas con las fotos de muestra, tipos de juego, tono de los textos |
 | Cómo se juega | La mesa con una partida en marcha, las reglas de los dos tipos, los iconos de la esquina |
-| Paso 1 · Fotos | Zona de subida, consentimiento, «Añadir un recuerdo sin foto», contadores con fecha / con fecha sugerida / sin fecha, «Usar las fechas sugeridas», aviso de posible escaneo, miniaturas «¿fecha?» y «Sin fecha» |
-| Paso 2 · Cartas | Carta grande con las dos caras, estado «Carta lista» / «Pendiente», sugerencias de fecha, «N de M listas», ✓ y «?» en la tira, casilla «+» para un recuerdo sin foto |
-| Paso 3 · Estilo | Paleta como elección principal, caja de siempre o personalizada con su foto, vista previa (caja, portada, carta), título, dedicatoria, tono, idioma y extras de juego con su icono |
-| Paso 4 · Pedido | Pack y cambio de pack, avisos de oferta, línea temporal, comprobaciones, extras, resumen con el total |
-| Barra inferior | Cartas frente al pack, oferta en una línea, total y botón siguiente bloqueado mientras falten cartas por completar; estado del guardado |
+| Paso 1 · Fotos | Consentimiento que se resalta si se intenta añadir fotos sin él, zona de subida con «o arrastra aquí archivos o una carpeta», resumen de la subida («N fotos añadidas · M sin fecha»), cuadrícula por fecha con las que no tienen al final, «≈» en las fechas aproximadas, «Seleccionar» con «Poner fecha» y «Borrar» |
+| Paso 2 · Cartas | Aviso grande de cuántas faltan (o «¡Tu mazo está listo!»), la carta abierta con sus dos caras y herramientas a la misma altura que su fecha y su frase, sugerencias de fecha de un toque, el mazo entero por años con «Sin fecha» al final y punto amarillo en las que faltan, «Añadir más fotos» y las ideas de recuerdos sin foto |
+| Paso 3 · Estilo | Paleta como elección principal, caja de siempre o personalizada con su foto, vista previa (caja, portada, carta), título, dedicatoria, idioma y extras de juego con su icono |
+| Paso 4 · Pedido | Pack y cambio de pack, avisos de oferta, el mazo como se jugará, comprobaciones, extras, resumen con el total y pago bloqueado mientras falten cartas por completar |
+| Barra inferior | Cartas frente al pack, oferta en una línea, total y siguiente paso; en Estilo y Pedido, cuántas cartas faltan por completar; estado del guardado |
 | Confirmación | Abanico de celebración y descarga del PDF (solo durante el prototipo) |
-| Muestrario interno | Todas las caras en cada paleta: foto, recuerdo estrella, recuerdo sin foto, portada, comodín, carta en blanco, caja de siempre y personalizada |
+| Muestrario interno | Todas las caras en cada paleta: foto, recuerdo con la frase también delante, recuerdo sin foto, portada, comodín, carta en blanco, caja de siempre y personalizada |
 | Folleto interno | Los 8 paneles de cada cara, la fila de mini cartas del póster y el esquema de plegado |
 
 ## Accesibilidad
 
 - WCAG 2.1 AA revisado con axe-core en las pantallas del configurador y las páginas públicas, sin incidencias.
-- Foco visible en cobalto en todos los controles; las paletas y la portada son radios nativos.
-- Los pasos bloqueados se anuncian (`aria-disabled` con su motivo) y siguen siendo enfocables.
+- Foco visible en cobalto en todos los controles; las paletas son radios nativos.
+- Los pasos bloqueados (Estilo y Pedido, sin ninguna carta) se anuncian (`aria-disabled` con su motivo) y siguen siendo enfocables.
 - Deshacer con Ctrl/Cmd+Z (no mientras se escribe ni con diálogos abiertos).
 - Las cartas dibujadas en canvas llevan su texto alternativo; las decorativas se ocultan a los lectores de pantalla. La escena de la mesa es una sola imagen con su descripción.
 - Movimiento reducido respetado (`prefers-reduced-motion`).
@@ -63,7 +63,7 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 
 ## Lo que más necesita la opinión de Marc
 
-1. La pestaña de esquina como elemento de marca fuera de la carta, ahora sin la franja de meses, y los dos iconos nuevos (comodín y carta en blanco).
+1. La pestaña de esquina como elemento de marca fuera de la carta, ahora sin la franja de meses y, en las cartas que se juegan, solo con icono; y los dos iconos (comodín y carta en blanco).
 2. La cara del recuerdo sin foto y la carta en blanco: que se vean del mismo mazo.
 3. La caja de siempre (solo la marca) frente a la personalizada (foto y título).
 4. Los packs en la portada: si se entienden y se comparan bien en el móvil.

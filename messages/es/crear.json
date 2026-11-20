@@ -17,7 +17,7 @@
       "estilo": "Estilo",
       "pedido": "Pedido",
       "paso": "Paso {n} de 4",
-      "bloqueado": "Completa todas las cartas para seguir"
+      "bloqueado": "Añade alguna foto para seguir"
     },
     "barra": {
       "siguienteCartas": "Siguiente: cartas",

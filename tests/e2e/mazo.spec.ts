@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
 import { PRINT } from "../../config/print";
 import catalogo from "../../supabase/catalogo.json";
-import { borrarSoloElMazo, cambiarMazo, conFecha, fotos, fotosGuardadas, guardado, leerMazo, soloSugeridas } from "./mazo-utiles";
+import { aproximada, borrarSoloElMazo, cambiarMazo, conFecha, fotos, fotosGuardadas, guardado, leerMazo, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
 
 /** Cartas físicas que añaden las mecánicas que el catálogo pone por defecto (comodines, en blanco…). */
 const CARTAS_DE_MECANICAS = catalogo.mecanicas
@@ -30,8 +30,13 @@ async function subir(page: Page, archivos: string[]) {
   await expect(page.getByText(`${archivos.length} fotos añadidas`)).toBeVisible({ timeout: 120_000 });
 }
 
+/** Va a un paso con la barra de pasos de arriba. */
+async function irA(page: Page, paso: "Fotos" | "Cartas" | "Estilo" | "Pedido") {
+  await page.getByRole("navigation", { name: "Pasos" }).getByRole("button", { name: new RegExp(paso) }).click();
+}
+
 test.describe("mazo de principio a fin", () => {
-  test("de las fotos al PDF: fechas sugeridas, recuerdo con hueco, paleta, caja propia, oferta, pago y descarga", async ({ page }, info) => {
+  test("de las fotos al PDF: fechas solas, fecha a varias, recuerdo con hueco, paleta, caja propia, oferta, pago y descarga", async ({ page }, info) => {
     test.skip(info.project.name === "movil", "El flujo completo se prueba en escritorio; el móvil tiene el suyo.");
     test.setTimeout(300_000);
 
@@ -40,60 +45,74 @@ test.describe("mazo de principio a fin", () => {
     await expect(page).toHaveURL(/\/es\/crear$/);
     await expect(page.getByRole("button", { name: /^Pack Pequeño/ })).toBeVisible();
 
+    // Casi todas salen ya con fecha: de la cámara, del nombre o, aproximada (el mes), del envío por
+    // WhatsApp o de la captura. Solo se quedan sin ella las que no traen más que la del archivo,
+    // y van al final de la cuadrícula.
     const archivos = fotos();
-    const sugeridas = archivos.filter(soloSugeridas).length;
+    const sinFecha = archivos.filter(sinFechaAlSubir).length;
+    expect(sinFecha).toBeGreaterThan(1);
     await subir(page, archivos);
-    const resumen = page.getByRole("list", { name: "Fechas de tus cartas" });
-    await expect(resumen).toContainText(`${archivos.length - sugeridas} con fecha`);
-    await expect(resumen).toContainText(`${sugeridas} con fecha sugerida`);
+    await expect(page.getByTestId("resumen-subida")).toContainText(`${sinFecha} sin fecha`);
+    await expect(page.getByTestId("fotos-sin-fecha").getByRole("button")).toHaveCount(sinFecha);
+    const enFotos = page.getByRole("region", { name: /^Tus cartas/ });
+    await expect(enFotos.getByRole("button", { name: /\. Fecha aproximada: / })).toHaveCount(archivos.filter(aproximada).length);
 
-    // Cartas: con fechas solo sugeridas, Estilo no se abre.
+    // Cartas: cuántas faltan, en grande, y el mazo como se jugará, con las que no tienen fecha al final.
     await page.getByRole("button", { name: "Siguiente: cartas" }).click();
     await expect(page.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Siguiente: estilo" })).toBeDisabled();
-    await expect(page.getByText(`Faltan ${sugeridas} cartas por completar`)).toBeVisible();
+    const pendientes = page.getByTestId("mazo-pendientes");
+    await expect(pendientes).toContainText(`Te faltan ${sinFecha} cartas por completar`);
+    await expect(pendientes).toContainText(`${archivos.length - sinFecha} de ${archivos.length} cartas listas`);
+    const mazo = page.getByTestId("linea-del-mazo");
+    await expect(mazo.getByRole("heading", { name: `Sin fecha · ${sinFecha}` })).toBeVisible();
+    await expect(mazo.getByRole("button", { name: /, por completar$/ })).toHaveCount(sinFecha);
+    await expect(mazo.getByRole("button", { name: /, lista$/ })).toHaveCount(archivos.length - sinFecha);
 
-    // De vuelta en Fotos, todas las sugeridas de una vez.
-    await page.getByRole("navigation", { name: "Pasos" }).getByRole("button", { name: /Fotos/ }).click();
-    await page.getByRole("button", { name: `Usar las ${sugeridas} fechas sugeridas` }).click();
-    await expect(page.getByText(`${sugeridas} fechas sugeridas puestas.`)).toBeVisible();
-    await expect(resumen).toContainText(`${archivos.length} con fecha`);
+    // Estilo y Pedido se abren aunque falten cartas; lo que espera a que estén todas es el pago.
+    await page.getByRole("button", { name: "Siguiente: estilo" }).click();
+    await expect(page.getByRole("heading", { name: "Elige el estilo" })).toBeVisible();
+    await expect(page.getByText(`Faltan ${sinFecha} cartas por completar`)).toBeVisible();
+    await page.getByRole("button", { name: "Siguiente: pedido" }).click();
+    await expect(page.getByRole("heading", { name: "Revisa y haz el pedido" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Pagar .* \(prueba\)/ })).toBeDisabled();
+    await expect(page.getByText(`Para pagar, completa antes las ${sinFecha} cartas que faltan.`)).toBeVisible();
 
-    // Un recuerdo sin foto con un hueco por rellenar, todavía sin fecha.
-    await page.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).first().click();
+    // En Fotos, el mismo año a todas las que no tienen fecha.
+    await irA(page, "Fotos");
+    expect(await ponerAnioALasSinFecha(page, 2016)).toBe(sinFecha);
+
+    // Cartas: todo listo. Un recuerdo sin foto desde las ideas de abajo, con un hueco por rellenar.
+    await page.getByRole("button", { name: "Siguiente: cartas" }).click();
+    await expect(page.getByTestId("mazo-listo")).toContainText("¡Tu mazo está listo!");
+    await page.getByTestId("ideas-recuerdo").getByRole("button", { name: "Nació [nombre]" }).click();
     const dialogo = page.getByRole("dialog");
-    await dialogo.getByRole("button", { name: "Llegó [mascota] a casa" }).click();
     await dialogo.getByRole("button", { name: "Añadir la carta" }).click();
     await expect(dialogo).toBeHidden();
 
-    // Cartas: las fotos, con su ✓; el recuerdo, pendiente, y Estilo sigue cerrado.
-    await page.getByRole("button", { name: "Siguiente: cartas" }).click();
-    const tira = page.getByRole("list", { name: "Todas las cartas" });
-    await expect(tira.getByRole("button", { name: /, lista$/ })).toHaveCount(archivos.length);
-    await expect(tira.getByRole("button", { name: /, pendiente$/ })).toHaveCount(1);
-    await expect(page.getByRole("button", { name: "Siguiente: estilo" })).toBeDisabled();
-
-    await tira.getByRole("button", { name: /^Llegó \[mascota\] a casa/ }).click();
+    // Se abre la carta nueva, que va al final: está por completar.
+    const actual = mazo.locator('[aria-current="true"]');
+    await expect(actual).toHaveAccessibleName("Nació [nombre], sin fecha, por completar");
+    await expect(pendientes).toContainText("Te falta 1 carta por completar");
     // «Siguiente» con la carta a medias: la primera vez lleva a la fecha y lo pide; la segunda, pasa.
-    const actual = tira.locator('[aria-current="true"]');
     await page.getByRole("button", { name: "Siguiente →", exact: true }).click();
     await expect(page.getByText(/falta la fecha.*pulsa otra vez «Siguiente» para dejarla para luego/)).toBeVisible();
-    await expect(actual).toHaveAccessibleName(/^Llegó \[mascota\] a casa/);
+    await expect(actual).toHaveAccessibleName(/^Nació \[nombre\]/);
     expect(await page.evaluate(() => !!document.activeElement?.closest("fieldset"))).toBe(true);
     await page.getByRole("button", { name: "Siguiente →", exact: true }).click();
-    await expect(actual).not.toHaveAccessibleName(/^Llegó \[mascota\] a casa/);
-    await tira.getByRole("button", { name: /^Llegó \[mascota\] a casa/ }).click();
+    await expect(actual).not.toHaveAccessibleName(/^Nació \[nombre\]/);
+    await mazo.getByRole("button", { name: /^Nació \[nombre\]/ }).click();
     await expect(page.getByText(/pulsa otra vez/)).toBeHidden();
-    await page.getByRole("button", { name: "Completar [mascota]" }).click();
-    await page.keyboard.type("Rufo");
+    await page.getByRole("button", { name: "Completar [nombre]" }).click();
+    await page.keyboard.type("Leo");
     await page.getByRole("radio", { name: "Solo el año" }).first().click();
     await page.getByLabel("Año").first().fill("2020");
     await expect(page.getByText("Carta lista")).toBeVisible();
-    await expect(tira.getByRole("button", { name: /, pendiente$/ })).toHaveCount(0);
-    await expect(tira.getByRole("button", { name: /^Llegó Rufo a casa, 2020, lista$/ })).toBeVisible();
+    await expect(mazo.getByRole("button", { name: /, por completar$/ })).toHaveCount(0);
+    await expect(mazo.getByRole("button", { name: "Nació Leo, 2020, lista" })).toBeVisible();
+    await expect(page.getByTestId("mazo-listo")).toContainText(`Las ${archivos.length + 1} cartas tienen su fecha y están correctas.`);
 
     // Estilo: paleta, título y caja personalizada con una foto propia.
-    await page.getByRole("button", { name: "Siguiente: estilo" }).click();
+    await page.getByTestId("mazo-listo").getByRole("button", { name: /Siguiente: estilo/ }).click();
     await expect(page.getByRole("heading", { name: "Elige el estilo" })).toBeVisible();
     await page.getByRole("radiogroup", { name: "Colores" }).locator("label").filter({ hasText: "Cobalto" }).click();
     await expect(page.getByRole("radio", { name: "Cobalto" })).toBeChecked();
@@ -139,42 +158,55 @@ test.describe("mazo de principio a fin", () => {
 });
 
 test.describe("fechas de copias y escaneos", () => {
-  test("las fechas recientes no se ponen de una vez: se avisa y se revisan carta a carta", async ({ page }, info) => {
-    test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
-    test.setTimeout(120_000);
-    // scripts/fixtures.ts: 5 fotos de fotos del mismo día reciente, una escaneada con su fecha
-    // original (1987) y otras sin pista o ya con fecha.
-    const carpeta = path.join(process.cwd(), "tests", "fixtures", "generadas", "escaner");
-    const archivos = readdirSync(carpeta).map((n) => path.join(carpeta, n));
-    const recientes = archivos.filter((a) => /^IMG_\d{8}_\d{6}\.jpg$/.test(path.basename(a))).length;
-    expect(recientes).toBe(5);
+  // scripts/fixtures.ts: 5 fotos de fotos hechas con el móvil el mismo día (el del nombre,
+  // IMG_AAAAMMDD_…), dos escaneadas con su fecha (el año en el nombre, 1958, y la original anotada
+  // en sus datos, 1987) y dos sin ninguna pista. «Hoy» se fija respecto a ese día, para que la
+  // prueba no dependa de cuándo se generaron las fotos.
+  const casos = [
+    { dias: 1, cuando: "del día anterior: seguramente son de preparar el mazo", motivo: /Es de estos últimos días/ },
+    { dias: 20, cuando: "muchas del mismo día de hace unas semanas: fotos de fotos", motivo: /Muchas fotos de la misma subida tienen este mismo día reciente/ },
+  ];
+  for (const caso of casos) {
+    test(`las fotos ${caso.cuando}, sin fecha y con el porqué; las escaneadas con su fecha, fechadas`, async ({ page }, info) => {
+      test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
+      test.setTimeout(120_000);
+      const carpeta = path.join(process.cwd(), "tests", "fixtures", "generadas", "escaner");
+      const archivos = readdirSync(carpeta).map((n) => path.join(carpeta, n));
+      const recientes = archivos.filter((a) => /^IMG_\d{8}_\d{6}\.jpg$/.test(path.basename(a)));
+      expect(recientes).toHaveLength(5);
+      const [, anio, mes, dia] = /^IMG_(\d{4})(\d{2})(\d{2})_/.exec(path.basename(recientes[0]!))!;
+      await page.clock.setSystemTime(new Date(Number(anio), Number(mes) - 1, Number(dia) + caso.dias, 12));
 
-    await empezar(page);
-    await subir(page, archivos);
-    await expect(page.getByText(`${recientes} fotos tienen como fecha sugerida el mismo día reciente`)).toBeVisible();
-    await expect(page.getByText(`${recientes} tienen una fecha reciente, que puede ser la de una copia o un escaneo`)).toBeVisible();
+      await empezar(page);
+      await subir(page, archivos);
+      await expect(page.getByTestId("resumen-subida")).toContainText(`${archivos.length - 2} sin fecha`);
+      await expect(guardado(page)).toContainText("Guardado");
+      const cartas = ((await leerMazo(page))?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown }[];
+      expect(cartas.filter((c) => /^IMG_\d{8}_/.test(c.nombreArchivo ?? "") && !c.fecha)).toHaveLength(recientes.length);
+      expect(cartas.filter((c) => c.fecha).map((c) => c.nombreArchivo).sort()).toEqual(["abuelos 1958.jpg", "boda tios.jpg"]);
 
-    // El botón solo pone la que no es reciente (la original de 1987 de la foto escaneada).
-    await page.getByRole("button", { name: "Usar la fecha sugerida", exact: true }).click();
-    await expect(page.getByText("1 fecha sugerida puesta.")).toBeVisible();
-    await expect(guardado(page)).toContainText("Guardado");
-    const cartas = ((await leerMazo(page))?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown }[];
-    expect(cartas.filter((c) => /^IMG_\d{8}_/.test(c.nombreArchivo ?? "") && !c.fecha)).toHaveLength(recientes);
-    expect(cartas.filter((c) => c.fecha)).toHaveLength(2);
-  });
+      // En Cartas, la carta dice por qué está en blanco y deja usar la fecha que trae con un toque.
+      await page.getByRole("button", { name: `Editar ${path.basename(recientes[0]!)}. Sin fecha` }).click();
+      await expect(page.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
+      await expect(page.getByText(caso.motivo)).toBeVisible();
+      await page.getByRole("button", { name: "Usar esta fecha" }).click();
+      await expect(page.getByText("Carta lista")).toBeVisible();
+    });
+  }
 });
 
 test.describe("caja personalizada", () => {
   test("sin ninguna foto para ella no deja pagar y el aviso lleva a elegirla", async ({ page }, info) => {
     test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
-    // Un mazo solo con un recuerdo sin foto: la caja no tiene de dónde sacar la suya.
+    // Un mazo solo con un recuerdo sin foto: la caja no tiene de dónde sacar la suya. Sin fotos,
+    // Cartas ofrece escribir uno.
     await empezar(page);
-    await page.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).first().click();
+    await irA(page, "Cartas");
+    await page.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).click();
     const dialogo = page.getByRole("dialog");
     await dialogo.getByRole("button", { name: "El día que nos conocimos" }).click();
     await dialogo.getByRole("button", { name: "Añadir la carta" }).click();
     await expect(dialogo).toBeHidden();
-    await page.getByRole("button", { name: "Siguiente: cartas" }).click();
     await page.getByRole("radio", { name: "Solo el año" }).first().click();
     await page.getByLabel("Año").first().fill("2012");
     await expect(page.getByText("Carta lista")).toBeVisible();
@@ -196,16 +228,16 @@ test.describe("guardado en el dispositivo", () => {
     const archivos = fotos().filter(conFecha).slice(0, 4);
     await subir(page, archivos);
     await page.getByRole("button", { name: "Siguiente: cartas" }).click();
-    const tira = page.getByRole("list", { name: "Todas las cartas" });
-    await tira.getByRole("button").nth(2).click();
-    await expect(tira.getByRole("button").nth(2)).toHaveAttribute("aria-current", "true");
+    const mazo = page.getByTestId("linea-del-mazo");
+    await mazo.getByRole("button").nth(2).click();
+    await expect(mazo.getByRole("button").nth(2)).toHaveAttribute("aria-current", "true");
     await expect(guardado(page)).toHaveText(/Guardado en este dispositivo · ahora mismo/);
 
     await page.reload();
     await expect(page.getByTestId("aviso-reanudar")).toHaveText("Seguimos donde lo dejaste");
     await expect(page.getByText(`«Nuestros recuerdos» · ${archivos.length} cartas · guardado ahora mismo`)).toBeVisible();
     await expect(page.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
-    await expect(tira.getByRole("button").nth(2)).toHaveAttribute("aria-current", "true");
+    await expect(mazo.getByRole("button").nth(2)).toHaveAttribute("aria-current", "true");
 
     // «Empezar otro mazo» pregunta antes de borrar.
     page.once("dialog", (d) => {
@@ -215,7 +247,7 @@ test.describe("guardado en el dispositivo", () => {
     await page.getByRole("button", { name: "Empezar otro mazo" }).first().click();
     await expect(page.getByRole("heading", { name: "Sube tus fotos" })).toBeVisible();
     await expect(page.getByTestId("aviso-reanudar")).toBeHidden();
-    await expect(page.getByRole("list", { name: "Tus cartas" })).toBeHidden();
+    await expect(page.getByRole("region", { name: /^Tus cartas/ })).toBeHidden();
   });
 
   test("dos pestañas con el mismo mazo no se pisan", async ({ page, context }) => {
@@ -223,19 +255,22 @@ test.describe("guardado en el dispositivo", () => {
     await subir(page, fotos().filter(conFecha).slice(0, 3));
     await expect(guardado(page)).toHaveText(/Guardado/);
 
-    // La otra pestaña abre el mismo mazo y ve lo que se añade en esta.
+    // La otra pestaña abre el mismo mazo, va a Cartas y ve lo que se añade en la primera (los
+    // recuerdos sin foto se añaden desde las ideas de Cartas).
     const otra = await context.newPage();
     await otra.goto("/es/crear");
     await expect(otra.getByText(`3 de ${pequeno.cartas} cartas`)).toBeVisible();
-    await page.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).first().click();
-    await page.getByRole("dialog").getByRole("button", { name: "Nuestra boda" }).click();
+    await irA(otra, "Cartas");
+    await expect(otra.getByRole("heading", { name: "Completa las cartas" })).toBeVisible();
+    await expect(guardado(otra)).toHaveText(/Guardado/);
+    await page.getByRole("button", { name: "Siguiente: cartas" }).click();
+    await page.getByTestId("ideas-recuerdo").getByRole("button", { name: "Nuestra boda" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Añadir la carta" }).click();
     await expect(otra.getByText(`4 de ${pequeno.cartas} cartas`)).toBeVisible();
 
     // Si el mazo cambia a sus espaldas (otra pestaña sin aviso) y aquí también, no lo pisa: avisa.
     await cambiarMazo(otra, (m) => ({ ...m, cartas: m.cartas.slice(0, 2), actualizadoEn: m.actualizadoEn + 1 }));
-    await otra.getByRole("button", { name: /Añadir un recuerdo sin foto/ }).first().click();
-    await otra.getByRole("dialog").getByRole("button", { name: "Nuestra primera cita" }).click();
+    await otra.getByTestId("ideas-recuerdo").getByRole("button", { name: "El día que nos conocimos" }).click();
     await otra.getByRole("dialog").getByRole("button", { name: "Añadir la carta" }).click();
     await expect(otra.getByText(/Has cambiado este mazo en otra pestaña/)).toBeVisible();
     await expect(guardado(otra)).toHaveText("Sin guardar: el mazo ha cambiado en otra pestaña");
@@ -257,7 +292,7 @@ test.describe("guardado en el dispositivo", () => {
     // Se corta a mitad (el navegador se cierra de golpe: sin «pagehide» ni nada que guarde al salir),
     // medio segundo después de ver unas cuantas cartas. Antes, el mazo se guardaba cada 2 s como
     // mucho durante la importación; ahora, en cuanto entra cada carta.
-    const cuadricula = page.getByRole("list", { name: "Tus cartas" }).getByRole("listitem");
+    const cuadricula = page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem");
     await expect.poll(() => cuadricula.count(), { timeout: 60_000, intervals: [50] }).toBeGreaterThanOrEqual(6);
     const vistas = await cuadricula.count();
     expect(vistas).toBeLessThan(archivos.length);

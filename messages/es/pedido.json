@@ -44,11 +44,11 @@
     "cambiarFotoCaja": "Cambiar foto",
     "sinFotoCaja": "Aún no tiene foto: sube una o elige una del mazo.",
     "elegirFotoCaja": "Elegir foto",
-    "sinFecha": "Sin fecha",
     "yaPedido": "Ya has hecho el pedido de este mazo. Puedes seguir retocándolo y volver a descargar el archivo.",
     "yaPedidoSinDescarga": "Ya has hecho el pedido de este mazo.",
     "verPedido": "Ver el pedido",
     "bloquea": "Antes de pagar, resuelve lo que está marcado en rojo.",
+    "faltanCartas": "{n, plural, one {Para pagar, completa antes la carta que falta.} other {Para pagar, completa antes las # cartas que faltan.}}",
     "faltaConfirmar": "Marca la casilla de revisión para pagar.",
     "pagoCancelado": "Has cancelado el pago. Tu mazo sigue aquí, tal cual.",
     "total": "Total"

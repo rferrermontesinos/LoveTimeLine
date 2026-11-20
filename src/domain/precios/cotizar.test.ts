@@ -137,7 +137,7 @@ describe("cotizar: cajas, mecánicas y extras", () => {
       catalogo,
       packId: "pequeno",
       cartas: 40,
-      mecanicas: ["estrella", "comodin", "en-blanco"],
+      mecanicas: ["comodin", "en-blanco"],
       extras: ["envoltorio-regalo", "caja-personalizada"],
     });
     expect(c.totalCents).toBe(4900 + 400 + 700);
@@ -169,8 +169,8 @@ describe("cotizar: cajas, mecánicas y extras", () => {
 describe("selección y formato", () => {
   it("normaliza la selección de un borrador antiguo", () => {
     expect(
-      normalizarSeleccion({ packId: "pareja", extras: ["pack-retos", "envoltorio-regalo"], mecanicas: ["cuentalo", "estrella"] }, catalogo),
-    ).toEqual({ packId: "pequeno", extras: ["envoltorio-regalo"], mecanicas: ["estrella"], cambiado: true });
+      normalizarSeleccion({ packId: "pareja", extras: ["pack-retos", "envoltorio-regalo"], mecanicas: ["cuentalo", "estrella", "comodin"] }, catalogo),
+    ).toEqual({ packId: "pequeno", extras: ["envoltorio-regalo"], mecanicas: ["comodin"], cambiado: true });
     expect(normalizarSeleccion({ packId: "grande", extras: [], mecanicas: ["comodin"] }, catalogo).cambiado).toBe(false);
   });
 
