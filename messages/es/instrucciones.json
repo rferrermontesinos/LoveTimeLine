@@ -1,0 +1,26 @@
+{
+  "instrucciones": {
+    "portadaTitulo": "Cómo se juega",
+    "portadaSub": "Despliega para empezar",
+    "posterTitulo": "¿Cuándo fue?",
+    "posterTexto": "Una baraja para ordenar vuestros recuerdos.",
+    "dedicatoriaPara": "Para",
+    "dedicatoriaDe": "De",
+    "mazoDe": "Este mazo es de",
+    "mazoAnios": "Años",
+    "lineas": "Escribid aquí vuestro récord en «Nuestra historia»",
+    "fecha": "Fecha",
+    "cartas": "Cartas",
+    "quienes": "Quiénes",
+    "vuestroMazo": "Con vuestro mazo de {n} cartas",
+    "personas": "{n} personas",
+    "vidasTitulo": "Vidas con vuestro mazo",
+    "vidasPersonas": "Personas con cartas → vidas:",
+    "vidasCompleta": "En la historia completa: {n} vidas.",
+    "comodin": {
+      "uso": "Antes de colocar, pide una pista a quien hizo el mazo («¿antes o después de esta carta?») o cambia una de tus cartas por la primera del mazo. Si no está, solo vale el cambio.",
+      "clasico": "Cuando falles y te quedes con más cartas que nadie, coge uno si queda alguno (uno por persona). Después de usarlo, vuelve a la caja.",
+      "historia": "Son del equipo y cada uno se usa una vez. La pista la da el guardián."
+    }
+  }
+}

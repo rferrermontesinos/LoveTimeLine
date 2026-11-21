@@ -1,0 +1,79 @@
+{
+  "guia": {
+    "metaTitulo": "Cómo elegir las fotos de tu mazo",
+    "metaDescripcion": "Atajos del iPhone y de Android para encontrar tus mejores fotos sin repasarlas una a una (favoritas, personas, búsquedas y un álbum) y qué fotos dan más juego en la partida.",
+    "micro": "Guía",
+    "titulo": "Cómo elegir las fotos de tu mazo",
+    "intro": "No hace falta repasar años de galería foto a foto. Con los atajos que ya tiene tu móvil y un álbum donde ir guardándolas, las tienes listas en una tarde.",
+    "cuantasTitulo": "¿Cuántas?",
+    "cuantasTexto": "Las de tu pack y unas cuantas más: al verlas juntas, siempre sobra alguna.",
+    "packCartas": "{pack}: {n} cartas",
+    "atajosTitulo": "Cuatro atajos del móvil",
+    "atajosTexto": "Los nombres pueden variar un poco según la versión, pero estas opciones están en Fotos del iPhone y en Google Fotos.",
+    "iphone": "iPhone",
+    "android": "Android",
+    "atajos": {
+      "favoritas": {
+        "titulo": "Empieza por tus favoritas",
+        "texto": "Si un día marcaste una foto como favorita, por algo fue.",
+        "iphone": "En Fotos, abre el álbum Favoritos: están las que marcaste con el corazón.",
+        "android": "En Google Fotos, ve a Colecciones y abre Favoritos."
+      },
+      "personas": {
+        "titulo": "Busca a cada persona",
+        "texto": "Es la forma más rápida de reunir las fotos de alguien de todas las épocas.",
+        "iphone": "En Fotos, abre Personas y mascotas y toca una cara: salen todas sus fotos juntas. Si le pones nombre, luego basta con escribirlo en el buscador.",
+        "android": "En Google Fotos, toca Buscar y elige una cara. Si no salen caras, mira en los ajustes de la app que esté activada la agrupación de caras."
+      },
+      "buscar": {
+        "titulo": "Busca por años, sitios y fiestas",
+        "texto": "Así encuentras una foto de cada época sin bajar por toda la galería.",
+        "comun": "En el buscador de las dos apps puedes escribir cosas como «2016», «playa», «Navidad», «boda» o el nombre de un pueblo."
+      },
+      "album": {
+        "titulo": "Guárdalas en un álbum",
+        "texto": "Puedes ir llenándolo durante varios días, cada vez que te acuerdes de una foto.",
+        "iphone": "En Fotos, crea un álbum (por ejemplo, «Nuestro mazo») y añade cada foto que te guste.",
+        "android": "En Google Fotos, crea un álbum y ve añadiendo las fotos.",
+        "despues": "Al subirlas, busca el álbum en el selector de fotos y elígelas desde ahí."
+      }
+    },
+    "ordenadorTitulo": "En el ordenador",
+    "ordenadorTexto": "En el paso Fotos puedes elegir una carpeta entera o arrastrar muchas fotos a la vez. Si las tienes en iCloud o en Google Fotos, descarga el álbum, descomprímelo y elige esa carpeta.",
+    "papelTitulo": "Fotos de papel",
+    "papelTexto": "Hazles una foto de frente, con luz de día y sin flash, o usa una app de escaneo. El móvil les pondrá la fecha del día en que las fotografías, así que te pediremos la del recuerdo: si solo sabes el año, con el año basta.",
+    "otrosTitulo": "Las fotos que tienen otros",
+    "otrosEnlace": "Pídeselas con un enlace: lo creas en el paso Fotos y lo mandas por donde quieras. Las fotos te llegan con su fecha original y cifradas, y solo tú puedes abrirlas.",
+    "otrosWhatsapp": "Si te las pasan por WhatsApp, pide que las manden como documento y no como foto: así conservan la fecha en que se hicieron.",
+    "juegoTitulo": "Qué fotos dan más juego",
+    "juegoTexto": "Una buena carta es un momento que alguien de la mesa pueda situar en el tiempo, aunque dude.",
+    "consejos": {
+      "1": {
+        "titulo": "Una de cada época",
+        "texto": "Mejor diez momentos distintos que diez fotos del mismo viaje."
+      },
+      "2": {
+        "titulo": "Con pistas",
+        "texto": "Un peinado, un coche, una casa, un bebé que crece: los detalles que ayudan a adivinar el año son los que hacen la partida."
+      },
+      "3": {
+        "titulo": "Momentos que todos recuerdan",
+        "texto": "Una boda, una mudanza o un nacimiento sirven de referencia, y los momentos pequeños que solo recuerdan algunos dan para discutir."
+      },
+      "4": {
+        "titulo": "Todo el mundo en la mesa",
+        "texto": "Que cada persona que juegue salga en unas cuantas."
+      },
+      "5": {
+        "titulo": "Un buen recuerdo antes que una foto perfecta",
+        "texto": "Una foto movida o a contraluz vale si el momento lo merece. Si alguna puede salir borrosa, te avisamos y decides tú."
+      },
+      "6": {
+        "titulo": "Si no sabes el día, pon el año",
+        "texto": "Las cartas que solo dicen el año valen en cualquier orden frente a otras del mismo año."
+      }
+    },
+    "ctaTitulo": "¿Ya las tienes?",
+    "ctaTexto": "Súbelas y ve cómo queda tu mazo, carta a carta."
+  }
+}

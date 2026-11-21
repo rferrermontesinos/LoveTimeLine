@@ -1,0 +1,32 @@
+{
+  "confirmado": {
+    "titulo": "Order placed!",
+    "tituloSimulado": "Test order placed",
+    "texto": "In the real version you’d get an email and the deck in {min}–{max} working days.",
+    "archivo": "Print files",
+    "textoPrototipo": "For the print tests: download the file for the printer you’re sending it to and send it as it is.",
+    "descargaPendiente": "You’ll be able to download it as soon as the payment is confirmed.",
+    "generando": "Generating side {hecha} of {total}…",
+    "volver": "Back to my deck",
+    "sinMazo": "We can’t find the deck on this device.",
+    "referencia": "Reference: {id}",
+    "comprobando": "Checking the payment…",
+    "pendiente": "The payment isn’t confirmed yet. If you just paid, wait a few seconds and reload the page.",
+    "pdfListo": "File ready. If it didn’t download on its own, press the button again.",
+    "pdfError": "We couldn’t generate the PDF. Please try again.",
+    "resumen": "{cartas} printed cards · {total}",
+    "siguientes": "What’s next",
+    "paso1": "Download the file for the printer you’re sending it to: each one asks for its own bleed, crop marks and page order.",
+    "paso1SinDescarga": "We check every card and send your deck to print.",
+    "aJugar": "Once the deck is in your hands, shuffle and play: the game modes and rules are in “How to play”.",
+    "comoJugar": "See how to play",
+    "imprentas": "Printers",
+    "otraImprenta": "Another printer",
+    "especificaciones": "{sangrado} mm bleed · {marcas, select, si {with crop marks} other {no crop marks}} · {paginas, select, separadas {fronts and backs in two PDFs, inside a ZIP} other {each card followed by its back}}",
+    "descargar": "Download {archivo}",
+    "descargarPara": "Download {archivo} for {imprenta}",
+    "colorConvierten": "They ask for CMYK FOGRA39: the file is RGB and they convert it.",
+    "colorPreguntar": "They ask for CMYK FOGRA39 and the file is RGB: when you send it, ask them to convert it.",
+    "leeme": "{titulo} · {cartas} cards of {ancho} × {alto} mm for {imprenta}\n\n{caras}: {paginas} pages, one per front.\n{reversos}: {paginas} pages, in the same order: page 1 is the back of page 1 of {caras}, and so on.{caja, select, si {\nThe last page of each file is the box.} other {}}\n\nBleed: {sangrado} mm on each side ({anchoPagina} × {altoPagina} mm pages), no crop marks.\nResolution: {ppp} ppi. Colour: RGB (sRGB).\nRounded corners of {radio} mm."
+  }
+}
