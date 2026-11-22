@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Estado** | Prototipo navegable, **pendiente de validación de Marc** |
-| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard); tercera versión el 20 de noviembre, con Fotos y Cartas más simples; por la tarde, la guía para elegir las fotos y la línea que quita presión en Fotos; por la noche, la subida colaborativa: «Pide fotos a los tuyos» en Fotos y la página «Manda tus fotos»; el 22 de noviembre, las cartas a la vista en la primera pantalla de Fotos, la invitación en una sola línea, «Solo cartas y fechas» y, en «Manda tus fotos», las fotos como cartas con su año y una frase antes de mandarlas |
+| **Entregado** | 4 de noviembre de 2026 (segunda versión el mismo día, con los cambios de Ricard); tercera versión el 20 de noviembre, con Fotos y Cartas más simples; por la tarde, la guía para elegir las fotos y la línea que quita presión en Fotos; por la noche, la subida colaborativa: «Pide fotos a los tuyos» en Fotos y la página «Manda tus fotos»; el 22 de noviembre, las cartas a la vista en la primera pantalla de Fotos, la invitación en una sola línea, «Solo cartas y fechas» y, en «Manda tus fotos», las fotos como cartas con su año y una frase antes de mandarlas; esa tarde, los avisos que dejó la auditoría (ver el punto 11 de abajo) |
 | **Validado por Marc** | — (fecha cuando lo valide) |
 | **Base** | Dirección visual D «Naipe» (v3), la de las cartas, ver el lienzo de dirección visual |
 
@@ -56,7 +56,7 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 
 ## Accesibilidad
 
-- WCAG 2.1 AA revisado con axe-core en las pantallas del configurador y las páginas públicas, sin incidencias.
+- WCAG 2.1 AA revisado con axe-core en las pantallas del configurador y las páginas públicas, sin incidencias; repetido el 22 de noviembre a 390 y 1280 px, también en «Manda tus fotos» (vacía, con cartas y enviada), Estilo, Pedido y la confirmación.
 - Foco visible en cobalto en todos los controles; las paletas son radios nativos.
 - Los pasos bloqueados (Estilo y Pedido, sin ninguna carta) se anuncian (`aria-disabled` con su motivo) y siguen siendo enfocables.
 - Deshacer con Ctrl/Cmd+Z (no mientras se escribe ni con diálogos abiertos).
@@ -76,3 +76,4 @@ Ricard pidió el portal completo antes de los mockups validados, sabiendo que el
 8. La guía para elegir las fotos: es la primera página de contenido largo y usa las piezas de siempre (tarjetas blancas, números de color y la franja oscura).
 9. La subida colaborativa: la línea de Fotos que se despliega (WhatsApp como botón principal, con el botón oscuro de siempre y no con los colores de WhatsApp) y la página «Manda tus fotos», que es la primera impresión de la marca para quien aún no la conoce; en ella, las cartas por mandar con el año sobre la foto y la frase debajo.
 10. Fotos con cartas (22 de noviembre): el mazo arriba con sus botones encima, y la mesa de «Cómo se juega» sin comodín ni carta en blanco, que deja libres dos esquinas.
+11. Los avisos que dejó la auditoría del 22 de noviembre, hechos con las piezas de siempre: en Pedido, la línea que explica que no se puede pagar mientras entran fotos; el aviso de la foto de la caja con poca resolución; el «Deshacer» que queda a la vista al borrar todas las fotos o cartas; el aviso de la dedicatoria que no cabe, mientras se escribe; y el estado del guardado con el dispositivo lleno («Sin guardar: no queda espacio en este dispositivo»). Y una duda: cuando un pack mayor sale más barato y se aplica solo, la barra sigue diciendo «Pack Pequeño» mientras el aviso dice «Ya te aplicamos el pack Grande».
