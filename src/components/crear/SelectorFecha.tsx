@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type KeyboardEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { borradorDe, cambiarBorrador, estadoBorrador, type BorradorFecha } from "@/domain/fechas/borrador";
 import type { FechaCarta, Precision } from "@/domain/fechas/fecha";
@@ -14,6 +14,10 @@ const claveDe = (f: FechaCarta | null) => (f ? `${f.anio}-${f.mes ?? ""}-${f.dia
  * pendiente) mientras el borrador conserva lo tecleado. Nunca corrige lo escrito: un 29 de
  * febrero de un año no bisiesto avisa de que no existe en vez de guardarse como otro día. En
  * blanco se ve en blanco: los marcadores son neutros («aaaa»), nunca un año que parezca puesto.
+ *
+ * En blanco empieza con `precisionEnBlanco` (por defecto, la fecha completa): quien va poniendo
+ * solo el año a muchas cartas no tiene que elegirlo en cada una (ver `alElegirPrecision`). Con
+ * `alIntro`, Intro en el día o el año hace lo mismo que el botón de seguir.
  */
 export function SelectorFecha({
   valor,
@@ -24,6 +28,9 @@ export function SelectorFecha({
   requerida = false,
   alEnfocar,
   describidoPor,
+  precisionEnBlanco = "dia",
+  alElegirPrecision,
+  alIntro,
 }: {
   valor: FechaCarta | null;
   alCambiar: (f: FechaCarta | null) => void;
@@ -36,13 +43,19 @@ export function SelectorFecha({
   alEnfocar?: () => void;
   /** Id de un texto que explica el estado de la fecha (por ejemplo, por qué está en blanco). */
   describidoPor?: string;
+  /** La precisión con la que empieza si no hay fecha. */
+  precisionEnBlanco?: Precision;
+  /** Al elegir una precisión (para empezar con ella la siguiente fecha en blanco). */
+  alElegirPrecision?: (p: Precision) => void;
+  /** Intro en el día o el año (como en un formulario: seguir). */
+  alIntro?: () => void;
 }) {
   const t = useTranslations("fechas");
   const locale = useLocale();
   const generado = useId();
   const id = idBase ?? generado;
   const meses = useMemo(() => nombresMeses(locale), [locale]);
-  const [b, setB] = useState<BorradorFecha>(() => borradorDe(valor, "dia"));
+  const [b, setB] = useState<BorradorFecha>(() => borradorDe(valor, precisionEnBlanco));
 
   // La última fecha que conoce el selector: la que recibió o la que acaba de emitir. Si la de
   // fuera cambia por otra cosa (otra carta, deshacer, una sugerencia aceptada…), se recarga el
@@ -77,6 +90,11 @@ export function SelectorFecha({
     "aria-required": requerida || undefined,
     "aria-describedby": error || aMedias ? idError : undefined,
   };
+  const alTeclear = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || !alIntro || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    alIntro();
+  };
 
   return (
     <fieldset className="space-y-3" onFocus={alEnfocar} onPointerDown={alEnfocar} aria-describedby={describidoPor}>
@@ -88,7 +106,10 @@ export function SelectorFecha({
             type="button"
             role="radio"
             aria-checked={b.precision === p}
-            onClick={() => actualizar({ precision: p })}
+            onClick={() => {
+              alElegirPrecision?.(p);
+              actualizar({ precision: p });
+            }}
             className={`tipo-boton min-h-11 rounded-[10px] px-3 text-sm transition-colors ${b.precision === p ? "bg-tinta text-papel" : "hover:bg-papel-3"}`}
           >
             {t(p === "dia" ? "dia" : p === "mes" ? "mes" : "anio")}
@@ -107,6 +128,7 @@ export function SelectorFecha({
               placeholder={t("placeholderDia")}
               value={b.dia}
               onChange={(e) => actualizar({ dia: e.target.value })}
+              onKeyDown={alTeclear}
               className={`${campo} w-[4.5rem] font-semibold`}
               {...comunes}
             />
@@ -141,6 +163,7 @@ export function SelectorFecha({
             placeholder={t("placeholderAnio")}
             value={b.anio}
             onChange={(e) => actualizar({ anio: e.target.value })}
+            onKeyDown={alTeclear}
             className={`${campo} w-[6.5rem] font-semibold`}
             {...comunes}
           />

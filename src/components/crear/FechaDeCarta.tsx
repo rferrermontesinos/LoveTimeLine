@@ -1,10 +1,10 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso } from "@/components/ui/Piezas";
-import { aIso, precisionDe, type FechaCarta } from "@/domain/fechas/fecha";
+import { aIso, precisionDe, type FechaCarta, type Precision } from "@/domain/fechas/fecha";
 import { fechaLegible } from "@/domain/fechas/formato";
 import { useMazo } from "@/lib/mazo/contexto";
 import { esAproximada } from "@/lib/mazo/derivados";
@@ -20,6 +20,10 @@ import { SelectorFecha } from "./SelectorFecha";
  * `hecho` confirma lo último que se ha hecho (la fecha puesta a la carta anterior y cuántas quedan):
  * va junto a las sugerencias, para que en el móvil se vea con lo siguiente que hay que decidir, con
  * una miniatura de la foto (`miniatura`), que allí queda más arriba.
+ *
+ * La precisión que se elige para una carta es con la que empieza la siguiente en blanco: con un
+ * montón de escaneos de los que solo se sabe el año, «Solo el año» se elige una vez. `alIntro`:
+ * Intro en la fecha, para seguir con el teclado.
  */
 export function FechaDeCarta({
   carta,
@@ -27,16 +31,19 @@ export function FechaDeCarta({
   alUsarSugerencia,
   hecho,
   miniatura,
+  alIntro,
 }: {
   carta: Carta;
   hoy: Date;
   alUsarSugerencia?: (s: SugerenciaFecha) => void;
   hecho?: string | null;
   miniatura?: string | null;
+  alIntro?: () => void;
 }) {
   const t = useTranslations("fechas");
   const locale = useLocale();
   const { despachar } = useMazo();
+  const [precisionEnBlanco, setPrecisionEnBlanco] = useState<Precision>("dia");
   const base = useId();
   const idTitulo = `${base}-titulo`;
   const idEstado = `${base}-estado`;
@@ -71,6 +78,9 @@ export function FechaDeCarta({
         alCambiar={cambiar}
         alEnfocar={() => despachar({ tipo: "puntoDeshacer" })}
         describidoPor={carta.fecha ? undefined : idEstado}
+        precisionEnBlanco={precisionEnBlanco}
+        alElegirPrecision={setPrecisionEnBlanco}
+        alIntro={alIntro}
       />
 
       {carta.fecha ? (

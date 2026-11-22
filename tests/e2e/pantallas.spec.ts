@@ -1,11 +1,12 @@
 /**
  * Lo que puede pasar mientras entran fotos y al deshacer (revisión de pantallas del 22-11-2026):
  * pagar a medias, empezar otro mazo a medias, las mismas fotos dos veces, girar y deshacer, borrar
- * todas y dónde queda el foco. De la revisión de la impresión, la dedicatoria que no cabe. Y, de la
- * del guardado, el móvil que se queda sin espacio.
+ * todas y dónde queda el foco. De la revisión de la impresión, la dedicatoria que no cabe; de la
+ * del guardado, el móvil que se queda sin espacio. Y, de los recorridos con 100 escaneos, poner
+ * solo el año a muchas cartas seguidas.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { conFecha, fotos, guardado, leerMazo, ponerAnioALasSinFecha } from "./mazo-utiles";
+import { conFecha, fotos, guardado, leerMazo, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
 
 /** Empieza un mazo con el pack pequeño y da el permiso de las fotos. */
 async function empezar(page: Page) {
@@ -158,6 +159,35 @@ test.describe("deshacer y foco", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(encuadrar).toBeFocused();
+  });
+});
+
+test.describe("fechas a mano", () => {
+  test("solo el año a muchas cartas: se elige una vez y, con Intro, se pasa a la siguiente sin soltar el teclado", async ({ page }, info) => {
+    test.skip(info.project.name === "movil", "El teclado se prueba en escritorio.");
+    await empezar(page);
+    await page.getByTestId("entrada-fotos").setInputFiles(fotos().filter(sinFechaAlSubir).slice(0, 3));
+    await expect(page.getByText("3 fotos añadidas")).toBeVisible({ timeout: 60_000 });
+    await irA(page, "Cartas");
+    const anio = page.getByLabel("Año", { exact: true });
+    const soloAnio = page.getByRole("radio", { name: "Solo el año" });
+    await expect(soloAnio).not.toBeChecked();
+    await soloAnio.click();
+    await anio.fill("1987");
+    await anio.press("Enter");
+    // La carta siguiente ya empieza con «Solo el año», y el foco está en su año, en blanco.
+    await expect(anio).toBeFocused();
+    await expect(anio).toHaveValue("");
+    await expect(soloAnio).toBeChecked();
+    await page.keyboard.type("1992");
+    await page.keyboard.press("Enter");
+    await expect(anio).toBeFocused();
+    await expect(anio).toHaveValue("");
+    await page.keyboard.type("2001");
+    await page.keyboard.press("Enter");
+    await expect
+      .poll(async () => (((await leerMazo(page))?.cartas ?? []) as { fecha: { anio: number; mes?: number } | null }[]).map((c) => c.fecha).sort((a, b) => (a?.anio ?? 0) - (b?.anio ?? 0)))
+      .toEqual([{ anio: 1987 }, { anio: 1992 }, { anio: 2001 }]);
   });
 });
 

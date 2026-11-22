@@ -76,9 +76,11 @@ export function PasoCartas() {
   const avisoVisto = useRef(avisoFecha);
   // Carta en la que «Siguiente» ya se ha frenado una vez por estar a medias.
   const [frenada, setFrenada] = useState<string | null>(null);
-  // Tras usar una fecha sugerida: a dónde va el foco cuando se pinta la carta siguiente (o el aviso
-  // de que el mazo está listo), para que quien usa el teclado o un lector de pantalla siga el paso.
-  const focoTrasSugerencia = useRef<"fecha" | "listo" | null>(null);
+  // Tras usar una fecha sugerida o pasar de carta con Intro en la fecha: a dónde va el foco cuando
+  // se pinta la carta siguiente (o el aviso de que el mazo está listo), para que quien usa el
+  // teclado o un lector de pantalla siga el paso. «fecha»: su sugerencia o, si no tiene, su campo;
+  // «campo»: el campo, para seguir tecleando.
+  const focoTrasSugerencia = useRef<"fecha" | "campo" | "listo" | null>(null);
   // Lo que se dice en la carta a la que se pasa sola: que la anterior ya tiene fecha y cuántas quedan.
   const [hecho, setHecho] = useState<{ cartaId: string; fecha: FechaCarta; quedan: number } | null>(null);
 
@@ -128,7 +130,8 @@ export function PasoCartas() {
     // con lo hecho y lo siguiente por decidir, justo entre las barras fijas.
     const bloque = bloqueFecha.current;
     const zona = bloque?.querySelector<HTMLElement>("[data-zona-sugerencias]") ?? bloque;
-    const destino = zona?.querySelector<HTMLElement>("[data-sugerencia] button") ?? bloque?.querySelector<HTMLElement>("fieldset input, fieldset select");
+    const campo = bloque?.querySelector<HTMLElement>("fieldset input, fieldset select");
+    const destino = destinoPedido === "campo" ? campo : (zona?.querySelector<HTMLElement>("[data-sugerencia] button") ?? campo);
     destino?.focus({ preventScroll: true });
     if (!zona) return;
     const estilo = getComputedStyle(zona);
@@ -208,6 +211,18 @@ export function PasoCartas() {
     if (deFecha) bloque?.querySelector<HTMLElement>("fieldset input, fieldset select")?.focus({ preventScroll: true });
     else if (rangoHueco(carta.descripcion)) irAlHueco();
     else areaTexto.current?.focus({ preventScroll: true });
+  }
+
+  /**
+   * Intro en la fecha: lo mismo que «Siguiente». Si se pasa a otra carta, el foco va a su fecha (la
+   * de esta desaparece), para seguir tecleando: 1987 ⏎ 1992 ⏎…
+   */
+  function siguienteDesdeFecha() {
+    if (!carta) return;
+    const pasa = pendientesDeCarta(carta, hoy).length === 0 || frenada === carta.id;
+    const otra = orden[(indice + 1) % orden.length] !== carta.id;
+    siguiente();
+    if (pasa && otra) focoTrasSugerencia.current = "campo";
   }
 
   /**
@@ -435,6 +450,7 @@ export function PasoCartas() {
               carta={carta}
               hoy={hoy}
               alUsarSugerencia={alUsarSugerencia}
+              alIntro={siguienteDesdeFecha}
               miniatura={miniatura}
               hecho={hecho?.cartaId === carta.id ? t("cartas.hecho", { fecha: fechaLegible(hecho.fecha, locale), n: hecho.quedan }) : null}
             />
