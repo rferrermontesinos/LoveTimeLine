@@ -170,15 +170,19 @@ export function cotizar(e: EntradaCotizacion): Cotizacion {
   const sel = seleccion(e);
   const n = e.cartas;
 
-  // Packs que se pueden cobrar: el elegido y los mayores.
-  const candidatos = packsActivos(catalogo).filter((p) => p.id === elegido.id || p.cartas > elegido.cartas);
+  const mejor = mejorCotizacion(catalogo, elegido, n, sel);
+  return { ...mejor, ofertas: ofertas(catalogo, elegido, mejor, sel) };
+}
+
+/** Lo que se cobra con un pack elegido: con ese pack o con uno mayor, si sale más barato. */
+function mejorCotizacion(catalogo: Catalogo, elegido: Pack, n: number, sel: Seleccion): Omit<Cotizacion, "ofertas"> {
   let mejor = cotizarCon(catalogo, elegido, elegido, n, sel);
-  for (const p of candidatos) {
-    if (p.id === elegido.id) continue;
+  for (const p of packsActivos(catalogo)) {
+    if (p.id === elegido.id || p.cartas <= elegido.cartas) continue;
     const c = cotizarCon(catalogo, elegido, p, n, sel);
     if (c.totalCents < mejor.totalCents) mejor = c;
   }
-  return { ...mejor, ofertas: ofertas(catalogo, elegido, mejor, sel) };
+  return mejor;
 }
 
 function ofertas(catalogo: Catalogo, elegido: Pack, actual: Omit<Cotizacion, "ofertas">, sel: Seleccion): Oferta[] {
@@ -197,9 +201,10 @@ function ofertas(catalogo: Catalogo, elegido: Pack, actual: Omit<Cotizacion, "of
   }
 
   if (actual.faltan > 0) {
-    // Un pack menor que ya está cubierto con las cartas que hay.
+    // Un pack menor que ya está cubierto con las cartas que hay, con lo que se cobraría de verdad
+    // al cambiar a él (que puede ser un pack mayor, si sale más barato).
     const menor = packs.filter((p) => p.cartas < elegido.cartas && p.cartas <= n).at(-1);
-    if (menor) lista.push({ tipo: "bajar", pack: menor, totalCents: cotizarCon(catalogo, menor, menor, n, sel).totalCents });
+    if (menor) lista.push({ tipo: "bajar", pack: menor, totalCents: mejorCotizacion(catalogo, menor, n, sel).totalCents });
     return lista;
   }
 

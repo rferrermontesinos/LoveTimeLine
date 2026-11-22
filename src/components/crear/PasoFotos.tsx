@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { PROPORCION_CARTA } from "@config/print";
 import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
 import { Aviso, Pestana } from "@/components/ui/Piezas";
@@ -345,14 +346,14 @@ function Miniatura({
         } ${seleccionada ? "outline outline-4 outline-cobalto" : ""}`}
       >
         {foto ? (
-          <span className="block aspect-[63/88] w-full">
+          <span className="block w-full" style={{ aspectRatio: PROPORCION_CARTA }}>
             {url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={url} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]" draggable={false} />
             )}
           </span>
         ) : (
-          <span className="flex aspect-[63/88] w-full items-center justify-center px-2.5 pb-8 pt-3">
+          <span className="flex w-full items-center justify-center px-2.5 pb-8 pt-3" style={{ aspectRatio: PROPORCION_CARTA }}>
             <span lang={lang} className="line-clamp-5 break-words text-center text-[0.8rem] font-semibold leading-snug">
               {carta.descripcion}
             </span>

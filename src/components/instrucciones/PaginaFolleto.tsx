@@ -16,6 +16,9 @@ import { CaraA, CaraB, type ColoresFolleto, type MecanicaFolleto, type Personali
 const MM = 96 / 25.4;
 const ANCHO_HOJA = PRINT.folleto.columnas * PRINT.carta.anchoMm * MM;
 const ALTO_HOJA = PRINT.folleto.filas * PRINT.carta.altoMm * MM;
+/** Pliegues entre los paneles, en mm desde la esquina superior izquierda (cada panel, una carta). */
+const PLIEGUES_X = Array.from({ length: PRINT.folleto.columnas - 1 }, (_, i) => (i + 1) * PRINT.carta.anchoMm);
+const PLIEGUES_Y = Array.from({ length: PRINT.folleto.filas - 1 }, (_, i) => (i + 1) * PRINT.carta.altoMm);
 
 /**
  * Herramienta interna para imprimir el folleto plegable que va en la caja: versión genérica
@@ -127,10 +130,12 @@ function Hoja({ etiqueta, children }: { etiqueta: string; children: ReactNode })
 function PlieguesPantalla() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 print:hidden">
-      {[63, 126, 189].map((x) => (
+      {PLIEGUES_X.map((x) => (
         <span key={x} className="absolute bottom-0 top-0 border-l border-dashed border-cobalto/60" style={{ left: `${x}mm` }} />
       ))}
-      <span className="absolute left-0 right-0 border-t border-dashed border-cobalto/60" style={{ top: "88mm" }} />
+      {PLIEGUES_Y.map((y) => (
+        <span key={y} className="absolute left-0 right-0 border-t border-dashed border-cobalto/60" style={{ top: `${y}mm` }} />
+      ))}
     </div>
   );
 }
@@ -153,14 +158,18 @@ function MarcasImpresion() {
           );
         }),
       )}
-      {[63, 126, 189].map((x) => (
+      {PLIEGUES_X.map((x) => (
         <span key={x}>
           <span className={linea} style={{ left: `${x}mm`, top: "-7mm", height: "4mm", width: g }} />
           <span className={linea} style={{ left: `${x}mm`, top: "calc(100% + 3mm)", height: "4mm", width: g }} />
         </span>
       ))}
-      <span className={linea} style={{ top: "88mm", left: "-7mm", width: "4mm", height: g }} />
-      <span className={linea} style={{ top: "88mm", left: "calc(100% + 3mm)", width: "4mm", height: g }} />
+      {PLIEGUES_Y.map((y) => (
+        <span key={y}>
+          <span className={linea} style={{ top: `${y}mm`, left: "-7mm", width: "4mm", height: g }} />
+          <span className={linea} style={{ top: `${y}mm`, left: "calc(100% + 3mm)", width: "4mm", height: g }} />
+        </span>
+      ))}
     </div>
   );
 }

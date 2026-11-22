@@ -134,14 +134,15 @@ function guardarCodigo(rutas) {
 }
 
 /**
- * Guarda las páginas que se pueden abrir sin conexión y el código que citan. Se piden sin cookies:
- * la copia es la de cualquier visitante, sin nada de nadie.
+ * Guarda las páginas que se pueden abrir sin conexión y el código que citan. Se piden con las
+ * cookies de la web (la del acceso privado del prototipo: sin ella, la respuesta es un 403 y no se
+ * guardaba nada); las páginas son las mismas para todos, sin nada de nadie.
  */
 function precargarPaginas() {
   return caches.open(CACHE_PAGINAS).then(function (cache) {
     return Promise.all(
       paginasSinConexion().map(function (ruta) {
-        return fetch(ruta, { credentials: "omit", cache: "no-store" })
+        return fetch(ruta, { credentials: "same-origin", cache: "no-store" })
           .then(function (respuesta) {
             if (!respuesta.ok || respuesta.redirected) return null;
             var copia = respuesta.clone();

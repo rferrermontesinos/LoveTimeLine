@@ -3,7 +3,8 @@
  * (otro navegador, sin la clave del prototipo) y entran en el mazo. Necesita la compilación con
  * NEXT_PUBLIC_COLABORACION_URL=/api/colaboracion y COLABORACION_LOCAL=1 (playwright.config.ts).
  */
-import path from "node:path";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { devices, expect, test, type Page } from "@playwright/test";
 import { conFecha, fotos, leerMazo, sinFechaAlSubir } from "./mazo-utiles";
 
@@ -80,6 +81,11 @@ test.describe("pedir fotos con un enlace", () => {
     await expect(frase).toBeFocused();
     await expect(cartas).toHaveCount(3);
     await frase.fill("Verano en la playa");
+    // Volver a escribir el mismo año no le quita el mes ni el día con los que llegó.
+    const anioOtra = otra.getByRole("textbox", { name: /^Año de la foto \d/ });
+    const suAnio = await anioOtra.inputValue();
+    await anioOtra.fill("");
+    await anioOtra.fill(suAnio);
     await movil.getByRole("button", { name: "Mandar las 3 fotos" }).click();
     await expect(movil.getByTestId("resultado-aportar")).toHaveText("¡Hecho! Han llegado 3 fotos.", { timeout: 60_000 });
     await expect(cartas).toHaveCount(0);
@@ -101,11 +107,14 @@ test.describe("pedir fotos con un enlace", () => {
     await expect(panel.getByText("Aún no ha llegado ninguna.", { exact: false })).toBeVisible();
     const mazo = await leerMazo(page);
     const enElMazo = (mazo?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown; fuente: unknown; descripcion: string }[];
-    expect(enElMazo.map((c) => c.nombreArchivo).sort()).toEqual(archivos.map((a) => path.basename(a)).sort());
+    // Llegan con un nombre neutro, no con el del archivo de quien las manda.
+    const nombreNeutro = (a: string) => `foto-${createHash("sha256").update(readFileSync(a)).digest("hex").slice(0, 8)}.jpg`;
+    expect(enElMazo.map((c) => c.nombreArchivo).sort()).toEqual(archivos.map(nombreNeutro).sort());
     expect(enElMazo.every((c) => c.fecha)).toBe(true);
     // Con el año y la frase que les puso quien las mandó; ese año cuenta como puesto a mano.
-    expect(enElMazo.find((c) => c.nombreArchivo === path.basename(enBlanco))).toMatchObject({ fecha: { anio: 1998 }, fuente: "manual" });
+    expect(enElMazo.find((c) => c.nombreArchivo === nombreNeutro(enBlanco))).toMatchObject({ fecha: { anio: 1998 }, fuente: "manual" });
     expect(enElMazo.filter((c) => c.descripcion === "Verano en la playa")).toHaveLength(1);
+    expect(enElMazo.find((c) => c.descripcion === "Verano en la playa")?.fecha).toMatchObject({ dia: expect.any(Number) });
     await expect(page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem")).toHaveCount(3);
 
     // Al volver otro día, el enlace sigue ahí, plegado en su línea, y las cartas se ven enseguida.

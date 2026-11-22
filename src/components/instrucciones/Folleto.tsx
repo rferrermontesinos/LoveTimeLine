@@ -1,6 +1,6 @@
 /**
- * Folleto de instrucciones: una hoja de 252 × 176 mm (4 × 2 paneles de 63 × 88 mm, el tamaño
- * de una carta) que se pliega en mapa y va dentro de la caja. No está en la web pública: se
+ * Folleto de instrucciones: una hoja de 4 × 2 paneles del tamaño de una carta (config/print.ts)
+ * que se pliega en mapa y va dentro de la caja. No está en la web pública: se
  * imprime con el packaging desde la herramienta interna /interno/folleto.
  *
  * Plegado: primero por la mitad a lo largo, con la cara A fuera; después en acordeón por las
@@ -18,6 +18,7 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 import { createTranslator } from "next-intl";
+import { PRINT } from "@config/print";
 import { textoContenidoCaja } from "@/components/juego/contenidoCaja";
 import { IconoMecanica } from "@/components/ui/IconoMecanica";
 import { jugadoresPorMazo, vidas, vidasHistoriaCompleta } from "@/domain/juego/reglas";
@@ -57,7 +58,16 @@ const COLOR_MODO = { clasico: "#FFC93C", historia: "#22A861" } as const;
 /** Clave de cada mecánica en juego.json (`mecanicas.<clave>`). */
 const CLAVE_MECANICA: Record<string, "comodin" | "enBlanco"> = { comodin: "comodin", "en-blanco": "enBlanco" };
 
-const PANEL = "relative h-[88mm] w-[63mm] shrink-0 overflow-hidden";
+/**
+ * Cada panel mide lo que una carta cortada y la hoja, columnas × filas paneles (config/print.ts).
+ * Lo de dentro está compuesto en mm para 63 × 88: si cambia el formato, hay que revisarlo.
+ */
+const PANEL = "relative shrink-0 overflow-hidden";
+const TAMANO_PANEL: CSSProperties = { width: `${PRINT.carta.anchoMm}mm`, height: `${PRINT.carta.altoMm}mm` };
+const TAMANO_HOJA: CSSProperties = {
+  width: `${PRINT.folleto.columnas * PRINT.carta.anchoMm}mm`,
+  height: `${PRINT.folleto.filas * PRINT.carta.altoMm}mm`,
+};
 const CUERPO = "text-[6.8pt] leading-[1.3]";
 
 function Pestana({ children, color, texto }: { children: ReactNode; color: string; texto: string }) {
@@ -181,7 +191,7 @@ function minusculaInicial(texto: string): string {
 
 function Portada({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Personalizacion | null }) {
   return (
-    <div data-panel="portada" className={PANEL} style={{ background: c.tinta, color: c.papel }}>
+    <div data-panel="portada" className={PANEL} style={{ ...TAMANO_PANEL, background: c.tinta, color: c.papel }}>
       <Pestana color={c.fondo} texto={c.texto}>
         ?
       </Pestana>
@@ -209,7 +219,7 @@ function Portada({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Personal
 /** Panel de reglas: papel, con la pestaña numerada. */
 function Regla({ n, c, children }: { n: number; c: ColoresFolleto; children: ReactNode }) {
   return (
-    <div data-panel={`regla-${n}`} className={PANEL} style={{ background: c.papel, color: c.tinta }}>
+    <div data-panel={`regla-${n}`} className={PANEL} style={{ ...TAMANO_PANEL, background: c.papel, color: c.tinta }}>
       <Pestana color={c.fondo} texto={c.texto}>
         {n}
       </Pestana>
@@ -221,7 +231,7 @@ function Regla({ n, c, children }: { n: number; c: ColoresFolleto; children: Rea
 /** Panel de Nuestra historia: tinta, con la pestaña numerada en verde. */
 function PanelHistoria({ n, c, children }: { n: number; c: ColoresFolleto; children: ReactNode }) {
   return (
-    <div data-panel={`historia-${n}`} className={PANEL} style={{ background: c.tinta, color: c.papel }}>
+    <div data-panel={`historia-${n}`} className={PANEL} style={{ ...TAMANO_PANEL, background: c.tinta, color: c.papel }}>
       <Pestana color={COLOR_MODO.historia} texto={c.tinta}>
         {n}
       </Pestana>
@@ -249,7 +259,7 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
   );
 
   return (
-    <div className="flex h-[176mm] w-[252mm] flex-col">
+    <div className="flex flex-col" style={TAMANO_HOJA}>
       {/* Fila superior: para empezar, el Clásico y los iconos, girada 180° para que se lea derecha al abrir la portada. */}
       <div className="flex rotate-180">
         <Regla n={1} c={c}>
@@ -380,7 +390,7 @@ export function CaraB({ t, c, p }: { t: TextosFolleto; c: ColoresFolleto; p: Per
   const ti = t.instrucciones;
   const estilo: CSSProperties = { background: c.fondo, color: c.texto };
   return (
-    <div data-panel="poster" className="relative h-[176mm] w-[252mm] overflow-hidden" style={estilo}>
+    <div data-panel="poster" className="relative overflow-hidden" style={{ ...TAMANO_HOJA, ...estilo }}>
       {/* Titular gigante sobre la fila superior. */}
       <div className="absolute left-[7mm] right-[7mm] top-[8mm]">
         <p className="tipo-micro text-[6pt] tracking-[0.16em] opacity-80">{t.marca}</p>

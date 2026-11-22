@@ -2,18 +2,19 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { crearServicio, esPaqueteValido, LIMITES, segmentos, type Limites } from "@datos/functions/colaboracion/servicio";
+import { crearServicio, esPaqueteValido, LIMITES, segmentos, type Almacen, type Limites } from "@datos/functions/colaboracion/servicio";
 import { aBase64url, clavePublicaCruda, cifrarAportacion, crearLlavesDueno, deBase64url, descifrarAportacion, huellaToken, tokenNuevo } from "@/domain/colaboracion/cifrado";
 import { almacenLocal } from "./colaboracionLocal";
 
 const BASE = "https://ejemplo.supabase.co/functions/v1/colaboracion";
 const DIA = 24 * 60 * 60 * 1000;
 
-function preparar(opciones: { limites?: Partial<Limites>; carpeta?: string } = {}) {
+function preparar(opciones: { limites?: Partial<Limites>; carpeta?: string; claveServicio?: string | null; almacen?: (a: Almacen) => Almacen } = {}) {
   let t = Date.UTC(2026, 10, 20, 12);
   const reloj = { ahora: () => t, avanzar: (ms: number) => (t += ms) };
-  const almacen = almacenLocal({ carpeta: opciones.carpeta, ahora: reloj.ahora });
-  const servir = crearServicio(almacen, { ahora: reloj.ahora, limites: opciones.limites });
+  const base = almacenLocal({ carpeta: opciones.carpeta, ahora: reloj.ahora });
+  const almacen = opciones.almacen ? opciones.almacen(base) : base;
+  const servir = crearServicio(almacen, { ahora: reloj.ahora, limites: opciones.limites, claveServicio: opciones.claveServicio });
   const pedir = (metodo: string, ruta: string, init: { cuerpo?: BodyInit; token?: string; cabeceras?: Record<string, string> } = {}) =>
     servir(
       new Request(`${BASE}${ruta}`, {
@@ -153,6 +154,46 @@ describe("servicio de la subida colaborativa", () => {
       cuerpo: JSON.stringify({ clavePublica: aBase64url(await clavePublicaCruda(llaves)), huellaToken: await huellaToken(tokenNuevo()) }),
     });
     expect(cuarto.status).toBe(503);
+  });
+
+  it("crear enlaces pide el secreto del portal; sin él configurado, no se crea ninguno", async () => {
+    const llaves = await crearLlavesDueno();
+    const cuerpo = JSON.stringify({ clavePublica: aBase64url(await clavePublicaCruda(llaves)), huellaToken: await huellaToken(tokenNuevo()) });
+    const { pedir } = preparar({ claveServicio: "secreto-del-portal-0123456789" });
+    expect((await pedir("POST", "/invitaciones", { cuerpo })).status).toBe(403);
+    expect((await pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "otro-secreto-del-portal-0123" } })).status).toBe(403);
+    expect((await pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "secreto-del-portal-0123456789" } })).status).toBe(201);
+    const vacia = preparar({ claveServicio: "" });
+    expect((await vacia.pedir("POST", "/invitaciones", { cuerpo })).status).toBe(403);
+    expect((await vacia.pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "" } })).status).toBe(403);
+  });
+
+  it("un enlace solo puede ocupar parte del espacio de todos", () => {
+    expect(LIMITES.maxBytesEnlace * 2).toBeLessThanOrEqual(LIMITES.maxBytesTotal);
+  });
+
+  it("si el enlace se cierra mientras llega una foto, no queda ningún paquete suelto", async () => {
+    let soltar: () => void = () => undefined;
+    const subiendo = new Promise<void>((r) => (soltar = r));
+    let empezada: () => void = () => undefined;
+    const empieza = new Promise<void>((r) => (empezada = r));
+    const { pedir, almacen } = preparar({
+      almacen: (a) => ({
+        ...a,
+        async subirArchivo(ruta, datos) {
+          empezada();
+          await subiendo;
+          return a.subirArchivo(ruta, datos);
+        },
+      }),
+    });
+    const enlace = await crearEnlace(pedir);
+    const envio = pedir("POST", `/invitaciones/${enlace.id}/aportaciones`, { cuerpo: await paquete(enlace.clavePublica, enlace.id) });
+    await empieza;
+    expect((await pedir("DELETE", `/invitaciones/${enlace.id}`, { token: enlace.token })).status).toBe(204);
+    soltar();
+    expect((await envio).status).toBe(404);
+    expect(await almacen.listarArchivos(enlace.id)).toEqual([]);
   });
 
   it("el espacio se comparte entre todos los enlaces", async () => {

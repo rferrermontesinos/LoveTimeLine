@@ -94,11 +94,34 @@ describe("cotizar: ofertas", () => {
     expect(cotizar({ catalogo, packId: "pequeno", cartas: 100 }).packAplicado.id).toBe("grande");
   });
 
-  it("si faltan cartas para el pack elegido, ofrece el menor que ya está cubierto", () => {
+  it("si faltan cartas para el pack elegido, ofrece el menor que ya está cubierto, con lo que se cobraría", () => {
     const c = cotizar({ catalogo, packId: "mediano", cartas: 55 });
     expect(c.faltan).toBe(5);
     expect(c.sePuedePagar).toBe(false);
-    expect(oferta(c.ofertas, "bajar")).toMatchObject({ pack: { id: "pequeno" }, totalCents: 6100 });
+    // Con el pequeño serían 49 + 15 × 0,80 = 61 €, pero se cobra el mediano, que sale a 59 €.
+    expect(oferta(c.ofertas, "bajar")).toMatchObject({ pack: { id: "pequeno" }, totalCents: 5900 });
+    expect(cotizar({ catalogo, packId: "pequeno", cartas: 55 }).totalCents).toBe(5900);
+  });
+
+  it("la oferta de bajar de pack dice siempre lo que se pagaría al cambiar", () => {
+    const extras = catalogo.extras.filter((x) => x.activo).map((x) => x.id);
+    const mecanicas = catalogo.mecanicas.filter((m) => m.activo).map((m) => m.id);
+    let vistas = 0;
+    for (const cat of [actual, catalogo]) {
+      for (const sel of [{}, { extras: extras.filter((id) => cat.extras.some((x) => x.id === id && x.activo)) }, { mecanicas: mecanicas.filter((id) => cat.mecanicas.some((m) => m.id === id && m.activo)) }]) {
+        for (const p of packsActivos(cat)) {
+          for (let n = 0; n <= cat.ampliacion.maxCartas; n++) {
+            const bajar = oferta(cotizar({ catalogo: cat, packId: p.id, cartas: n, ...sel }).ofertas, "bajar");
+            if (bajar?.tipo !== "bajar") continue;
+            vistas++;
+            const alCambiar = cotizar({ catalogo: cat, packId: bajar.pack.id, cartas: n, ...sel });
+            expect(alCambiar.sePuedePagar).toBe(true);
+            expect(bajar.totalCents, `${p.id} con ${n} cartas`).toBe(alCambiar.totalCents);
+          }
+        }
+      }
+    }
+    expect(vistas).toBeGreaterThan(50);
   });
 
   it("nunca cobra más que con el pack elegido, ni más que un pack mayor, y el precio no baja al sumar cartas", () => {

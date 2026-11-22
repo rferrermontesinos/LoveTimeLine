@@ -38,8 +38,8 @@
 }
 
 /* El hueco discontinuo de la línea donde va a entrar la carta. */
+/* Su forma (aspect-ratio) la pone el componente, del formato de impresión. */
 .hueco {
-  aspect-ratio: 63 / 88;
   border: 2px dashed rgba(245, 240, 230, 0.92);
   border-radius: 7%/5%;
   background: rgba(245, 240, 230, 0.14);

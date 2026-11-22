@@ -69,8 +69,9 @@ describe("textoOferta", () => {
 
   it("bajar de pack cuando faltan cartas: con qué pack ya se podría pagar y cuánto", () => {
     const o = oferta("mediano", 55, "bajar");
-    expect(frase(o, "es")).toBe("Con el pack Pequeño ya podrías pagar (61 €).");
-    expect(frase(o, "en")).toBe("With the Small pack you could already check out (€61).");
+    // Lo que se cobraría de verdad al cambiar: con 55 cartas, el Pequeño se cobra como Mediano (más barato).
+    expect(frase(o, "es")).toBe("Con el pack Pequeño ya podrías pagar (59 €).");
+    expect(frase(o, "en")).toBe("With the Small pack you could already check out (€59).");
   });
 
   it("todas las ofertas posibles tienen su frase completa en los dos idiomas", () => {

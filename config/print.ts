@@ -27,6 +27,9 @@ export const PRINT = {
 
 export const MM_POR_PULGADA = 25.4;
 
+/** Ancho entre alto de la carta cortada: la forma de las cartas y miniaturas de la web. */
+export const PROPORCION_CARTA = PRINT.carta.anchoMm / PRINT.carta.altoMm;
+
 /** Tamaño de una cara con sangrado, en milímetros. */
 export function caraConSangradoMm() {
   return {

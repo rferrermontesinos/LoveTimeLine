@@ -19,7 +19,11 @@ export const MAX_AUTOR = 40;
 export const MAX_BYTES_COPIA = 12 * 1024 * 1024;
 export const MAX_BYTES_MINI = 2 * 1024 * 1024;
 const MAX_BYTES_DATOS = 16 * 1024;
-const MAX_LADO = 20_000;
+/**
+ * Lado máximo, en píxeles, de la copia que viaja. El del original (que no viaja) solo sirve para
+ * avisar de la calidad: si es mayor (una panorámica), se recorta a este en vez de rechazar la foto.
+ */
+export const MAX_LADO = 20_000;
 
 /** Datos de una foto aportada. `propuesta` es la de su móvil, sin las señales de depuración. */
 export interface DatosAportacion {
@@ -141,7 +145,8 @@ export function validarDatos(x: unknown): DatosAportacion {
   if (!nombreArchivo) throw new ErrorAportacion("nombre");
   if (typeof x.tipoArchivo !== "string" || !/^image\/[a-z0-9.+-]{1,40}$/i.test(x.tipoArchivo)) throw new ErrorAportacion("tipo");
   if (typeof x.hash !== "string" || !/^[0-9a-f]{64}$/.test(x.hash)) throw new ErrorAportacion("huella");
-  for (const lado of ["ancho", "alto", "anchoOriginal", "altoOriginal"] as const) if (!entero(x[lado], 1, MAX_LADO)) throw new ErrorAportacion(lado);
+  for (const lado of ["ancho", "alto"] as const) if (!entero(x[lado], 1, MAX_LADO)) throw new ErrorAportacion(lado);
+  for (const lado of ["anchoOriginal", "altoOriginal"] as const) if (!entero(x[lado], 1, Number.MAX_SAFE_INTEGER)) throw new ErrorAportacion(lado);
   const autor = x.autor === null ? null : texto(x.autor, MAX_AUTOR);
   if (x.autor !== null && !autor) throw new ErrorAportacion("autor");
   if (typeof x.lote !== "string" || !/^[A-Za-z0-9_-]{8,64}$/.test(x.lote)) throw new ErrorAportacion("lote");
@@ -153,8 +158,8 @@ export function validarDatos(x: unknown): DatosAportacion {
     hash: x.hash,
     ancho: x.ancho as number,
     alto: x.alto as number,
-    anchoOriginal: x.anchoOriginal as number,
-    altoOriginal: x.altoOriginal as number,
+    anchoOriginal: Math.min(x.anchoOriginal as number, MAX_LADO),
+    altoOriginal: Math.min(x.altoOriginal as number, MAX_LADO),
     propuesta: propuesta(x.propuesta),
     autor,
     lote: x.lote,

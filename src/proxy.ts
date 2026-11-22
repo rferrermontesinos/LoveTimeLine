@@ -31,11 +31,17 @@ export default async function proxy(req: NextRequest) {
     return res;
   }
 
-  return req.nextUrl.pathname.startsWith("/api") ? NextResponse.next() : idiomas(req);
+  // El idioma solo se resuelve en las páginas: la API y las rutas con punto (las variantes internas
+  // de una página, …/pagina.rsc y …/pagina.segments/…) ya han pasado por el acceso y siguen tal cual.
+  const { pathname } = req.nextUrl;
+  return pathname.startsWith("/api") || pathname.includes(".") ? NextResponse.next() : idiomas(req);
 }
 
 export const config = {
-  // Páginas y API. Fuera quedan los archivos internos de Next y los estáticos con extensión
-  // (robots.txt, sw.js, fuentes, fotos de muestra), que no tienen nada privado.
-  matcher: "/((?!_next|_vercel|.*\\..*).*)",
+  // Todo pasa por el acceso menos los archivos estáticos que no tienen nada privado: los de Next,
+  // las fuentes, las fotos de muestra, el service worker, el icono y robots.txt. No se excluye «lo
+  // que tenga un punto»: las variantes internas de cada página (…/pagina.segments/…segment.rsc)
+  // devuelven su contenido y en Vercel se servían sin la cookie (comprobado el 22-11-2026).
+  // Cada cambio aquí, con su prueba en src/lib/servidor/acceso.test.ts.
+  matcher: "/((?!_next/|_vercel/|fonts/|muestras/|juego/|sw\\.js|icono\\.svg|robots\\.txt|favicon\\.ico).*)",
 };

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { COOKIE_ACCESO, decidirAcceso, huellaClave, igualesSeguro, PARAM_ACCESO } from "./acceso";
 
@@ -57,5 +59,53 @@ describe("acceso privado al prototipo", () => {
     expect(igualesSeguro("abc", "abd")).toBe(false);
     expect(igualesSeguro("abc", "abcd")).toBe(false);
     expect(COOKIE_ACCESO).toMatch(/^[a-z_]+$/);
+  });
+});
+
+describe("qué rutas pasan por el acceso (el matcher del proxy, compilado como lo hace Next)", async () => {
+  // Next añade a cada matcher las variantes internas de las páginas (.rsc, .segments/…): se prueba
+  // con su propio compilador para ver lo mismo que en Vercel. El matcher se lee del archivo (Next
+  // también lo lee así, sin ejecutarlo).
+  type Compilador = { getMiddlewareMatchers: (matcher: string, config: object) => { regexp: string }[] };
+  const { getMiddlewareMatchers } = (await import("next/dist/build/analysis/get-page-static-info")) as unknown as Compilador;
+  const fuente = readFileSync(path.join(process.cwd(), "src", "proxy.ts"), "utf8");
+  const literal = /matcher:\s*("(?:[^"\\]|\\.)*")/.exec(fuente)?.[1];
+  if (!literal) throw new Error("No se encuentra el matcher en src/proxy.ts");
+  const regexps = getMiddlewareMatchers(JSON.parse(literal) as string, {}).map((m) => new RegExp(m.regexp));
+  const pasa = (ruta: string) => regexps.some((r) => r.test(ruta));
+
+  it("las páginas, la API y las variantes internas de las páginas pasan por el acceso", () => {
+    for (const ruta of [
+      "/",
+      "/es",
+      "/es/crear",
+      "/es/privacidad",
+      "/es/aportar/AbCdEfGhIjKlMnOpQrStUv",
+      "/api/checkout",
+      "/es.rsc",
+      "/es/crear.rsc",
+      "/es/privacidad.segments/_full.segment.rsc",
+      "/es/crear.segments/_tree.segment.rsc",
+      "/es/interno/folleto.rsc",
+      "/instrucciones/es.pdf",
+    ]) {
+      expect(pasa(ruta), ruta).toBe(true);
+    }
+  });
+
+  it("los estáticos sin nada privado no pasan (los necesita la página para mandar fotos)", () => {
+    for (const ruta of [
+      "/_next/static/chunks/abc.js",
+      "/_next/static/immutable/chunks/abc.css",
+      "/_next/image",
+      "/fonts/cartas/BricolageGrotesque-Bold.woff2",
+      "/muestras/playa.jpg",
+      "/juego/mesa.jpg",
+      "/sw.js",
+      "/icono.svg",
+      "/robots.txt",
+    ]) {
+      expect(pasa(ruta), ruta).toBe(false);
+    }
   });
 });

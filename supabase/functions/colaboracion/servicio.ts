@@ -40,7 +40,9 @@ export interface Limites {
 export const LIMITES: Limites = {
   diasEnlace: 14,
   maxFotos: 300,
-  maxBytesEnlace: 900 * 1024 * 1024,
+  // Un enlace no puede llenar solo el espacio de todos: como mucho, la mitad (las fotos se borran
+  // del servicio en cuanto el dueño las añade al mazo, así que es lo que espera a la vez).
+  maxBytesEnlace: 400 * 1024 * 1024,
   maxBytesTotal: 800 * 1024 * 1024,
   maxBytesPaquete: 15 * 1024 * 1024,
   maxEnlacesActivos: 200,
@@ -97,7 +99,7 @@ const LARGO_MINIMO_PAQUETE = 97;
 const CORS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type, x-token-dueno, authorization, apikey, x-client-info",
+  "Access-Control-Allow-Headers": "content-type, x-token-dueno, x-clave-servicio, authorization, apikey, x-client-info",
   "Access-Control-Max-Age": "86400",
 };
 const CABECERAS: Record<string, string> = { ...CORS, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
@@ -176,11 +178,19 @@ const ruta = (inv: string, id: string) => `${inv}/${id}`;
 export interface OpcionesServicio {
   ahora?: () => number;
   limites?: Partial<Limites>;
+  /**
+   * El secreto que solo tienen el portal y el servicio: crear un enlace lo pide en la cabecera
+   * `x-clave-servicio` (lo pone la ruta /api/enlaces del portal, detrás de su acceso privado). Así
+   * nadie de fuera crea enlaces: ni llena el servicio ni se hace páginas «Manda tus fotos» en la web.
+   * Vacío: no se puede crear ninguno. Sin la opción (null), no se comprueba: solo pruebas y local.
+   */
+  claveServicio?: string | null;
 }
 
 export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {}): (req: Request) => Promise<Response> {
   const ahora = opciones.ahora ?? (() => Date.now());
   const l: Limites = { ...LIMITES, ...opciones.limites };
+  const claveServicio = opciones.claveServicio ?? null;
 
   /** Borra los enlaces caducados y todo lo que guardaban. */
   async function purgar(limite = 50): Promise<number> {
@@ -203,6 +213,10 @@ export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {})
   }
 
   async function crearInvitacion(req: Request): Promise<Response> {
+    if (claveServicio !== null) {
+      const dada = req.headers.get("x-clave-servicio") ?? "";
+      if (!claveServicio || !iguales(dada, claveServicio)) return error("no-autorizado", 403);
+    }
     let cuerpo: unknown;
     try {
       cuerpo = JSON.parse(new TextDecoder().decode(await leerCuerpo(req, 4096)));
@@ -244,6 +258,12 @@ export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {})
       await almacen.borrarArchivos([ruta(inv, id)]).catch(() => undefined);
       throw e;
     }
+    // Si el enlace se ha cerrado (o purgado) mientras llegaba, el paquete no se queda suelto: nadie
+    // lo vería ni lo borraría. El cierre, por su parte, vuelve a mirar la carpeta al acabar.
+    if (!(await almacen.leer(inv))) {
+      await almacen.borrarArchivos([ruta(inv, id)]).catch(() => undefined);
+      return error("no-existe", 404);
+    }
     return json({ id }, 201);
   }
 
@@ -271,6 +291,9 @@ export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {})
         const archivos = await almacen.listarArchivos(inv);
         if (archivos.length) await almacen.borrarArchivos(archivos);
         await almacen.borrarInvitacion(inv);
+        // Lo que estuviera subiéndose mientras tanto (ver aportar).
+        const tardios = await almacen.listarArchivos(inv);
+        if (tardios.length) await almacen.borrarArchivos(tardios);
         return new Response(null, { status: 204, headers: CABECERAS });
       }
       return error("metodo", 405);

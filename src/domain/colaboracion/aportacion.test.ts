@@ -64,13 +64,20 @@ describe("datos de una aportación", () => {
     expect(error(() => validarDatos(datos({ hash: "A".repeat(64) })))).toBe("huella");
     expect(error(() => validarDatos(datos({ ancho: 0 })))).toBe("ancho");
     expect(error(() => validarDatos(datos({ alto: 1.5 })))).toBe("alto");
-    expect(error(() => validarDatos(datos({ anchoOriginal: 20_001 })))).toBe("anchoOriginal");
+    expect(error(() => validarDatos(datos({ ancho: 20_001 })))).toBe("ancho");
+    expect(error(() => validarDatos(datos({ anchoOriginal: 0 })))).toBe("anchoOriginal");
+    expect(error(() => validarDatos(datos({ altoOriginal: "mucho" })))).toBe("altoOriginal");
     expect(error(() => validarDatos(datos({ autor: "x".repeat(41) })))).toBe("autor");
     expect(error(() => validarDatos(datos({ autor: 7 })))).toBe("autor");
     expect(error(() => validarDatos(datos({ lote: "corto" })))).toBe("lote");
     expect(error(() => validarDatos(datos({ lote: "con espacios y más" })))).toBe("lote");
     expect(error(() => validarDatos(datos({ enviadaEn: -1 })))).toBe("envío");
     expect(error(() => validarDatos(datos({ enviadaEn: "ayer" })))).toBe("envío");
+  });
+
+  it("una panorámica más grande que el máximo no se rechaza: su original se recorta a ese máximo", () => {
+    const d = validarDatos(datos({ anchoOriginal: 24_000, altoOriginal: 4_000 }));
+    expect(d).toMatchObject({ anchoOriginal: 20_000, altoOriginal: 4_000, ancho: 3200, alto: 2400 });
   });
 
   it("valida la fecha propuesta, sus sugerencias y sus motivos", () => {

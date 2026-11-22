@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useCallback, useId, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { BRAND_NAME } from "@config/brand";
 import { CartaPortada } from "@/components/carta/CartaPortada";
@@ -31,6 +31,17 @@ export function PasoEstilo() {
   const { catalogo, iconos, versiones } = useCrear();
   const id = useId();
   const nombreIdioma = (codigo: string) => nombreDeIdioma(codigo, locale);
+  // En el móvil la vista previa se desliza a lo ancho: entonces también se puede recorrer con el
+  // teclado (WCAG 2.1.1). En escritorio cabe entera y no hace falta una parada más con Tab.
+  const [desborda, setDesborda] = useState(false);
+  const medirMesa = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    const medir = () => setDesborda(el.scrollWidth > el.clientWidth + 1);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, []);
 
   if (!mazo) return null;
   const estilo = obtenerEstilo(mazo.estiloId);
@@ -54,7 +65,11 @@ export function PasoEstilo() {
         {/* Vista previa: en el móvil va arriba, en escritorio a la derecha y fija. */}
         <aside aria-label={t("vistaPrevia")} className="order-first min-w-0 lg:order-last lg:sticky lg:top-36 lg:self-start">
           <Micro className="mb-3 text-tinta-2">{t("vistaPrevia")}</Micro>
-          <div className="mesa -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-5 sm:mx-0 sm:rounded-[24px] sm:px-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:p-6">
+          <div
+            ref={medirMesa}
+            tabIndex={desborda ? 0 : undefined}
+            className="mesa -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-5 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-cobalto sm:mx-0 sm:rounded-[24px] sm:px-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:p-6"
+          >
             <Figura etiqueta={t("caja")}>
               <VistaCaja
                 mazo={mazo}

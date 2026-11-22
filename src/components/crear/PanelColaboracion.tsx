@@ -176,7 +176,14 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
 
   const cerrar = async () => {
     if (actual.tipo !== "activo") return;
-    const n = actual.espera?.length ?? 0;
+    // Lo que espera, mirado ahora: la última consulta puede ser de hace medio minuto (o no haber
+    // llegado), y cerrar borra lo que haya. Sin red, la cuenta de la última vez.
+    let n = actual.espera?.length ?? 0;
+    try {
+      n = (await cliente.listar(actual.enlace.id, actual.enlace.token)).aportaciones.length;
+    } catch {
+      /* sin red: la última cuenta */
+    }
     if (!window.confirm(n ? t("cerrarConFotos", { n }) : t("cerrarConfirmar"))) return;
     setOcupado("cerrando");
     setError(null);

@@ -17,8 +17,10 @@ async function manejar(req: Request): Promise<Response> {
   if (process.env.COLABORACION_LOCAL !== "1") return new Response("No encontrado", { status: 404 });
   // Sin el freno de enlaces por hora: las pruebas crean muchos seguidos (los límites tienen sus
   // propias pruebas en src/lib/servidor/colaboracion.test.ts).
+  // Con COLABORACION_CLAVE_SERVICIO, crear enlaces la pide como en Supabase (solo desde /api/enlaces).
   servir ??= crearServicio(almacenLocal({ carpeta: path.join(process.cwd(), ".colaboracion-local") }), {
     limites: { maxEnlacesActivos: 10_000, maxEnlacesPorHora: 10_000 },
+    claveServicio: process.env.COLABORACION_CLAVE_SERVICIO || null,
   });
   return servir(req);
 }

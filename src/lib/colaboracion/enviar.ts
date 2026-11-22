@@ -3,7 +3,7 @@
  * (fecha, copia de trabajo y miniatura, sin GPS ni otros metadatos) y se cifra para el dueño del
  * mazo antes de salir.
  */
-import { empaquetar, limpiarFrase, MAX_AUTOR, VERSION_APORTACION, type DatosAportacion, type DeQuienManda } from "@/domain/colaboracion/aportacion";
+import { empaquetar, limpiarFrase, MAX_AUTOR, MAX_LADO, VERSION_APORTACION, type DatosAportacion, type DeQuienManda } from "@/domain/colaboracion/aportacion";
 import { cifrarAportacion, deBase64url, huella, pareceClavePublica } from "@/domain/colaboracion/cifrado";
 import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import type { FotoImportada } from "@/lib/importar/procesar";
@@ -30,18 +30,23 @@ export interface ExtraAportacion extends DeQuienManda {
   enviadaEn: number;
 }
 
+/** El nombre con el que llega una foto al mazo: «foto-» y el principio de su huella. */
+export const nombreNeutro = (hash: string) => `foto-${hash.slice(0, 8)}.jpg`;
+
 /** El paquete cifrado de una foto, listo para mandar. */
 export async function prepararAportacion(foto: FotoImportada, extra: ExtraAportacion, clavePublica: Uint8Array, invitacionId: string): Promise<Uint8Array<ArrayBuffer>> {
-  // Con los límites que comprueba quien lo recibe: nombre de archivo corto y autor sin espacios de más.
+  // Con los límites que comprueba quien lo recibe: autor sin espacios de más. El nombre del archivo no
+  // viaja (puede decir más de la cuenta): va uno neutro, distinto para cada foto.
   const datos: DatosAportacion = {
     v: VERSION_APORTACION,
-    nombreArchivo: foto.nombreArchivo.slice(0, 200),
+    nombreArchivo: nombreNeutro(foto.hash),
     tipoArchivo: foto.tipoArchivo,
     hash: foto.hash,
     ancho: foto.ancho,
     alto: foto.alto,
-    anchoOriginal: foto.anchoOriginal,
-    altoOriginal: foto.altoOriginal,
+    // Una panorámica puede pasar de MAX_LADO: el original no viaja, y para la calidad basta con eso.
+    anchoOriginal: Math.min(foto.anchoOriginal, MAX_LADO),
+    altoOriginal: Math.min(foto.altoOriginal, MAX_LADO),
     propuesta: foto.propuesta,
     autor: extra.autor?.trim().slice(0, MAX_AUTOR) || null,
     lote: extra.lote,

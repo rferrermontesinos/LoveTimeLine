@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
 import { URL_COLABORACION } from "@config/colaboracion";
+import { PROPORCION_CARTA } from "@config/print";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso, Franja, Micro } from "@/components/ui/Piezas";
 import { reservarAbajo } from "@/components/ui/reservaAbajo";
@@ -10,6 +11,7 @@ import { MAX_AUTOR } from "@/domain/colaboracion/aportacion";
 import { idAleatorio } from "@/domain/colaboracion/cifrado";
 import { cambiarBorrador, estadoBorrador, type BorradorFecha } from "@/domain/fechas/borrador";
 import { aSugerencia, estadoInicial, puestaAMano, type EstadoFecha } from "@/domain/fechas/estado";
+import type { FechaCarta } from "@/domain/fechas/fecha";
 import { crearDetectorSesion } from "@/domain/fechas/sesion";
 import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import { clienteColaboracion, ErrorServicio } from "@/lib/colaboracion/api";
@@ -31,6 +33,8 @@ interface Pendiente extends EstadoFecha {
   anio: string;
   /** Quien manda ha cambiado el año: se manda su fecha, aunque sea en blanco. */
   fechaTocada: boolean;
+  /** La fecha con la que llegó a la lista (sola, con su mes y su día si los tenía). */
+  traida: FechaCarta | null;
   frase: string;
 }
 
@@ -65,7 +69,7 @@ const borradorAnio = (anio: string): BorradorFecha => ({ precision: "anio", dia:
 /** Una fecha puesta sola que resulta ser de una sesión de fotos de fotos: su carta queda sin año. */
 const deSesion = (p: Pendiente): Pendiente => {
   const s = aSugerencia(p, "sesion-de-escaneo");
-  return s === p ? p : { ...s, anio: "" };
+  return s === p ? p : { ...s, anio: "", traida: null };
 };
 
 /**
@@ -187,7 +191,7 @@ export function Aportar({ id }: { id: string }) {
     const url = URL.createObjectURL(foto.mini);
     urls.current.set(foto.id, url);
     const fecha = enBlanco ? aSugerencia(inicial, "sesion-de-escaneo") : inicial;
-    const nueva: Pendiente = { ...fecha, foto, url, anio: fecha.fecha ? String(fecha.fecha.anio) : "", fechaTocada: false, frase: "" };
+    const nueva: Pendiente = { ...fecha, foto, url, anio: fecha.fecha ? String(fecha.fecha.anio) : "", fechaTocada: false, traida: fecha.fecha, frase: "" };
     const antes = new Set(anteriores);
     setPendientes((ps) => [...ps.map((p) => (antes.has(p.foto.id) && !p.fechaTocada ? deSesion(p) : p)), nueva]);
   };
@@ -241,11 +245,16 @@ export function Aportar({ id }: { id: string }) {
   };
 
   const cambiar = (fotoId: string, cambio: (p: Pendiente) => Pendiente) => setPendientes((ps) => ps.map((p) => (p.foto.id === fotoId ? cambio(p) : p)));
-  /** El año que se escribe en una carta: si es válido, su fecha pasa a ser ese año; si no, en blanco. */
+  /**
+   * El año que se escribe en una carta: si es válido, su fecha pasa a ser ese año; si no, en blanco.
+   * Si es el mismo con el que llegó la foto, se queda su fecha entera: no pierde el mes ni el día.
+   */
   const ponerAnio = (fotoId: string, texto: string) =>
     cambiar(fotoId, (p) => {
       const b = cambiarBorrador(borradorAnio(p.anio), { anio: texto });
-      return { ...puestaAMano(p, estadoBorrador(b, hoy).fecha), anio: b.anio, fechaTocada: true };
+      const escrita = estadoBorrador(b, hoy).fecha;
+      const fecha = escrita && p.traida?.anio === escrita.anio ? p.traida : escrita;
+      return { ...puestaAMano(p, fecha), anio: b.anio, fechaTocada: true };
     });
   const ponerFrase = (fotoId: string, frase: string) => cambiar(fotoId, (p) => ({ ...p, frase }));
 
@@ -605,7 +614,7 @@ function CartaPorMandar({
     <li data-testid="foto-por-mandar" className="min-w-0 space-y-2">
       <div className="relative overflow-hidden rounded-[12px] bg-papel-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.url} alt={t("foto", { n })} className="block aspect-[63/88] w-full object-cover" draggable={false} />
+        <img src={p.url} alt={t("foto", { n })} className="block w-full object-cover" style={{ aspectRatio: PROPORCION_CARTA }} draggable={false} />
         <button
           type="button"
           onClick={alQuitar}

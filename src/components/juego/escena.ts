@@ -10,6 +10,7 @@
  * foto). El comodín y la carta en blanco salen solo si el catálogo los tiene activos (`escenaCon`):
  * desde el 22-11-2026, «Solo cartas y fechas», no. Lógica pura, sin React, para poder probarla.
  */
+import { PROPORCION_CARTA } from "@config/print";
 import type { ClaveMuestra } from "@/components/inicio/muestras";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 import type { Cara } from "@/lib/carta/tipos";
@@ -21,8 +22,8 @@ export const FORMATOS: readonly FormatoEscena[] = ["apaisada", "vertical"];
 export const FONDOS: Record<FormatoEscena, string> = { apaisada: "/juego/mesa.jpg", vertical: "/juego/mesa-movil.jpg" };
 /** Ancho/alto de cada formato: el de su foto, para que no se deforme. */
 export const PROPORCION_ESCENA: Record<FormatoEscena, number> = { apaisada: 1600 / 1000, vertical: 900 / 1200 };
-/** Ancho/alto de una carta (63 × 88 mm). */
-export const PROPORCION_CARTA = 63 / 88;
+/** Ancho/alto de una carta (la del formato de impresión). */
+export { PROPORCION_CARTA };
 
 export type Papel = "linea" | "hueco" | "candidata" | "mano" | "robo" | "comodin" | "en-blanco";
 

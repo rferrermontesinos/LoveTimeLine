@@ -3,7 +3,10 @@
 // solo se conecta con la base de datos y el bucket privado «aportaciones».
 //
 // Despliegue: supabase functions deploy colaboracion --no-verify-jwt
-// (cualquiera con el enlace puede mandar fotos; quien lo creó se identifica con su token).
+// (cualquiera con el enlace puede mandar fotos; quien lo creó se identifica con su token). Crear
+// enlaces pide el secreto COLABORACION_CLAVE_SERVICIO, el mismo que tiene el portal (Vercel):
+//   supabase secrets set COLABORACION_CLAVE_SERVICIO=<valor largo y aleatorio>
+// Sin él, el servicio funciona pero no deja crear enlaces nuevos.
 //
 // No escribe datos personales en los registros: no ve el contenido de las fotos, ni nombres.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -24,4 +27,4 @@ function claveServidor(): string {
 
 const cliente = createClient(Deno.env.get("SUPABASE_URL")!, claveServidor(), { auth: { persistSession: false, autoRefreshToken: false } });
 
-Deno.serve(crearServicio(almacenSupabase(cliente as unknown as ClienteSupabase)));
+Deno.serve(crearServicio(almacenSupabase(cliente as unknown as ClienteSupabase), { claveServicio: Deno.env.get("COLABORACION_CLAVE_SERVICIO") ?? "" }));

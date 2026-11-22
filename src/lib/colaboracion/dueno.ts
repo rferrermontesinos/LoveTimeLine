@@ -9,6 +9,7 @@ import { URL_COLABORACION } from "@config/colaboracion";
 import { aBase64url, clavePublicaCruda, crearLlavesDueno, huella, huellaToken, tokenNuevo } from "@/domain/colaboracion/cifrado";
 import { borrarDato, guardarDato, leerDato } from "@/lib/almacen/idb";
 import { clienteColaboracion, ErrorServicio, type ClienteColaboracion } from "./api";
+import { esHuella, esIdEnlace } from "./enlace";
 
 export interface EnlaceDueno {
   v: 1;
@@ -26,15 +27,15 @@ export interface EnlaceDueno {
 
 const claveDe = (mazoId: string) => `colaboracion:${mazoId}`;
 
-/** El cliente del servicio, si la web lo tiene configurado. */
+/** El cliente del servicio, si la web lo tiene configurado. Los enlaces se crean desde el portal. */
 export function clienteConfigurado(): ClienteColaboracion | null {
-  return URL_COLABORACION ? clienteColaboracion(URL_COLABORACION) : null;
+  return URL_COLABORACION ? clienteColaboracion(URL_COLABORACION, undefined, { crearEn: "/api/enlaces" }) : null;
 }
 
 export async function leerEnlace(mazoId: string): Promise<EnlaceDueno | null> {
   try {
     const e = await leerDato<EnlaceDueno>(claveDe(mazoId));
-    return e && e.v === 1 && e.mazoId === mazoId && e.llaves?.privateKey && typeof e.token === "string" ? e : null;
+    return e && e.v === 1 && e.mazoId === mazoId && esIdEnlace(e.id) && esHuella(e.huellaClave) && e.llaves?.privateKey && typeof e.token === "string" ? e : null;
   } catch {
     return null;
   }

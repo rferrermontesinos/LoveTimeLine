@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // Ninguna otra web puede meter estas páginas en un marco (ni la de mandar fotos).
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" },
           // Prototipo: ningún buscador lo indexa (ver config/prototipo.ts).
           ...(PERMITIR_INDEXAR ? [] : [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }]),
         ],

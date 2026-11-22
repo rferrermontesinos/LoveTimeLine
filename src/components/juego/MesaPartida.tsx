@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { CartaCanvas } from "@/components/carta/CartaCanvas";
 import { CartaDeMuestra, useMuestra } from "@/components/carta/Muestra";
 import { obtenerEstilo, obtenerPaleta } from "@/lib/estilos";
-import { ASOMA_DEBAJO, FONDOS, FORMATOS, escenaCon, type Colocacion, type ContenidoPieza, type FormatoEscena } from "./escena";
+import { ASOMA_DEBAJO, FONDOS, FORMATOS, PROPORCION_CARTA, escenaCon, type Colocacion, type ContenidoPieza, type FormatoEscena } from "./escena";
 import estilos from "./MesaPartida.module.css";
 
 /** Iconos de la esquina del comodín y de la carta en blanco (los del catálogo). */
@@ -69,7 +69,7 @@ export function MesaPartida({ idioma, iconos, mecanicas }: { idioma: string; ico
       case "en-blanco":
         return <CartaCanvas {...comun} cara="anverso" datos={{ tipo: "en-blanco", icono: iconos.enBlanco }} />;
       case "hueco":
-        return <div className={estilos.hueco} />;
+        return <div className={estilos.hueco} style={{ aspectRatio: PROPORCION_CARTA }} />;
     }
   };
 

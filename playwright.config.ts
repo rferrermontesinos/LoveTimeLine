@@ -30,6 +30,12 @@ export default defineConfig({
         // Las pruebas descargan el archivo de impresión: el interruptor del prototipo, encendido
         // aunque el .env.local lo apague (config/prototipo.ts). Se lee al compilar. Y la subida
         // colaborativa, con el servicio local de la propia web (src/app/api/colaboracion).
-        env: { NEXT_PUBLIC_DESCARGA_PDF: "1", NEXT_PUBLIC_COLABORACION_URL: "/api/colaboracion", COLABORACION_LOCAL: "1" },
+        // Crear enlaces pide el secreto del portal, como en Supabase (no es secreto: solo vale aquí).
+        env: {
+          NEXT_PUBLIC_DESCARGA_PDF: "1",
+          NEXT_PUBLIC_COLABORACION_URL: "/api/colaboracion",
+          COLABORACION_LOCAL: "1",
+          COLABORACION_CLAVE_SERVICIO: "solo-para-las-pruebas-locales",
+        },
       },
 });

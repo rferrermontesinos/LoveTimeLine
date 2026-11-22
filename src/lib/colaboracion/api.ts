@@ -2,6 +2,7 @@
  * Cliente del servicio de la subida colaborativa (supabase/functions/colaboracion/servicio.ts).
  * Solo mueve paquetes cifrados y la lista de lo que ha llegado: no ve nada de las fotos.
  */
+import { esIdEnlace } from "./enlace";
 
 export interface AportacionEnEspera {
   id: string;
@@ -39,15 +40,19 @@ export interface ClienteColaboracion {
 const esNumero = (x: unknown): x is number => typeof x === "number" && Number.isFinite(x);
 const esTexto = (x: unknown): x is string => typeof x === "string" && x.length > 0;
 
-/** `base`: la dirección del servicio sin barra final (URL_COLABORACION). */
-export function clienteColaboracion(base: string, buscar: typeof fetch = (...a) => fetch(...a)): ClienteColaboracion {
-  async function pedir(ruta: string, init: RequestInit & { token?: string } = {}): Promise<Response> {
-    const { token, ...resto } = init;
+/**
+ * `base`: la dirección del servicio sin barra final (URL_COLABORACION). `crearEn`: dónde se crean los
+ * enlaces, si no es en el propio servicio: en la web, la ruta /api/enlaces del portal, que firma la
+ * petición con su secreto (ver src/app/api/enlaces). Esa sí lleva las cookies (el acceso privado).
+ */
+export function clienteColaboracion(base: string, buscar: typeof fetch = (...a) => fetch(...a), opciones: { crearEn?: string } = {}): ClienteColaboracion {
+  async function pedir(ruta: string, init: RequestInit & { token?: string; url?: string } = {}): Promise<Response> {
+    const { token, url, ...resto } = init;
     const cabeceras = new Headers(resto.headers);
     if (token) cabeceras.set("x-token-dueno", token);
     let r: Response;
     try {
-      r = await buscar(`${base}${ruta}`, { ...resto, headers: cabeceras, cache: "no-store", credentials: "omit" });
+      r = await buscar(url ?? `${base}${ruta}`, { ...resto, headers: cabeceras, cache: "no-store", credentials: url ? "same-origin" : "omit" });
     } catch {
       throw new ErrorServicio(0, "red");
     }
@@ -77,8 +82,14 @@ export function clienteColaboracion(base: string, buscar: typeof fetch = (...a) 
 
   return {
     async crear(clavePublica, huellaToken) {
-      const r = await pedir("/invitaciones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clavePublica, huellaToken }) });
-      return json(r, (c) => esTexto(c.id) && esNumero(c.caducaEn));
+      const r = await pedir("/invitaciones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clavePublica, huellaToken }),
+        url: opciones.crearEn,
+      });
+      // El id va en el enlace que se comparte: solo uno con la forma de un id del servicio.
+      return json(r, (c) => esIdEnlace(c.id) && esNumero(c.caducaEn));
     },
 
     async info(id) {

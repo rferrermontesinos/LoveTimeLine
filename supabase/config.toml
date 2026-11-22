@@ -17,3 +17,8 @@ enable_signup = true
 # La llama pg_cron con un secreto propio, no con el JWT de un usuario.
 [functions.purgar-fotos]
 verify_jwt = false
+
+# La subida colaborativa: la llaman navegadores sin sesión (quien manda fotos y el dueño, con su
+# token) y la purga diaria de pg_cron. Crear enlaces pide su propio secreto (ver su index.ts).
+[functions.colaboracion]
+verify_jwt = false

@@ -89,7 +89,7 @@ describe("subida colaborativa de punta a punta (sin navegador)", () => {
     expect(recibida.autor).toBe("Tía Carmen");
     expect(recibida.lote).toBe("lote_prueba_01");
     expect(recibida.foto).toMatchObject({
-      nombreArchivo: "IMG_20190814_123045.jpg",
+      nombreArchivo: "foto-bbbbbbbb.jpg",
       hash: "b".repeat(64),
       ancho: 3200,
       alto: 2400,
@@ -117,13 +117,30 @@ describe("subida colaborativa de punta a punta (sin navegador)", () => {
     expect(await claveComprobada(aBase64url(new Uint8Array(65)), dueno.huellaClave)).toBeNull();
   });
 
-  it("lee la huella del enlace solo si tiene la forma de una huella", () => {
+  it("lee la huella del enlace solo si tiene la forma de una huella y no hay nada más", () => {
     const h = "A".repeat(43);
     expect(huellaDelEnlace(`#k=${h}`)).toBe(h);
-    expect(huellaDelEnlace(`k=${h}&x=1`)).toBe(h);
+    expect(huellaDelEnlace(`k=${h}`)).toBe(h);
+    expect(huellaDelEnlace(`#k=${h}&x=1`)).toBeNull();
+    expect(huellaDelEnlace(`#k=${"B".repeat(43)}&x=#k=${h}`)).toBeNull();
     expect(huellaDelEnlace("")).toBeNull();
     expect(huellaDelEnlace("#k=corta")).toBeNull();
     expect(huellaDelEnlace(`#k=${h}!`)).toBeNull();
+  });
+
+  it("un servicio que devuelve un id con otra «#k=» dentro no consigue colar su clave en el enlace", async () => {
+    const atacante = await crearComoDueno(montar());
+    const servir = crearServicio(almacenLocal());
+    // El servicio (comprometido) da como id uno que lleva su propia huella delante de la del dueño.
+    const buscar = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
+      const r = await servir(new Request(entrada, init));
+      if (init?.method !== "POST" || !String(entrada).endsWith("/invitaciones")) return r;
+      const { caducaEn } = (await r.json()) as { caducaEn: number };
+      return new Response(JSON.stringify({ id: `${"A".repeat(22)}#k=${atacante.huellaClave}&x=`, caducaEn }), { status: 201 });
+    }) as typeof fetch;
+    const cliente = clienteColaboracion(BASE, buscar);
+    expect(await codigoDe(crearComoDueno(cliente))).toBe("201 respuesta");
+    expect(() => urlParaCompartir("https://web.ejemplo", "es", { id: `${"A".repeat(22)}#k=${atacante.huellaClave}&x=`, huellaClave: atacante.huellaClave })).toThrow();
   });
 
   it("lleva la fecha y la frase que pone quien la manda; sin tocar la fecha, no la manda", async () => {
@@ -141,15 +158,16 @@ describe("subida colaborativa de punta a punta (sin navegador)", () => {
     expect((await abrirAportacion(sinTocar, dueno.llaves, dueno.id, medidorFalso)).deQuienManda).toEqual({});
   });
 
-  it("recorta el nombre del archivo y deja el autor en null si está vacío", async () => {
+  it("no manda el nombre del archivo (va uno neutro) y deja el autor en null si está vacío", async () => {
     const cliente = montar();
     const dueno = await crearComoDueno(cliente);
     const { clavePublica } = await cliente.info(dueno.id);
     const clave = (await claveComprobada(clavePublica, dueno.huellaClave))!;
-    const paquete = await prepararAportacion(foto({ nombreArchivo: `${"x".repeat(300)}.jpg` }), { autor: "   ", lote: "lote_prueba_02", enviadaEn: 1 }, clave, dueno.id);
+    const paquete = await prepararAportacion(foto({ nombreArchivo: "Hospital de Sant Pau, María.jpg", hash: "3fa9c2d1".repeat(8) }), { autor: "   ", lote: "lote_prueba_02", enviadaEn: 1 }, clave, dueno.id);
     const r = await abrirAportacion(paquete, dueno.llaves, dueno.id, medidorFalso);
     expect(r.autor).toBeNull();
-    expect(r.foto.nombreArchivo).toHaveLength(200);
+    expect(r.foto.nombreArchivo).toBe("foto-3fa9c2d1.jpg");
+    expect(JSON.stringify(r)).not.toContain("Hospital");
   });
 });
 
@@ -198,6 +216,13 @@ describe("abrir una aportación", () => {
     const { llaves, paquete } = await paqueteDe(foto({ anchoOriginal: 100, altoOriginal: 5000 }));
     const r = await abrirAportacion(paquete, llaves, "inv-1", async () => ({ ancho: 2400, alto: 3200 }));
     expect(r.foto).toMatchObject({ ancho: 2400, alto: 3200, anchoOriginal: 2400, altoOriginal: 5000 });
+  });
+
+  it("una panorámica de más de 20 000 px llega bien: su original se cuenta como de 20 000", async () => {
+    const { llaves, paquete } = await paqueteDe(foto({ anchoOriginal: 24_000, altoOriginal: 4_000 }));
+    expect(await motivo(abrirAportacion(paquete, llaves, "inv-1", medidorFalso))).toBe("sin error");
+    const r = await abrirAportacion(paquete, llaves, "inv-1", medidorFalso);
+    expect(r.foto).toMatchObject({ anchoOriginal: 20_000, altoOriginal: 4_000 });
   });
 
   it("un fallo de red no hace inservible el paquete: se queda para la próxima vez", () => {
