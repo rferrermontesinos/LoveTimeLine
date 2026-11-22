@@ -15,6 +15,7 @@ import {
   PROPORCION_CARTA,
   PROPORCION_ESCENA,
   cajaDe,
+  escenaCon,
   lineaEn,
   piezasEn,
   sePisan,
@@ -223,6 +224,37 @@ describe("leyenda de la escena", () => {
   it("todas las piezas salen al menos en un formato y los ids no se repiten", () => {
     expect(new Set(PIEZAS.map((p) => p.id)).size).toBe(PIEZAS.length);
     for (const p of PIEZAS) expect(Object.keys(p.en).length, p.id).toBeGreaterThan(0);
+  });
+});
+
+describe("escena con las cartas especiales que tiene el juego", () => {
+  it("sin comodines ni cartas en blanco (22-11-2026, «Solo cartas y fechas»): no salen y la leyenda va del 1 al 3", () => {
+    const { piezas, marcas } = escenaCon([]);
+    expect(piezas.some((p) => p.papel === "comodin" || p.papel === "en-blanco")).toBe(false);
+    expect(piezas.filter((p) => p.papel !== "comodin" && p.papel !== "en-blanco")).toEqual(PIEZAS.filter((p) => p.papel !== "comodin" && p.papel !== "en-blanco"));
+    expect(marcas.map((m) => [m.numero, m.clave])).toEqual([
+      [1, "linea"],
+      [2, "candidata"],
+      [3, "manos"],
+    ]);
+  });
+
+  it("con las dos activas, la escena entera, igual que antes", () => {
+    const { piezas, marcas } = escenaCon(["comodin", "en-blanco", "copia-extra"]);
+    expect(piezas).toEqual(PIEZAS);
+    expect(marcas).toEqual(MARCAS);
+  });
+
+  it("con una sola, solo esa, y los números siguen seguidos", () => {
+    const { piezas, marcas } = escenaCon(["en-blanco"]);
+    expect(piezas.some((p) => p.papel === "comodin")).toBe(false);
+    expect(piezas.some((p) => p.papel === "en-blanco")).toBe(true);
+    expect(marcas.map((m) => [m.numero, m.clave])).toEqual([
+      [1, "linea"],
+      [2, "candidata"],
+      [3, "manos"],
+      [4, "enBlanco"],
+    ]);
   });
 });
 

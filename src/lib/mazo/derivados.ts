@@ -1,4 +1,5 @@
 import { PRINT } from "@config/print";
+import { FRASE_EN_ANVERSO } from "@config/prototipo";
 import { pppEfectivo, recorteCentrado, recorteReversoDesdeAnverso, type Rect } from "@/domain/imagen/recorte";
 import { ordenarPorFecha, rangoAnios } from "@/domain/mazo/ordenar";
 import type { CartaParaValidar } from "@/domain/mazo/validar";
@@ -166,7 +167,8 @@ export function datosCarta(c: Carta, icono: string | null): Omit<DatosCarta, "fo
     tipo: "foto",
     fecha: c.fecha,
     descripcion: c.descripcion,
-    descripcionEnAnverso: c.descripcionEnAnverso,
+    // La frase delante, solo si la opción está encendida (config/prototipo.ts; apagada desde el 22-11-2026).
+    descripcionEnAnverso: FRASE_EN_ANVERSO && c.descripcionEnAnverso,
     icono,
     adornos: c.adornos,
   };

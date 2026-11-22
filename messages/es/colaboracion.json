@@ -1,7 +1,9 @@
 {
   "colaboracion": {
     "panel": {
-      "titulo": "Pide fotos a los tuyos",
+      "resumen": "¿Alguien más tiene fotos? <enlace>Pídeselas con un enlace</enlace>",
+      "resumenActivo": "<enlace>Tu enlace para pedir fotos</enlace> · abierto hasta el {fecha}",
+      "resumenCaducado": "<enlace>Tu enlace para pedir fotos</enlace> · ya no admite fotos nuevas",
       "texto": "Crea un enlace y mándalo por WhatsApp o como prefieras. Quien lo abra podrá enviarte fotos desde su móvil, sin registrarse.",
       "privacidad": "Llegan cifradas: solo se abren en este navegador, que es donde guardas tu mazo.",
       "crear": "Crear enlace",
@@ -13,7 +15,6 @@
       "compartir": "Más opciones",
       "mensaje": "Estoy haciendo un mazo de cartas con nuestros recuerdos. ¿Me mandas tus fotos? Puedes subirlas aquí:",
       "compartirTitulo": "Fotos para el mazo",
-      "valeHasta": "Recibe fotos hasta el {fecha}.",
       "mirando": "Mirando si han llegado fotos…",
       "ninguna": "Aún no ha llegado ninguna. Miramos cada poco rato.",
       "mirarAhora": "Mirar ahora",

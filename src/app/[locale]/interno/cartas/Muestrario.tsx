@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useLocale } from "next-intl";
+import { FRASE_EN_ANVERSO } from "@config/prototipo";
 import { CartaCanvas } from "@/components/carta/CartaCanvas";
 import { useImagenUrl } from "@/components/carta/Muestra";
 import { IconoMecanica } from "@/components/ui/IconoMecanica";
@@ -154,23 +155,28 @@ export function Muestrario({ mecanicas }: { mecanicas: MecanicaMuestrario[] }) {
   const caja = fotoCaja(mazo);
   const imagenCaja = caja ? imagenes[caja.id as ClaveFoto] : null;
 
-  const muestras: Muestra[] = [
-    { id: "foto", datos: () => ({ ...datosCarta(carta("mar"), null), foto: fotoDe(carta("mar"), imagenes) }) },
-    { id: "fraseDelante", datos: () => ({ ...datosCarta(carta("luces"), null), foto: fotoDe(carta("luces"), imagenes) }) },
-    { id: "texto", datos: () => datosCarta(carta("conocimos"), null) },
-    { id: "textoLargo", datos: () => datosCarta(carta("largo"), null) },
-    { id: "portada", datos: (cara) => ({ ...datosPortada(mazo, cara), foto: fotoDe(portada, imagenes) }) },
-    { id: "comodin", datos: () => ({ tipo: "comodin", icono: icono("comodin") }) },
-    { id: "enBlanco", datos: () => ({ tipo: "en-blanco", icono: icono("en-blanco") }) },
-    {
-      id: "cajaPersonalizada",
-      datos: (cara) => ({
-        ...datosCaja(mazo, cara, "personalizada"),
-        foto: caja && imagenCaja ? { imagen: imagenCaja, escala: imagenCaja.width / caja.ancho, recorteAnverso: caja.recorte, recorteReverso: caja.recorte } : null,
-      }),
-    },
-    { id: "cajaGenerica", unaSola: true, datos: (cara) => datosCaja(mazo, cara, "generica") },
-  ];
+  // Solo lo que se imprime hoy: sin la frase delante ni las cartas especiales que estén apagadas.
+  const sale = (seccion: ClaveSeccion) =>
+    seccion === "fraseDelante" ? FRASE_EN_ANVERSO : seccion === "comodin" ? !!icono("comodin") : seccion === "enBlanco" ? !!icono("en-blanco") : true;
+  const muestras: Muestra[] = (
+    [
+      { id: "foto", datos: () => ({ ...datosCarta(carta("mar"), null), foto: fotoDe(carta("mar"), imagenes) }) },
+      { id: "fraseDelante", datos: () => ({ ...datosCarta(carta("luces"), null), foto: fotoDe(carta("luces"), imagenes) }) },
+      { id: "texto", datos: () => datosCarta(carta("conocimos"), null) },
+      { id: "textoLargo", datos: () => datosCarta(carta("largo"), null) },
+      { id: "portada", datos: (cara) => ({ ...datosPortada(mazo, cara), foto: fotoDe(portada, imagenes) }) },
+      { id: "comodin", datos: () => ({ tipo: "comodin", icono: icono("comodin") }) },
+      { id: "enBlanco", datos: () => ({ tipo: "en-blanco", icono: icono("en-blanco") }) },
+      {
+        id: "cajaPersonalizada",
+        datos: (cara) => ({
+          ...datosCaja(mazo, cara, "personalizada"),
+          foto: caja && imagenCaja ? { imagen: imagenCaja, escala: imagenCaja.width / caja.ancho, recorteAnverso: caja.recorte, recorteReverso: caja.recorte } : null,
+        }),
+      },
+      { id: "cajaGenerica", unaSola: true, datos: (cara) => datosCaja(mazo, cara, "generica") },
+    ] satisfies Muestra[]
+  ).filter((m) => sale(m.id));
 
   return (
     <Seccion className="space-y-10 py-10 sm:py-12">
@@ -248,7 +254,7 @@ export function Muestrario({ mecanicas }: { mecanicas: MecanicaMuestrario[] }) {
             caras={{ anverso: t.anverso, reverso: t.reverso }}
           />
         ))}
-        <SeccionIconos titulo={t.secciones.iconos} paletas={paletas} mecanicas={mecanicas} estilo={estilo} locale={locale} enRejilla={todas} />
+        {mecanicas.length > 0 && <SeccionIconos titulo={t.secciones.iconos} paletas={paletas} mecanicas={mecanicas} estilo={estilo} locale={locale} enRejilla={todas} />}
       </div>
     </Seccion>
   );

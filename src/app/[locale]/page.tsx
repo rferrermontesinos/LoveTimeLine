@@ -119,26 +119,29 @@ export default async function Inicio({ params }: { params: Promise<{ locale: str
           </Seccion>
         </div>
 
-        {/* Extras de juego (gratis) y extras opcionales (de pago) */}
+        {/* Extras de juego (gratis, si los hay) y extras opcionales (de pago) */}
         <Seccion className="space-y-14 py-16">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
-            <div>
-              <h2 className="tipo-titular text-3xl">{t("mecanicasTitulo")}</h2>
-              <p className="mt-4 text-md text-tinta-2">{t("mecanicasTexto")}</p>
+          {/* Sin cartas especiales activas (desde el 22-11-2026, «Solo cartas y fechas»), no sale. */}
+          {mecanicas.length > 0 && (
+            <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+              <div>
+                <h2 className="tipo-titular text-3xl">{t("mecanicasTitulo")}</h2>
+                <p className="mt-4 text-md text-tinta-2">{t("mecanicasTexto")}</p>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {mecanicas.map((m) => (
+                  <li key={m.id} className="flex gap-4 rounded-[var(--radius-carta)] bg-blanco p-5">
+                    <IconoMecanica icono={m.icono} />
+                    <div>
+                      <h3 className="font-bold">{textoEn(m.nombre, locale)}</h3>
+                      <p className="mt-1 text-sm text-tinta-2">{textoEn(m.descripcion, locale)}</p>
+                      <p className="tipo-micro mt-2 text-micro text-verde-texto">{tc("gratis")}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {mecanicas.map((m) => (
-                <li key={m.id} className="flex gap-4 rounded-[var(--radius-carta)] bg-blanco p-5">
-                  <IconoMecanica icono={m.icono} />
-                  <div>
-                    <h3 className="font-bold">{textoEn(m.nombre, locale)}</h3>
-                    <p className="mt-1 text-sm text-tinta-2">{textoEn(m.descripcion, locale)}</p>
-                    <p className="tipo-micro mt-2 text-micro text-verde-texto">{tc("gratis")}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
           <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
             <div>
               <h2 className="tipo-titular text-3xl">{t("extrasTitulo")}</h2>

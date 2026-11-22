@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createTranslator } from "next-intl";
 import catalogoJson from "../../../supabase/catalogo.json";
+import { conCartasEspeciales } from "@/domain/precios/catalogoDePrueba";
 import type { Catalogo, Mecanica } from "@/domain/precios/tipos";
 import { MENSAJES } from "../../../messages";
 import { cartasEspeciales, textoContenidoCaja, type TraducirCaja } from "./contenidoCaja";
 
-const catalogo = catalogoJson as unknown as Catalogo;
+/** El catálogo de verdad («Solo cartas y fechas» desde el 22-11-2026) y el de antes, con comodines y cartas en blanco. */
+const actual = catalogoJson as unknown as Catalogo;
+const catalogo = conCartasEspeciales(actual);
 const traductor = (idioma: "es" | "en"): TraducirCaja => {
   const t = createTranslator({ locale: idioma, messages: MENSAJES[idioma], namespace: "juego.contenidoCaja" });
   return (clave, valores) => t(clave, valores);
@@ -48,6 +51,11 @@ describe("textoContenidoCaja", () => {
     expect(texto(con("en-blanco", { cartasFisicas: 6 }), "en")).toContain(`: ${cartasDe("comodin")} jokers and 6 blank cards.`);
     expect(texto(con("comodin", { activo: false }), "es")).toContain(`que elijáis: ${cartasDe("en-blanco")} cartas en blanco.`);
     expect(texto(con("en-blanco", { activo: false, cartasFisicas: 1 }), "en")).toContain(`you choose: ${cartasDe("comodin")} jokers.`);
+  });
+
+  it("hoy, solo cartas y fechas: la caja trae los recuerdos, la portada y el folleto", () => {
+    expect(cartasEspeciales(actual.mecanicas)).toEqual([]);
+    expect(texto(actual.mecanicas, "es")).toBe("Vuestras cartas de recuerdos y la portada. También un folleto con estas reglas.");
   });
 
   it("sin cartas especiales activas, no las nombra", () => {

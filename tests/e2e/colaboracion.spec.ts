@@ -11,7 +11,11 @@ async function crearEnlace(page: Page): Promise<string> {
   await page.goto("/es/crear?pack=pequeno");
   await expect(page.getByRole("heading", { name: "Sube tus fotos" })).toBeVisible();
   const panel = page.getByTestId("panel-colaboracion");
-  await expect(panel.getByRole("heading", { name: "Pide fotos a los tuyos" })).toBeVisible();
+  // Discreto: una sola línea, que se despliega para crear el enlace.
+  const resumen = panel.locator("summary");
+  await expect(resumen).toHaveText("¿Alguien más tiene fotos? Pídeselas con un enlace");
+  await expect(panel.getByRole("button", { name: "Crear enlace" })).toBeHidden();
+  await resumen.click();
   await panel.getByRole("button", { name: "Crear enlace" }).click();
   const campo = panel.getByTestId("enlace-colaboracion");
   await expect(campo).toHaveValue(/\/es\/aportar\/[A-Za-z0-9_-]{22}#k=[A-Za-z0-9_-]{43}$/);
@@ -24,7 +28,7 @@ test.describe("pedir fotos con un enlace", () => {
     const url = await crearEnlace(page);
     const panel = page.getByTestId("panel-colaboracion");
     await expect(panel.getByRole("link", { name: "Mandar por WhatsApp" })).toHaveAttribute("href", `https://wa.me/?text=${encodeURIComponent(`Estoy haciendo un mazo de cartas con nuestros recuerdos. ¿Me mandas tus fotos? Puedes subirlas aquí: ${url}`)}`);
-    await expect(panel).toContainText(/Recibe fotos hasta el \d{1,2} de \w+\./);
+    await expect(panel.locator("summary")).toHaveText(/^Tu enlace para pedir fotos · abierto hasta el \d{1,2} de \w+$/);
     await expect(panel.getByText("Aún no ha llegado ninguna.", { exact: false })).toBeVisible();
 
     // Quien manda las fotos: otro navegador (otro móvil), sin nada del mazo ni la clave del prototipo.
@@ -66,6 +70,14 @@ test.describe("pedir fotos con un enlace", () => {
     expect(cartas.every((c) => c.fecha)).toBe(true);
     await expect(page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem")).toHaveCount(3);
 
+    // Al volver otro día, el enlace sigue ahí, plegado en su línea, y las cartas se ven enseguida.
+    await page.reload();
+    await expect(panel.locator("summary")).toHaveText(/^Tu enlace para pedir fotos · abierto hasta el /);
+    await expect(panel.getByTestId("enlace-colaboracion")).toBeHidden();
+    await expect(page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem").first()).toBeInViewport();
+    await panel.locator("summary").click();
+    await expect(panel.getByTestId("enlace-colaboracion")).toHaveValue(url);
+
     // Al cerrar el enlace, deja de funcionar para quien lo tenga.
     page.once("dialog", (d) => {
       expect(d.message()).toBe("¿Cerrar el enlace? Nadie más podrá mandarte fotos con él.");
@@ -105,7 +117,7 @@ test.describe("pedir fotos con un enlace", () => {
     // Empezar otro mazo cierra el enlace del anterior: nadie podría abrir ya lo que llegara.
     page.once("dialog", (d) => void d.accept());
     await page.getByRole("button", { name: "Empezar otro mazo" }).click();
-    await expect(page.getByTestId("panel-colaboracion").getByRole("button", { name: "Crear enlace" })).toBeVisible();
+    await expect(page.getByTestId("panel-colaboracion").locator("summary")).toHaveText("¿Alguien más tiene fotos? Pídeselas con un enlace");
     await visita.reload();
     await expect(visita.getByTestId("aportar-error")).toHaveAttribute("data-motivo", "noExiste");
     await otro.close();

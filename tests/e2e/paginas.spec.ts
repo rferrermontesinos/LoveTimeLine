@@ -38,9 +38,20 @@ const pantallaDe = (proyecto: string) => (proyecto === "movil" ? { width: 390, h
  * de las reglas de Nuestra historia («Cómo se juega») y se queda.
  */
 const RETIRADOS: Record<Idioma, RegExp[]> = {
-  es: [/Guardián/, /\bDuelo\b/i, /\bGeneraciones\b/i, /Cu[eé]ntalo/i, /\bRetos\b/i, /\blino\b/i, /no gane siempre/i, /franja/i],
-  en: [/Memory Keeper/, /\bGuardian\b/i, /\bDuel\b/i, /\bGenerations\b/i, /\bTell it\b/, /\bChallenge pack\b/i, /\blinen\b/i, /always win/i, /month strip/i],
+  es: [/Guardián/, /\bDuelo\b/i, /\bGeneraciones\b/i, /Cu[eé]ntalo/i, /\bRetos\b/i, /\blino\b/i, /no gane siempre/i, /franja/i, /Responde las pistas/i],
+  en: [/Memory Keeper/, /\bGuardian\b/i, /\bDuel\b/i, /\bGenerations\b/i, /\bTell it\b/, /\bChallenge pack\b/i, /\blinen\b/i, /always win/i, /month strip/i, /answer hints/i],
 };
+/**
+ * Cartas especiales que, apagadas en el catálogo, no se nombran en ninguna página pública (desde el
+ * 22-11-2026, «Solo cartas y fechas»: ni comodines ni cartas en blanco).
+ */
+const PALABRAS_ESPECIALES: Record<string, Record<Idioma, RegExp>> = {
+  comodin: { es: /comod[ií]n/i, en: /\bjokers?\b/i },
+  "en-blanco": { es: /cartas? en blanco/i, en: /blank cards?/i },
+};
+const ESPECIALES_APAGADAS = catalogo.mecanicas.filter((m) => !m.activo && PALABRAS_ESPECIALES[m.id]).map((m) => PALABRAS_ESPECIALES[m.id]!);
+/** Piezas numeradas de la mesa: la línea, la carta que entra y las de cada persona, más las especiales activas. */
+const MARCAS_MESA = 3 + catalogo.mecanicas.filter((m) => m.activo && PALABRAS_ESPECIALES[m.id]).length;
 /** En la portada solo están los dos tipos de juego: ni siquiera el papel de guardián. */
 const RETIRADOS_PORTADA: Record<Idioma, RegExp[]> = { es: [/guardi[aá]n/i], en: [/keeper/i] };
 
@@ -275,7 +286,7 @@ test.describe("«Cómo se juega»", () => {
     const piezas = page.locator("[data-escena] [data-pieza]");
     expect(await piezas.count()).toBeGreaterThanOrEqual(10);
     for (const pieza of await piezas.all()) await expect(pieza).toHaveAttribute("aria-hidden", "true");
-    await expect(page.locator("figure:has([data-escena]) figcaption li")).toHaveCount(5);
+    await expect(page.locator("figure:has([data-escena]) figcaption li")).toHaveCount(MARCAS_MESA);
     const caja = (await escena.boundingBox())!;
     expect(caja.x).toBeGreaterThanOrEqual(0);
     expect(caja.x + caja.width).toBeLessThanOrEqual(pantallaDe(info.project.name).width);
@@ -413,6 +424,7 @@ test.describe("páginas públicas", () => {
         const patrones = [...RETIRADOS[idioma], ...(ruta === "" ? RETIRADOS_PORTADA[idioma] : []), /timeline/i];
         for (const patron of patrones) expect(texto, `/${idioma}${ruta}`).not.toMatch(patron);
         for (const nombre of retiradosDelCatalogo) expect(texto, `/${idioma}${ruta}`).not.toContain(nombre);
+        for (const palabras of ESPECIALES_APAGADAS) expect(texto, `/${idioma}${ruta}`).not.toMatch(palabras[idioma]);
         await expect(page.locator('a[href*="instrucciones"], a[href*="folleto"], a[href*="/interno"]')).toHaveCount(0);
       }
     }

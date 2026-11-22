@@ -264,7 +264,8 @@ function aviso(a: Arranque | null, packActual: string): Extract<Arranque, { tipo
 
 /**
  * «Seguimos donde lo dejaste»: el mazo que había guardado en este dispositivo, cuánto tiene y
- * cuándo se guardó, con la salida para empezar otro.
+ * cuándo se guardó, con la salida para empezar otro. En el móvil, esa salida va como enlace al
+ * final del texto: el aviso ocupa menos y las cartas se ven antes (22-11-2026).
  */
 function AvisoReanudar({ guardado, mazo, ocupado, alEmpezarOtro, alCerrar }: { guardado: Mazo; mazo: Mazo; ocupado: boolean; alEmpezarOtro: () => void; alCerrar: () => void }) {
   const t = useTranslations("crear");
@@ -275,8 +276,8 @@ function AvisoReanudar({ guardado, mazo, ocupado, alEmpezarOtro, alCerrar }: { g
     <Aviso
       tono="info"
       accion={
-        <span className="flex items-center gap-1 max-sm:w-full max-sm:justify-between">
-          <Boton tamano="sm" variante="secundario" className="max-sm:min-h-11" disabled={ocupado} onClick={alEmpezarOtro}>
+        <span className="flex items-center gap-1">
+          <Boton tamano="sm" variante="secundario" className="max-sm:hidden" disabled={ocupado} onClick={alEmpezarOtro}>
             {t("empezarOtro")}
           </Boton>
           <CerrarAviso etiqueta={t("cerrarAviso")} alCerrar={alCerrar} />
@@ -286,7 +287,15 @@ function AvisoReanudar({ guardado, mazo, ocupado, alEmpezarOtro, alCerrar }: { g
       <p className="font-semibold" data-testid="aviso-reanudar">
         {t("reanudar.titulo")}
       </p>
-      <p className="text-tinta-2">{t("reanudar.detalle", { titulo: mazo.titulo.trim() || t("reanudar.sinTitulo"), n: mazo.cartas.length, cuando })}</p>
+      <p className="text-tinta-2">
+        {t("reanudar.detalle", { titulo: mazo.titulo.trim() || t("reanudar.sinTitulo"), n: mazo.cartas.length, cuando })}
+        <span className="sm:hidden">
+          {" · "}
+          <button type="button" className="enlace font-semibold" disabled={ocupado} onClick={alEmpezarOtro}>
+            {t("empezarOtro")}
+          </button>
+        </span>
+      </p>
     </Aviso>
   );
 }

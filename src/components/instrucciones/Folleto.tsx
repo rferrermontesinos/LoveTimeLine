@@ -238,6 +238,8 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
   const visibles = mecanicas.filter((x) => CLAVE_MECANICA[x.id] && (!p || p.mecanicas.includes(x.id)));
   // Un mazo sin iconos deja libre el panel 4: las fechas pasan allí y el panel 1 respira.
   const fechasEnPanel4 = visibles.length === 0;
+  // Con cartas especiales, la preparación empieza por dónde se dejan.
+  const preparacion = (modo: "clasico" | "historia") => [...(visibles.length > 0 ? j[modo].preparacionEspeciales : []), ...j[modo].preparacion];
   // «Qué trae la caja»: las cartas especiales del catálogo (y, con un mazo, solo las que eligió).
   const tcaja = createTranslator({ locale: t.idioma, messages: { juego: { contenidoCaja: j.contenidoCaja } }, namespace: "juego.contenidoCaja" });
   const contenido = textoContenidoCaja(
@@ -271,7 +273,7 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
           <CabeceraModo nombre={m.clasico.nombre} detalle={`${m.clasico.etiqueta} · ${m.clasico.jugadores}`} color={COLOR_MODO.clasico} />
           <p className={`${CUERPO} font-semibold`}>{m.clasico.resumen}</p>
           <Titulo className="pt-[0.6mm]">{j.preparacion}</Titulo>
-          <Pasos pasos={j.clasico.preparacion} />
+          <Pasos pasos={preparacion("clasico")} />
         </Regla>
         <Regla n={3} c={c}>
           <Titulo>{j.turno}</Titulo>
@@ -327,7 +329,7 @@ export function CaraA({ t, c, p, mecanicas }: { t: TextosFolleto; c: ColoresFoll
           <CabeceraModo nombre={m.historia.nombre} detalle={`${m.historia.etiqueta} · ${m.historia.jugadores}`} color={COLOR_MODO.historia} />
           <p className={`${CUERPO} font-semibold`}>{m.historia.resumen}</p>
           <Titulo className="pt-[0.6mm]">{j.preparacion}</Titulo>
-          <Pasos pasos={j.historia.preparacion} className="opacity-90" />
+          <Pasos pasos={preparacion("historia")} className="opacity-90" />
         </PanelHistoria>
         <PanelHistoria n={6} c={c}>
           <Titulo>{j.turno}</Titulo>

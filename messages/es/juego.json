@@ -2,7 +2,12 @@
   "juego": {
     "titulo": "Cómo se juega",
     "intro": "Un juego para ordenar vuestros recuerdos. Cada carta tiene la foto delante y la fecha detrás: colócala en la línea del tiempo donde creas que va, dale la vuelta y descubre si acertaste.",
-    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea del tiempo con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista, el resto del mazo, un comodín y una carta en blanco.",
+    "mesaAlt": "Una partida en marcha vista desde arriba: en el centro de la mesa, la línea del tiempo con las cartas ordenadas por fecha y un hueco donde alguien va a colocar la suya; alrededor, las cartas de dos personas con la foto a la vista y el resto del mazo.",
+    "mesaAltEspeciales": "Al lado, {especiales}.",
+    "mesaAltPieza": {
+      "comodin": "un comodín",
+      "enBlanco": "una carta en blanco"
+    },
     "mesa": {
       "titulo": "Así se ve una partida",
       "texto": "La foto de cada carta da la pista; la fecha de detrás, la respuesta.",
@@ -46,11 +51,13 @@
     "final": "Cómo acaba",
     "clasico": {
       "preparacion": [
-        "Si vuestro mazo trae comodines, dejadlos en el centro de la mesa; las cartas en blanco, a un lado y con un boli.",
         "Barajad las cartas de recuerdos con la fecha hacia abajo y repartid 7 a cada persona. Ponedlas delante con la foto a la vista: nadie mira las fechas.",
         "Dad la vuelta a la primera carta del mazo y ponedla en el centro con la fecha a la vista: es el principio de la línea del tiempo. El resto es el mazo de robo.",
         "Si juega quien hizo el mazo, recibe 8 cartas: se sabe mejor las fechas.",
         "Empieza la persona más joven y se sigue en el sentido de las agujas del reloj."
+      ],
+      "preparacionEspeciales": [
+        "Si vuestro mazo trae comodines, dejadlos en el centro de la mesa; las cartas en blanco, a un lado y con un boli."
       ],
       "turno": [
         "Elige una de tus cartas y colócala en la línea del tiempo: antes de todas, después de todas o entre dos.",
@@ -71,10 +78,13 @@
     "historia": {
       "preparacion": [
         "Barajad las cartas de recuerdos con la fecha hacia abajo y repartid 7 a cada persona, con la foto a la vista de todos. Nadie mira las fechas.",
-        "Dad la vuelta a la primera carta del mazo y ponedla en el centro con la fecha a la vista: es el principio de la línea del tiempo. Si tenéis comodines, son del equipo.",
+        "Dad la vuelta a la primera carta del mazo y ponedla en el centro con la fecha a la vista: es el principio de la línea del tiempo.",
         "Tenéis tantas vidas como personas con cartas, más una: 3 si sois 2, 4 si sois 3… Contadlas con monedas o con lo que tengáis a mano.",
-        "Si juega quien hizo el mazo, no recibe cartas: es el guardián de la memoria. Responde las pistas y cuenta cada recuerdo al darle la vuelta.",
+        "Si juega quien hizo el mazo, no recibe cartas: es el guardián de la memoria y cuenta cada recuerdo al darle la vuelta.",
         "Empieza la persona de más edad y se sigue en el sentido de las agujas del reloj."
+      ],
+      "preparacionEspeciales": [
+        "Si vuestro mazo trae comodines, son del equipo: dejadlos en el centro de la mesa."
       ],
       "turno": [
         "Habladlo entre todos, pero decide a quien le toca: coloca una de sus cartas en la línea y le da la vuelta.",

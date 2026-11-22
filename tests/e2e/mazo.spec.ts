@@ -452,6 +452,11 @@ test.describe("móvil", () => {
     await empezar(page);
     await subir(page, fotos().filter(conFecha).slice(0, 6));
     expect(await desborda()).toBe(false);
+    // Con cartas, se empiezan a ver en la primera pantalla, sin bajar: por encima de la barra de abajo.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const primera = await page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem").first().boundingBox();
+    const visibleHasta = await page.evaluate(() => window.innerHeight - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--reserva-abajo")) || 0));
+    expect(primera!.y + 60).toBeLessThan(visibleHasta);
 
     const pasos: [string, string][] = [
       ["Siguiente: cartas", "Completa las cartas"],

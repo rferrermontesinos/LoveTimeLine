@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { PRINT } from "@config/print";
+import { FRASE_EN_ANVERSO } from "@config/prototipo";
 import { VistaCarta } from "@/components/carta/VistaCarta";
 import { Boton } from "@/components/ui/Boton";
 import { Dialogo } from "@/components/ui/Dialogo";
@@ -434,7 +435,8 @@ export function PasoCartas() {
                 })}
               </Boton>
             )}
-            {foto && (
+            {/* «Solo cartas y fechas» (22-11-2026): de momento, la frase no va también en la cara de la foto. */}
+            {foto && FRASE_EN_ANVERSO && (
               <Interruptor
                 id={`en-anverso-${carta.id}`}
                 activo={foto.descripcionEnAnverso}

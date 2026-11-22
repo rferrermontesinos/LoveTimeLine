@@ -11,6 +11,8 @@
     "soltarActivo": "Suelta para añadir las fotos",
     "elegirFotos": "Elegir fotos",
     "elegirCarpeta": "Elegir una carpeta",
+    "anadirFotos": "Añadir fotos",
+    "anadirCarpeta": "Añadir una carpeta",
     "privacidad": "JPG, PNG, HEIC o WEBP. Las fotos no salen de este dispositivo: leemos las fechas aquí mismo.",
     "procesando": "Leyendo {hechas} de {total} fotos…",
     "procesadas": "{n, plural, one {# foto añadida} other {# fotos añadidas}}",

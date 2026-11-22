@@ -3,6 +3,7 @@
  * a sus frases (mensajes inicio.muestras). Sin React, para poder usarlos en la escena de la mesa
  * y en los tests; las cartas las dibuja CartaDeMuestra (src/components/carta/Muestra.tsx).
  */
+import { FRASE_EN_ANVERSO } from "@config/prototipo";
 import type { FechaCarta } from "@/domain/fechas/fecha";
 
 export interface CartaMuestra {
@@ -35,7 +36,7 @@ export const MUESTRAS = {
   cita: { ...fotosMuestra("cita"), fecha: { anio: 2015, mes: 11, dia: 7 }, paletaId: "rojo" },
   tren: { ...fotosMuestra("tren"), fecha: { anio: 2016, mes: 7, dia: 12 }, paletaId: "amarillo" },
   picnic: { ...fotosMuestra("picnic"), fecha: { anio: 2017 }, paletaId: "amarillo" },
-  playa: { ...fotosMuestra("playa"), fecha: { anio: 2017, mes: 8, dia: 19 }, descripcionEnAnverso: true, paletaId: "rosa" },
+  playa: { ...fotosMuestra("playa"), fecha: { anio: 2017, mes: 8, dia: 19 }, descripcionEnAnverso: FRASE_EN_ANVERSO, paletaId: "rosa" },
   montana: { ...fotosMuestra("montana"), fecha: { anio: 2018, mes: 10 }, paletaId: "verde" },
   furgoneta: { ...fotosMuestra("furgoneta"), fecha: { anio: 2019, mes: 8 }, paletaId: "cobalto" },
   acampada: { ...fotosMuestra("acampada"), fecha: { anio: 2020, mes: 8 }, paletaId: "verde" },

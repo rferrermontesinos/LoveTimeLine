@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { PRINT } from "@config/print";
 import catalogoJson from "../../supabase/catalogo.json";
 import { CONTRASTE_GRAFICO, CONTRASTE_TEXTO, contraste } from "@/domain/color/contraste";
+import { conCartasEspeciales } from "@/domain/precios/catalogoDePrueba";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { ESTILOS, ESTILO_POR_DEFECTO, colorGlifo, obtenerPaleta, obtenerPlantilla, rutaIcono, superficie } from "./estilos";
 
-const catalogo = catalogoJson as unknown as Catalogo;
+/** Con los comodines y las cartas en blanco encendidos: sus iconos tienen que seguir en la plantilla. */
+const catalogo = conCartasEspeciales(catalogoJson as unknown as Catalogo);
 
 describe("estilos y paletas", () => {
   it("los ids de estilos y de paletas no se repiten", () => {

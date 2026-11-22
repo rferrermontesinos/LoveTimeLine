@@ -6,8 +6,9 @@
  *
  * Lo que tiene que contar de un vistazo: la línea de recuerdos en el centro, ordenada por fecha y
  * por la cara de la fecha; una carta por la cara de la foto a punto de entrar en un hueco; las
- * cartas de dos personas en abanico; el resto del mazo; un comodín y una carta en blanco; y alguna
- * carta de texto (un recuerdo sin foto). Lógica pura, sin React, para poder probarla.
+ * cartas de dos personas en abanico; el resto del mazo; y alguna carta de texto (un recuerdo sin
+ * foto). El comodín y la carta en blanco salen solo si el catálogo los tiene activos (`escenaCon`):
+ * desde el 22-11-2026, «Solo cartas y fechas», no. Lógica pura, sin React, para poder probarla.
  */
 import type { ClaveMuestra } from "@/components/inicio/muestras";
 import type { FechaCarta } from "@/domain/fechas/fecha";
@@ -210,6 +211,24 @@ export const MARCAS: readonly MarcaEscena[] = [
   { numero: 4, clave: "comodin", papeles: ["comodin"], en: { apaisada: { x: 8.5, y: 17.5 }, vertical: { x: 12, y: 9 } } },
   { numero: 5, clave: "enBlanco", papeles: ["en-blanco"], en: { apaisada: { x: 9, y: 85.5 }, vertical: { x: 11.5, y: 92.5 } } },
 ];
+
+/** Las cartas especiales de la mesa y la mecánica del catálogo (`mecanicas[].id`) de la que salen. */
+export const MECANICA_DE_PAPEL: Partial<Record<Papel, string>> = { comodin: "comodin", "en-blanco": "en-blanco" };
+
+/**
+ * La escena con las cartas especiales que tiene el juego (ids de las mecánicas activas): las que no
+ * están no salen en la mesa ni en la leyenda, y los números de la leyenda siguen seguidos.
+ */
+export function escenaCon(mecanicas: readonly string[]): { piezas: readonly PiezaEscena[]; marcas: readonly MarcaEscena[] } {
+  const sale = (papel: Papel) => {
+    const m = MECANICA_DE_PAPEL[papel];
+    return !m || mecanicas.includes(m);
+  };
+  return {
+    piezas: PIEZAS.filter((p) => sale(p.papel)),
+    marcas: MARCAS.filter((m) => m.papeles.every(sale)).map((m, i) => ({ ...m, numero: i + 1 })),
+  };
+}
 
 /** Piezas que salen en un formato, con su colocación. */
 export function piezasEn(formato: FormatoEscena): (PiezaEscena & { colocacion: Colocacion })[] {

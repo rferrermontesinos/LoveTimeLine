@@ -2,7 +2,12 @@
   "juego": {
     "titulo": "How to play",
     "intro": "A game for putting your memories in order. Each card has the photo on the front and the date on the back: place it in the memory line where you think it goes, flip it and see if you got it right.",
-    "mesaAlt": "A game in progress seen from above: in the middle of the table, the memory line with the cards in date order and a gap where someone is about to place theirs; around it, two players’ cards photo side up, the rest of the deck, a joker and a blank card.",
+    "mesaAlt": "A game in progress seen from above: in the middle of the table, the memory line with the cards in date order and a gap where someone is about to place theirs; around it, two players’ cards photo side up and the rest of the deck.",
+    "mesaAltEspeciales": "To one side, {especiales}.",
+    "mesaAltPieza": {
+      "comodin": "a joker",
+      "enBlanco": "a blank card"
+    },
     "mesa": {
       "titulo": "What a game looks like",
       "texto": "The photo on each card is the clue; the date on the back, the answer.",
@@ -46,11 +51,13 @@
     "final": "How it ends",
     "clasico": {
       "preparacion": [
-        "If your deck has jokers, put them in the middle of the table; blank cards go to one side, with a pen.",
         "Shuffle the memory cards date side down and deal 7 to each player. Lay them out in front of you, photo side up: nobody looks at the dates.",
         "Flip the top card of the deck and put it in the middle, date side up: it starts the memory line. The rest is the draw pile.",
         "If the person who made the deck plays, they get 8 cards: they know the dates better.",
         "The youngest player starts, and play goes clockwise."
+      ],
+      "preparacionEspeciales": [
+        "If your deck has jokers, put them in the middle of the table; blank cards go to one side, with a pen."
       ],
       "turno": [
         "Pick one of your cards and place it in the memory line: before all the others, after all of them or between two.",
@@ -71,10 +78,13 @@
     "historia": {
       "preparacion": [
         "Shuffle the memory cards date side down and deal 7 to each player, photo side up for everyone to see. Nobody looks at the dates.",
-        "Flip the top card of the deck and put it in the middle, date side up: it starts the memory line. If you have jokers, they belong to the team.",
+        "Flip the top card of the deck and put it in the middle, date side up: it starts the memory line.",
         "You get as many lives as players with cards, plus one: 3 for 2 players, 4 for 3… Keep count with coins or whatever you have to hand.",
-        "If the person who made the deck plays, they don’t get cards: they’re the memory keeper. They answer hints and tell each story when the card is flipped.",
+        "If the person who made the deck plays, they don’t get cards: they’re the memory keeper, and they tell each story when the card is flipped.",
         "The oldest player starts, and play goes clockwise."
+      ],
+      "preparacionEspeciales": [
+        "If your deck has jokers, they belong to the team: put them in the middle of the table."
       ],
       "turno": [
         "Talk it over together, but whoever’s turn it is decides: they place one of their cards in the line and flip it.",

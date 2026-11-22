@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Boton, clasesBoton } from "@/components/ui/Boton";
-import { Aviso, Pestana } from "@/components/ui/Piezas";
+import { Aviso } from "@/components/ui/Piezas";
 import { ErrorServicio, type AportacionEnEspera, type ClienteColaboracion } from "@/lib/colaboracion/api";
 import { cerrarEnlace, clienteConfigurado, crearEnlace, ErrorLlave, leerEnlace, olvidarEnlace, type EnlaceDueno } from "@/lib/colaboracion/dueno";
 import { urlParaCompartir } from "@/lib/colaboracion/enlace";
@@ -61,7 +61,9 @@ function entradasDe(cliente: ClienteColaboracion, enlace: EnlaceDueno, espera: A
 
 /**
  * Pedir fotos con un enlace (subida colaborativa): crearlo, compartirlo, ver lo que llega y
- * añadirlo al mazo. Solo se muestra si la web tiene el servicio configurado. Pendiente de Marc.
+ * añadirlo al mazo. Discreto (22-11-2026): una sola línea que se despliega; lo único que se ve sin
+ * desplegar es el aviso de fotos llegadas, que pide hacer algo. Solo se muestra si la web tiene el
+ * servicio configurado. Pendiente de Marc.
  */
 export function PanelColaboracion({ mazoId }: { mazoId: string }) {
   const t = useTranslations("colaboracion.panel");
@@ -74,6 +76,8 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
   const [error, setError] = useState<ErrorPanel | null>(null);
   const [sinRed, setSinRed] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  // Plegado al entrar; al crear el enlace sigue abierto (se crea desde dentro) para compartirlo.
+  const [abierto, setAbierto] = useState(false);
   const campo = useRef<HTMLInputElement>(null);
 
   // El estado de otro mazo (tras empezar otro) no vale: se lee el del nuevo.
@@ -187,17 +191,22 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
   };
 
   const textoError = error && (
-    <Aviso tono="error" className="mt-4">
+    <Aviso tono="error" className="mt-3">
       {t(error === "llave" ? "errorLlave" : error === "ocupado" ? "errorOcupado" : "errorRed")}
     </Aviso>
   );
 
-  let cuerpo;
+  const enlaceTexto = (c: ReactNode) => <span className="enlace whitespace-nowrap font-semibold">{c}</span>;
+  let resumen: ReactNode;
+  let llegadas: ReactNode = null;
+  let cuerpo: ReactNode;
   if (actual.tipo === "sin-enlace") {
+    resumen = t.rich("resumen", { enlace: enlaceTexto });
     cuerpo = (
       <>
-        {actual.inactivo && <p className="mt-3 font-semibold">{t("inactivo")}</p>}
-        <Boton className="mt-4" onClick={() => void crear()} disabled={ocupado === "creando"} data-testid="crear-enlace">
+        {actual.inactivo && <p className="mb-2 font-semibold">{t("inactivo")}</p>}
+        <p className="text-tinta-2">{t("texto")}</p>
+        <Boton tamano="sm" className="mt-3 max-sm:min-h-11" onClick={() => void crear()} disabled={ocupado === "creando"} data-testid="crear-enlace">
           {ocupado === "creando" ? t("creando") : t("crear")}
         </Boton>
         {textoError}
@@ -218,17 +227,54 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
         campo.current?.select();
       }
     };
+    resumen = actual.caducado
+      ? t.rich("resumenCaducado", { enlace: enlaceTexto })
+      : t.rich("resumenActivo", { enlace: enlaceTexto, fecha: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(actual.caducaEn) });
+    // Lo que ha llegado se ve aunque el enlace esté plegado: es lo primero que hay que hacer al volver.
+    if (n > 0) {
+      llegadas = (
+        <div data-testid="fotos-llegadas" className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-[#FFF4D6] px-4 py-3 shadow-[inset_4px_0_0_var(--color-amarillo)]">
+          <p className="font-semibold">{t("llegadas", { n })}</p>
+          <Boton tamano="sm" className="max-sm:min-h-11" onClick={() => void recibir()} disabled={ocupado === "recibiendo" || !!progreso} data-testid="anadir-llegadas">
+            {ocupado === "recibiendo" ? t("anadiendo") : t("anadir")}
+          </Boton>
+        </div>
+      );
+    }
     cuerpo = (
       <>
-        {/* Lo que ha llegado: lo primero que se ve al volver. */}
-        {n > 0 ? (
-          <div data-testid="fotos-llegadas" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] bg-[#FFF4D6] px-4 py-3 shadow-[inset_4px_0_0_var(--color-amarillo)]">
-            <p className="font-semibold">{t("llegadas", { n })}</p>
-            <Boton onClick={() => void recibir()} disabled={ocupado === "recibiendo" || !!progreso} data-testid="anadir-llegadas">
-              {ocupado === "recibiendo" ? t("anadiendo") : t("anadir")}
-            </Boton>
-          </div>
+        {actual.caducado ? (
+          <p className="font-semibold">{t("yaNoAdmite")}</p>
         ) : (
+          <div className="space-y-3">
+            <label htmlFor={`${id}-url`} className="block text-sm font-semibold">
+              {t("etiquetaEnlace")}
+            </label>
+            <input
+              ref={campo}
+              id={`${id}-url`}
+              data-testid="enlace-colaboracion"
+              readOnly
+              value={url}
+              onFocus={(e) => e.target.select()}
+              className="w-full rounded-[var(--radius-control)] border-2 border-linea bg-papel px-3 py-2.5 text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              <a href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className={clasesBoton("primario", "sm", "max-sm:min-h-11")}>
+                {t("whatsapp")}
+              </a>
+              <Boton variante="secundario" tamano="sm" className="max-sm:min-h-11" onClick={() => void copiar()} aria-live="polite">
+                {copiado ? `✓ ${t("copiado")}` : t("copiar")}
+              </Boton>
+              {puedeCompartir && (
+                <Boton variante="fantasma" tamano="sm" className="max-sm:min-h-11" onClick={() => void navigator.share({ title: t("compartirTitulo"), text: t("mensaje"), url }).catch(() => undefined)}>
+                  {t("compartir")}
+                </Boton>
+              )}
+            </div>
+          </div>
+        )}
+        {n === 0 && (
           <p className="mt-3 text-sm text-tinta-2" aria-live="polite">
             {actual.espera === null ? (
               t("mirando")
@@ -247,43 +293,12 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
             {t("sinRed")}
           </Aviso>
         )}
-
-        {actual.caducado ? (
-          <p className="mt-4 text-sm font-semibold">{t("yaNoAdmite")}</p>
-        ) : (
-          <div className="mt-5 space-y-3">
-            <label htmlFor={`${id}-url`} className="block text-sm font-semibold">
-              {t("etiquetaEnlace")}
-            </label>
-            <input
-              ref={campo}
-              id={`${id}-url`}
-              data-testid="enlace-colaboracion"
-              readOnly
-              value={url}
-              onFocus={(e) => e.target.select()}
-              className="w-full rounded-[var(--radius-control)] border-2 border-linea bg-papel px-3 py-2.5 text-sm"
-            />
-            <div className="flex flex-wrap gap-2">
-              <a href={`https://wa.me/?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noopener noreferrer" className={clasesBoton("primario", "sm")}>
-                {t("whatsapp")}
-              </a>
-              <Boton variante="secundario" tamano="sm" onClick={() => void copiar()} aria-live="polite">
-                {copiado ? `✓ ${t("copiado")}` : t("copiar")}
-              </Boton>
-              {puedeCompartir && (
-                <Boton variante="fantasma" tamano="sm" onClick={() => void navigator.share({ title: t("compartirTitulo"), text: t("mensaje"), url }).catch(() => undefined)}>
-                  {t("compartir")}
-                </Boton>
-              )}
-            </div>
-            <p className="text-sm text-tinta-2">
-              {t("valeHasta", { fecha: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long" }).format(actual.caducaEn) })}{" "}
-              <button type="button" className="enlace font-semibold" onClick={() => void cerrar()} disabled={ocupado === "cerrando"}>
-                {ocupado === "cerrando" ? t("cerrando") : t("cerrar")}
-              </button>
-            </p>
-          </div>
+        {!actual.caducado && (
+          <p className="mt-3 text-sm">
+            <button type="button" className="enlace font-semibold" onClick={() => void cerrar()} disabled={ocupado === "cerrando"}>
+              {ocupado === "cerrando" ? t("cerrando") : t("cerrar")}
+            </button>
+          </p>
         )}
         {textoError}
       </>
@@ -291,14 +306,23 @@ export function PanelColaboracion({ mazoId }: { mazoId: string }) {
   }
 
   return (
-    <section aria-labelledby={`${id}-titulo`} data-testid="panel-colaboracion" className="relative overflow-hidden rounded-[var(--radius-carta)] bg-blanco p-6 pl-16 pt-8 sm:p-8 sm:pl-20">
-      <Pestana color="var(--color-verde)">+</Pestana>
-      <h2 id={`${id}-titulo`} className="tipo-subtitular text-xl">
-        {t("titulo")}
-      </h2>
-      <p className="mt-1 max-w-2xl text-tinta-2">{t("texto")}</p>
-      {cuerpo}
-      <p className="mt-4 text-sm text-tinta-2">{t("privacidad")}</p>
-    </section>
+    <div data-testid="panel-colaboracion" className="space-y-2">
+      {llegadas}
+      <details open={abierto} onToggle={(e) => setAbierto(e.currentTarget.open)} className="group">
+        <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[8px] text-sm text-tinta-2 [&::-webkit-details-marker]:hidden">
+          {/* El «+» es un dibujo y no texto: no se cuela al copiar la línea ni en su texto. Abierto, gira a «×». */}
+          <span aria-hidden="true" className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-verde text-tinta transition-transform group-open:rotate-45">
+            <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M6 1.5v9M1.5 6h9" />
+            </svg>
+          </span>
+          <span>{resumen}</span>
+        </summary>
+        <div className="mt-1 max-w-2xl rounded-[14px] bg-blanco p-4 sm:p-5">
+          {cuerpo}
+          <p className="mt-3 text-sm text-tinta-2">{t("privacidad")}</p>
+        </div>
+      </details>
+    </div>
   );
 }

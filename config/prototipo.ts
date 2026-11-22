@@ -31,3 +31,11 @@ export function indexacionPermitida(valor: string | undefined): boolean {
   const v = valor?.trim().toLowerCase();
   return v === "1" || v === "true";
 }
+
+/**
+ * La frase de una carta también en la cara de la foto, «como pista» (un interruptor en Cartas).
+ * Apagada desde el 22-11-2026: Ricard quiere ir de momento «sin pistas… y sin nada adicional. Solo
+ * cartas y fechas». La frase sigue en la cara de la fecha. El dato no se borra de los mazos
+ * guardados: con `true` vuelve el interruptor y las cartas que lo tenían marcado la llevan delante.
+ */
+export const FRASE_EN_ANVERSO = false;

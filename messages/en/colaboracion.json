@@ -1,7 +1,9 @@
 {
   "colaboracion": {
     "panel": {
-      "titulo": "Ask your people for photos",
+      "resumen": "Does anyone else have photos? <enlace>Ask them with a link</enlace>",
+      "resumenActivo": "<enlace>Your link to ask for photos</enlace> · open until {fecha}",
+      "resumenCaducado": "<enlace>Your link to ask for photos</enlace> · no longer takes new photos",
       "texto": "Create a link and send it on WhatsApp or however you like. Anyone who opens it can send you photos from their phone, no sign-up needed.",
       "privacidad": "They arrive encrypted: they only open in this browser, which is where your deck is saved.",
       "crear": "Create link",
@@ -13,7 +15,6 @@
       "compartir": "More options",
       "mensaje": "I'm making a card deck with our memories. Could you send me your photos? You can upload them here:",
       "compartirTitulo": "Photos for the deck",
-      "valeHasta": "Takes photos until {fecha}.",
       "mirando": "Checking for new photos…",
       "ninguna": "None have arrived yet. We check every so often.",
       "mirarAhora": "Check now",

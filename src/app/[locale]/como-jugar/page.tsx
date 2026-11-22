@@ -46,7 +46,15 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
   const catalogo = await obtenerCatalogo();
   const packs = packsActivos(catalogo);
   const iconoDe = (id: string) => catalogo.mecanicas.find((m) => m.id === id)?.icono ?? null;
-  const pasos = (clave: `${(typeof MODOS)[number]["id"]}.${(typeof PARTES)[number]}`) => t.raw(clave) as string[];
+  // Las mecánicas activas. Desde el 22-11-2026, «Solo cartas y fechas»: ni comodines ni cartas en
+  // blanco, así que ni salen en la mesa ni se explican, y las reglas no los nombran.
+  const activas = catalogo.mecanicas.filter((m) => m.activo).map((m) => m.id);
+  const especiales = MECANICAS.filter((m) => activas.includes(m.id));
+  // Con cartas especiales, la preparación empieza por dónde se dejan (`preparacionEspeciales`).
+  const pasos = (modo: (typeof MODOS)[number]["id"], parte: (typeof PARTES)[number]) => [
+    ...(parte === "preparacion" && especiales.length > 0 ? (t.raw(`${modo}.preparacionEspeciales`) as string[]) : []),
+    ...(t.raw(`${modo}.${parte}`) as string[]),
+  ];
   const personas = Array.from({ length: MAX_PERSONAS - 1 }, (_, i) => i + 2);
 
   const paneles: PanelModo[] = MODOS.map((m) => ({
@@ -74,7 +82,7 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
             <section key={parte}>
               <h3 className="tipo-subtitular text-lg">{t(parte)}</h3>
               <ol className="mt-3 space-y-3">
-                {pasos(`${m.id}.${parte}`).map((paso, i) => (
+                {pasos(m.id, parte).map((paso, i) => (
                   <li key={paso} className="flex gap-3">
                     <span aria-hidden="true" className="tipo-titular mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[0.85rem] leading-none text-tinta" style={{ background: m.color }}>
                       {i + 1}
@@ -139,7 +147,7 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
         <Seccion className="pb-14">
           <h2 className="tipo-titular text-3xl">{t("mesa.titulo")}</h2>
           <p className="mb-6 mt-3 max-w-2xl text-md text-tinta-2">{t("mesa.texto")}</p>
-          <MesaPartida idioma={locale} iconos={{ comodin: iconoDe("comodin"), enBlanco: iconoDe("en-blanco") }} />
+          <MesaPartida idioma={locale} iconos={{ comodin: iconoDe("comodin"), enBlanco: iconoDe("en-blanco") }} mecanicas={activas} />
         </Seccion>
 
         <Seccion className="pb-14">
@@ -186,32 +194,34 @@ export default async function ComoJugar({ params }: { params: Promise<{ locale: 
           </div>
         </Seccion>
 
-        <Seccion className="pb-16">
-          <h2 className="tipo-titular text-3xl">{t("mecanicas.titulo")}</h2>
-          <p className="mt-3 max-w-2xl text-md text-tinta-2">{t("mecanicas.texto")}</p>
-          <ul className="mt-6 grid gap-3 md:grid-cols-3">
-            {MECANICAS.filter((m) => catalogo.mecanicas.some((x) => x.id === m.id && x.activo)).map((m) => (
-              <li key={m.id} className="rounded-[var(--radius-carta)] bg-blanco p-5">
-                <div className="flex items-center gap-3">
-                  <IconoMecanica icono={iconoDe(m.id)} />
-                  <h3 className="tipo-subtitular text-lg">{t(`mecanicas.${m.clave}.nombre`)}</h3>
-                </div>
-                {m.clave === "enBlanco" ? (
-                  <p className="mt-3 text-tinta-2">{t("mecanicas.enBlanco.texto")}</p>
-                ) : (
-                  <dl className="mt-3 space-y-2 text-sm">
-                    {MODOS.map((modo) => (
-                      <div key={modo.id}>
-                        <dt className="font-semibold">{tm(`${modo.id}.nombre`)}</dt>
-                        <dd className="text-tinta-2">{t(`mecanicas.${m.clave}.${modo.id}`)}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Seccion>
+        {especiales.length > 0 && (
+          <Seccion className="pb-16">
+            <h2 className="tipo-titular text-3xl">{t("mecanicas.titulo")}</h2>
+            <p className="mt-3 max-w-2xl text-md text-tinta-2">{t("mecanicas.texto")}</p>
+            <ul className="mt-6 grid gap-3 md:grid-cols-3">
+              {especiales.map((m) => (
+                <li key={m.id} className="rounded-[var(--radius-carta)] bg-blanco p-5">
+                  <div className="flex items-center gap-3">
+                    <IconoMecanica icono={iconoDe(m.id)} />
+                    <h3 className="tipo-subtitular text-lg">{t(`mecanicas.${m.clave}.nombre`)}</h3>
+                  </div>
+                  {m.clave === "enBlanco" ? (
+                    <p className="mt-3 text-tinta-2">{t("mecanicas.enBlanco.texto")}</p>
+                  ) : (
+                    <dl className="mt-3 space-y-2 text-sm">
+                      {MODOS.map((modo) => (
+                        <div key={modo.id}>
+                          <dt className="font-semibold">{tm(`${modo.id}.nombre`)}</dt>
+                          <dd className="text-tinta-2">{t(`mecanicas.${m.clave}.${modo.id}`)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </Seccion>
+        )}
 
         <Seccion className="pb-16">
           <div className="flex flex-wrap items-center justify-between gap-6 rounded-[28px] bg-rosa p-8 sm:p-10">

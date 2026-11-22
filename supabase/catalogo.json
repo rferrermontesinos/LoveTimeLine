@@ -258,7 +258,7 @@
     {
       "id": "comodin",
       "orden": 2,
-      "activo": true,
+      "activo": false,
       "tipo": "cartas",
       "icono": "comodin",
       "cartasFisicas": 2,
@@ -276,7 +276,7 @@
     {
       "id": "en-blanco",
       "orden": 3,
-      "activo": true,
+      "activo": false,
       "tipo": "cartas",
       "icono": "en-blanco",
       "cartasFisicas": 4,

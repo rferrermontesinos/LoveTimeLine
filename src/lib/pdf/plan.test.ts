@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import catalogoJson from "../../../supabase/catalogo.json";
 import { cotizar } from "@/domain/precios/cotizar";
+import { conCartasEspeciales } from "@/domain/precios/catalogoDePrueba";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { nuevaCartaTexto } from "@/lib/mazo/derivados";
 import type { Carta, CartaFoto, FotoCaja, Mazo } from "@/lib/mazo/tipos";
 import { cartasImpresas, planImpresion } from "./plan";
 
-const catalogo = catalogoJson as unknown as Catalogo;
+/** El catálogo de verdad («Solo cartas y fechas» desde el 22-11-2026) y el mismo con los comodines
+ * y las cartas en blanco encendidos, para probar cómo se imprimen. */
+const actual = catalogoJson as unknown as Catalogo;
+const catalogo = conCartasEspeciales(actual);
 /** El extra de la caja personalizada se busca por su efecto, como hace el código. */
 const CAJA = catalogo.extras.find((x) => x.efecto === "caja-personalizada")!.id;
 
@@ -140,6 +144,14 @@ describe("plan de impresión", () => {
     for (const p of comodines) expect(p.caras.map((c) => c.datos.icono)).toEqual([icono("comodin"), icono("comodin")]);
     for (const p of enBlanco) expect(p.caras.map((c) => c.datos.icono)).toEqual([icono("en-blanco"), icono("en-blanco")]);
     expect(plan.every((p) => p.tipo !== "comodin" || p.foto === null)).toBe(true);
+  });
+
+  it("hoy, solo cartas y fechas: un mazo guardado con comodines y cartas en blanco imprime solo la portada y los recuerdos", () => {
+    const m = mazo(40);
+    expect(m.mecanicas).toEqual(["comodin", "en-blanco"]);
+    const plan = planImpresion({ mazo: m, catalogo: actual, iconos: new Map() });
+    expect(plan.filter((p) => p.tipo === "comodin" || p.tipo === "en-blanco")).toEqual([]);
+    expect(cartasImpresas(plan)).toBe(40 + 1);
   });
 
   it("sin la mecánica no imprime sus cartas", () => {

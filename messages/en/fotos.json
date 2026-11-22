@@ -11,6 +11,8 @@
     "soltarActivo": "Drop to add the photos",
     "elegirFotos": "Choose photos",
     "elegirCarpeta": "Choose a folder",
+    "anadirFotos": "Add photos",
+    "anadirCarpeta": "Add a folder",
     "privacidad": "JPG, PNG, HEIC or WEBP. Photos never leave this device: we read the dates right here.",
     "procesando": "Reading {hechas} of {total} photos…",
     "procesadas": "{n, plural, one {# photo added} other {# photos added}}",

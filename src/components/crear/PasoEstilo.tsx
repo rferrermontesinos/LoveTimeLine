@@ -195,36 +195,39 @@ export function PasoEstilo() {
             </div>
           </Bloque>
 
-          <Bloque titulo={t("mecanicas")} ayuda={t("mecanicasAyuda")}>
-            <ul className="grid gap-3">
-              {mecanicas.map((m) => {
-                const activa = mazo.mecanicas.includes(m.id);
-                return (
-                  <li key={m.id} className="flex items-start gap-3 rounded-[14px] bg-blanco p-4">
-                    <IconoMecanica icono={m.icono} tamano="sm" estiloId={mazo.estiloId} paletaId={mazo.paletaId} />
-                    <div className="min-w-0 flex-1">
-                      <Interruptor
-                        id={`${id}-mec-${m.id}`}
-                        alFinal
-                        activo={activa}
-                        alCambiar={(v) => cambiar("mecanicas", v ? [...mazo.mecanicas, m.id] : mazo.mecanicas.filter((x) => x !== m.id))}
-                        etiqueta={
-                          <span className="flex flex-wrap items-center gap-2">
-                            {textoEn(m.nombre, locale)}
-                            <Chip color="#E3F4EA" className="text-verde-texto">
-                              {tc("gratis")}
-                            </Chip>
-                            {m.tipo === "cartas" && m.cartasFisicas ? <Chip>{t("masCartas", { n: m.cartasFisicas })}</Chip> : null}
-                          </span>
-                        }
-                        descripcion={textoEn(m.descripcion, locale)}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </Bloque>
+          {/* Las cartas especiales, si el catálogo tiene alguna activa (desde el 22-11-2026, ninguna). */}
+          {mecanicas.length > 0 && (
+            <Bloque titulo={t("mecanicas")} ayuda={t("mecanicasAyuda")}>
+              <ul className="grid gap-3">
+                {mecanicas.map((m) => {
+                  const activa = mazo.mecanicas.includes(m.id);
+                  return (
+                    <li key={m.id} className="flex items-start gap-3 rounded-[14px] bg-blanco p-4">
+                      <IconoMecanica icono={m.icono} tamano="sm" estiloId={mazo.estiloId} paletaId={mazo.paletaId} />
+                      <div className="min-w-0 flex-1">
+                        <Interruptor
+                          id={`${id}-mec-${m.id}`}
+                          alFinal
+                          activo={activa}
+                          alCambiar={(v) => cambiar("mecanicas", v ? [...mazo.mecanicas, m.id] : mazo.mecanicas.filter((x) => x !== m.id))}
+                          etiqueta={
+                            <span className="flex flex-wrap items-center gap-2">
+                              {textoEn(m.nombre, locale)}
+                              <Chip color="#E3F4EA" className="text-verde-texto">
+                                {tc("gratis")}
+                              </Chip>
+                              {m.tipo === "cartas" && m.cartasFisicas ? <Chip>{t("masCartas", { n: m.cartasFisicas })}</Chip> : null}
+                            </span>
+                          }
+                          descripcion={textoEn(m.descripcion, locale)}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Bloque>
+          )}
         </div>
       </div>
     </div>

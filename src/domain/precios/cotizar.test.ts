@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import catalogoJson from "../../../supabase/catalogo.json";
 import { cotizar, ErrorCotizacion, formatearImporte, normalizarSeleccion, packPorDefecto, packsActivos, precioDesde, type Oferta } from "./cotizar";
+import { conCartasEspeciales } from "./catalogoDePrueba";
 import type { Catalogo } from "./tipos";
 
-const catalogo = catalogoJson as unknown as Catalogo;
+/** El catálogo de verdad («Solo cartas y fechas» desde el 22-11-2026) y, para probar la maquinaria
+ * de las cartas especiales, el mismo con los comodines y las cartas en blanco encendidos. */
+const actual = catalogoJson as unknown as Catalogo;
+const catalogo = conCartasEspeciales(actual);
 const oferta = (o: Oferta[], tipo: Oferta["tipo"]) => o.find((x) => x.tipo === tipo);
 
 describe("cotizar: packs por tamaño", () => {
@@ -167,6 +171,16 @@ describe("cotizar: cajas, mecánicas y extras", () => {
 });
 
 describe("selección y formato", () => {
+  it("hoy, solo cartas y fechas: un borrador con comodines y cartas en blanco los pierde, y no se cuentan", () => {
+    expect(actual.mecanicas.filter((m) => m.activo)).toEqual([]);
+    const s = normalizarSeleccion({ packId: "grande", extras: ["envoltorio-regalo"], mecanicas: ["comodin", "en-blanco"] }, actual);
+    expect(s).toEqual({ packId: "grande", extras: ["envoltorio-regalo"], mecanicas: [], cambiado: true });
+    const c = cotizar({ catalogo: actual, packId: "grande", cartas: 114, mecanicas: s.mecanicas, extras: s.extras });
+    // 114 recuerdos + portada = 115 cartas → 2 cajas, sin ninguna carta especial.
+    expect(c.cartasFisicas).toBe(115);
+    expect(c.lineas.some((l) => l.tipo === "mecanica")).toBe(false);
+  });
+
   it("normaliza la selección de un borrador antiguo", () => {
     expect(
       normalizarSeleccion({ packId: "pareja", extras: ["pack-retos", "envoltorio-regalo"], mecanicas: ["cuentalo", "estrella", "comodin"] }, catalogo),

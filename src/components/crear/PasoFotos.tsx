@@ -28,6 +28,9 @@ interface Borrado {
  * Paso 1: el permiso, elegir o soltar fotos y la cuadrícula del mazo ordenada por fecha, con las
  * que no tienen fecha al final. Solo una herramienta: seleccionar, para poner la misma fecha a
  * varias o borrarlas. La fecha de cada carta se completa en el paso 2.
+ *
+ * Con cartas en el mazo, lo primero que se ve son ellas (22-11-2026): sin la zona grande de soltar
+ * ni la casilla ya marcada, y «Añadir fotos» junto al título de la cuadrícula.
  */
 export function PasoFotos() {
   const t = useTranslations();
@@ -110,14 +113,20 @@ export function PasoFotos() {
     </ul>
   );
 
+  const hayCartas = mazo.cartas.length > 0;
+
   return (
     <div className="space-y-6">
+      {/* Las entradas de archivo ocultas, una sola vez: las abren los botones de cualquier estado. */}
+      {entradas}
       <header className="space-y-2">
         <h1 className="tipo-titular text-[clamp(2.2rem,6vw,3.4rem)] leading-[0.95]">{t("fotos.titulo")}</h1>
-        <p className="max-w-2xl text-md text-tinta-2">{t("fotos.texto", { minimo: cotizacion?.minimo ?? 0 })}</p>
+        {/* Con cartas, cuántas faltan ya lo dice la barra de abajo. */}
+        {!hayCartas && <p className="max-w-2xl text-md text-tinta-2">{t("fotos.texto", { minimo: cotizacion?.minimo ?? 0 })}</p>}
         {/* Quitar presión: vale un buen recuerdo aunque la foto no sea perfecta. La guía se abre en
-            otra pestaña para no cortar una subida en marcha. */}
-        <p data-testid="sin-presion" className="max-w-2xl text-tinta-2">
+            otra pestaña para no cortar una subida en marcha. En el móvil, con cartas ya, se queda en
+            la pantalla vacía (allí se vio al empezar), para que las cartas quepan en la primera. */}
+        <p data-testid="sin-presion" className={`max-w-2xl text-tinta-2 ${hayCartas ? "max-sm:hidden" : ""}`}>
           {t("fotos.sinPresion")}{" "}
           <a href={`/${locale}/guia-fotos`} target="_blank" rel="noopener" className="enlace whitespace-nowrap font-semibold">
             {t("fotos.guiaEnlace")}
@@ -127,67 +136,91 @@ export function PasoFotos() {
       </header>
 
       {/* Permiso explícito antes de añadir fotos (RGPD). Si se intenta añadir sin él, se resalta y
-          dice qué falta; lo que se haya soltado espera y se añade al marcarlo. */}
-      <label
-        ref={permiso}
-        data-testid="permiso-fotos"
-        className={`flex max-w-3xl cursor-pointer items-start gap-3 rounded-[14px] p-4 transition-[background-color,box-shadow] ${
-          resaltar ? "bg-[#FFF4D6] shadow-[inset_0_0_0_3px_var(--color-amarillo)]" : "bg-blanco"
-        }`}
-      >
-        <input
-          ref={casilla}
-          type="checkbox"
-          checked={consentido}
-          onChange={(e) => e.target.checked && consentir()}
-          disabled={consentido}
-          className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--color-tinta)]"
-        />
-        <span className="min-w-0">
-          <span className="block text-sm leading-relaxed">{t("fotos.consentimiento")}</span>
-          {resaltar && <span className="mt-1.5 block font-semibold">{enEspera > 0 ? t("fotos.enEspera", { n: enEspera }) : t("fotos.consentimientoFalta")}</span>}
-        </span>
-      </label>
+          dice qué falta; lo que se haya soltado espera y se añade al marcarlo. Ya dado y con cartas,
+          no ocupa sitio. */}
+      {(!consentido || !hayCartas) && (
+        <label
+          ref={permiso}
+          data-testid="permiso-fotos"
+          className={`flex max-w-3xl cursor-pointer items-start gap-3 rounded-[14px] p-4 transition-[background-color,box-shadow] ${
+            resaltar ? "bg-[#FFF4D6] shadow-[inset_0_0_0_3px_var(--color-amarillo)]" : "bg-blanco"
+          }`}
+        >
+          <input
+            ref={casilla}
+            type="checkbox"
+            checked={consentido}
+            onChange={(e) => e.target.checked && consentir()}
+            disabled={consentido}
+            className="mt-0.5 h-6 w-6 shrink-0 accent-[var(--color-tinta)]"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm leading-relaxed">{t("fotos.consentimiento")}</span>
+            {resaltar && <span className="mt-1.5 block font-semibold">{enEspera > 0 ? t("fotos.enEspera", { n: enEspera }) : t("fotos.consentimientoFalta")}</span>}
+          </span>
+        </label>
+      )}
 
-      {/* Elegir fotos o una carpeta. Soltarlas funciona en toda la página (SoltarFotos). */}
-      <div className="relative overflow-hidden rounded-[var(--radius-carta)] border-[2.5px] border-dashed border-tinta/60 bg-blanco p-6 pl-16 pt-8 sm:p-8 sm:pl-20">
-        <Pestana>1</Pestana>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Boton onClick={elegirFotos}>{t("fotos.elegirFotos")}</Boton>
-            <Boton variante="secundario" onClick={elegirCarpeta} className="hidden sm:inline-flex">
-              {t("fotos.elegirCarpeta")}
-            </Boton>
+      {/* Sin cartas: elegir fotos o una carpeta, en grande. Soltarlas funciona en toda la página
+          (SoltarFotos), también con cartas. */}
+      {!hayCartas && (
+        <div className="relative overflow-hidden rounded-[var(--radius-carta)] border-[2.5px] border-dashed border-tinta/60 bg-blanco p-6 pl-16 pt-8 sm:p-8 sm:pl-20">
+          <Pestana>1</Pestana>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Boton onClick={elegirFotos}>{t("fotos.elegirFotos")}</Boton>
+              {/* En el móvil no se elige una carpeta: allí se eligen las fotos de la galería. */}
+              <Boton variante="secundario" onClick={elegirCarpeta} className="max-sm:hidden">
+                {t("fotos.elegirCarpeta")}
+              </Boton>
+            </div>
+            <p className="tipo-subtitular hidden text-lg sm:block">{t("fotos.arrastrar")}</p>
           </div>
-          <p className="tipo-subtitular hidden text-lg sm:block">{t("fotos.arrastrar")}</p>
+          <p className="mt-4 text-sm text-tinta-2">{t("fotos.privacidad")}</p>
         </div>
-        {entradas}
-        <p className="mt-4 text-sm text-tinta-2">{t("fotos.privacidad")}</p>
-      </div>
+      )}
 
-      {/* Pedir fotos a otros con un enlace (si el servicio está configurado). */}
-      <PanelColaboracion mazoId={mazo.id} />
-
-      <EstadoImportacion />
-
-      {mazo.cartas.length === 0 ? (
-        !progreso && enEspera === 0 && <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>
-      ) : (
-        <section aria-labelledby={`${id}-cartas`} className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id={`${id}-cartas`} className="tipo-subtitular text-xl">
+      {/* Con cartas, su cabecera: «Tus cartas», añadir y seleccionar (en el móvil, solo los botones:
+          cuántas hay ya lo dice la barra de abajo). Justo debajo, pedir fotos a otros con un enlace
+          (si el servicio está configurado), en una línea discreta: va siempre en este mismo sitio
+          del árbol, para que no se pliegue ni se recargue al llegar las primeras cartas; con otro
+          mazo, empieza de cero. */}
+      <div className="space-y-2">
+        {hayCartas && (
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <h2 id={`${id}-cartas`} className="tipo-subtitular text-xl max-sm:sr-only">
               {t("fotos.tusCartas")} <span className="text-tinta-2">· {mazo.cartas.length}</span>
             </h2>
-            <Boton
-              variante={modoSeleccion ? "primario" : "secundario"}
-              tamano="sm"
-              className="max-sm:min-h-11"
-              aria-pressed={modoSeleccion}
-              onClick={() => (modoSeleccion ? salirDeSeleccion() : setModoSeleccion(true))}
-            >
-              {t("fotos.seleccionar")}
-            </Boton>
+            <div className="flex flex-wrap gap-2">
+              <Boton tamano="sm" className="max-sm:min-h-11" onClick={elegirFotos}>
+                {t("fotos.anadirFotos")}
+              </Boton>
+              <Boton variante="secundario" tamano="sm" className="max-sm:hidden" onClick={elegirCarpeta}>
+                {t("fotos.anadirCarpeta")}
+              </Boton>
+              <Boton
+                variante={modoSeleccion ? "primario" : "secundario"}
+                tamano="sm"
+                className="max-sm:min-h-11"
+                aria-pressed={modoSeleccion}
+                onClick={() => (modoSeleccion ? salirDeSeleccion() : setModoSeleccion(true))}
+              >
+                {t("fotos.seleccionar")}
+              </Boton>
+            </div>
           </div>
+        )}
+        <PanelColaboracion key={mazo.id} mazoId={mazo.id} />
+      </div>
+
+      {!hayCartas ? (
+        <>
+          <EstadoImportacion />
+          {!progreso && enEspera === 0 && <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>}
+        </>
+      ) : (
+        <section aria-labelledby={`${id}-cartas`} className="space-y-4">
+          <EstadoImportacion />
           {modoSeleccion && seleccion.size === 0 && <p className="text-sm text-tinta-2">{t("fotos.seleccionAyuda")}</p>}
           {borradoVigente && (
             <Aviso

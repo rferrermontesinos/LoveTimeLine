@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import catalogoJson from "../../../supabase/catalogo.json";
+import { conCartasEspeciales } from "@/domain/precios/catalogoDePrueba";
 import type { Catalogo } from "@/domain/precios/tipos";
 import { accionCrearMazo, accionNormalizar, decidirArranque, packDeLaUrl, urlSinPack, urlSinParametros } from "./arranque";
 import { ESTADO_INICIAL, reductor } from "./reductor";
 import type { Pedido } from "./tipos";
 
-const catalogo = catalogoJson as unknown as Catalogo;
+/** El catálogo de verdad («Solo cartas y fechas» desde el 22-11-2026) y el mismo con los comodines
+ * y las cartas en blanco encendidos, para probar cómo entran y salen las mecánicas. */
+const actual = catalogoJson as unknown as Catalogo;
+const catalogo = conCartasEspeciales(actual);
 
 const pedido = (estado: Pedido["estado"]): Pedido => ({
   id: "p1",
@@ -102,6 +106,14 @@ describe("accionCrearMazo", () => {
     const e = reductor(ESTADO_INICIAL, accion);
     expect(e.mazo).toMatchObject({ id: "m1", packId: "mediano", idiomaMazo: "en", titulo: "Our memories", paso: 1, paletaId: "rosa", cartas: [], caja: null, extras: [] });
     expect(e.pasado).toEqual([]);
+  });
+
+  it("hoy, solo cartas y fechas: un mazo nuevo no lleva ninguna mecánica", () => {
+    expect(accionCrearMazo({ id: "m", ahora: 0, packId: "pequeno", idiomaMazo: "es", titulo: "t", catalogo: actual }).mecanicas).toEqual([]);
+  });
+
+  it("hoy, un mazo guardado con comodines y cartas en blanco los pierde al abrirse", () => {
+    expect(accionNormalizar({ packId: "mediano", extras: [], mecanicas: ["comodin", "en-blanco"] }, actual)).toMatchObject({ mecanicas: [] });
   });
 
   it("una mecánica retirada no entra aunque esté marcada por defecto", () => {
