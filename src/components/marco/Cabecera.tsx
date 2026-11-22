@@ -16,13 +16,17 @@ export function Marca({ className = "" }: { className?: string }) {
   );
 }
 
-export async function CintaPrototipo() {
+/**
+ * La cinta amarilla del prototipo. `conDetalle` falso la deja solo con su nombre: en la página de
+ * mandar fotos, la frase de que las fotos no salen del dispositivo no es verdad (ahí sí salen, cifradas).
+ */
+export async function CintaPrototipo({ conDetalle = true }: { conDetalle?: boolean } = {}) {
   const t = await getTranslations("nav");
   return (
     <div className="bg-amarillo text-tinta">
       <p className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-1.5 text-sm sm:px-6">
         <strong className="tipo-micro text-micro">{t("prototipo")}</strong>
-        <span className="text-[0.8125rem]">{t("prototipoDetalle")}</span>
+        {conDetalle && <span className="text-[0.8125rem]">{t("prototipoDetalle")}</span>}
       </p>
     </div>
   );

@@ -7,6 +7,9 @@ import { cotizar, type Cotizacion, type LineaCotizacion } from "@/domain/precios
 import { textoEn, type Catalogo } from "@/domain/precios/tipos";
 import { clienteSupabaseServicio } from "./supabase";
 
+/** El cliente de Supabase con la clave de servicio (null si no hay base configurada). */
+type Base = ReturnType<typeof clienteSupabaseServicio>;
+
 export interface SolicitudPedido {
   mazoId: string;
   packId: string;
@@ -113,15 +116,21 @@ export async function crearSesionStripe(e: {
 }
 
 /** Guarda el pedido en Supabase si está configurado. Sin Supabase no hace nada. */
-export async function registrarPedido(e: {
-  pedidoId: string;
-  solicitud: SolicitudPedido;
-  cotizacion: Cotizacion;
-  catalogo: Catalogo;
-  modo: "simulado" | "stripe";
-  stripeSessionId?: string;
-}) {
-  const sb = clienteSupabaseServicio();
+/**
+ * Guarda el pedido en Supabase, si está configurado. Lanza si no se ha podido: sin el pedido en la
+ * base, el aviso de pago de Stripe no encontraría qué marcar.
+ */
+export async function registrarPedido(
+  e: {
+    pedidoId: string;
+    solicitud: SolicitudPedido;
+    cotizacion: Cotizacion;
+    catalogo: Catalogo;
+    modo: "simulado" | "stripe";
+    stripeSessionId?: string;
+  },
+  sb: Base = clienteSupabaseServicio(),
+): Promise<void> {
   if (!sb) return;
   const { error } = await sb.from("pedidos").insert({
     id: e.pedidoId,
@@ -142,12 +151,33 @@ export async function registrarPedido(e: {
     idioma: e.solicitud.idioma,
     stripe_session_id: e.stripeSessionId ?? null,
   });
-  if (error) console.error("No se pudo registrar el pedido en Supabase:", error.message);
+  if (error) throw new Error(`No se pudo registrar el pedido en Supabase: ${error.message}`);
 }
 
-export async function marcarPagado(pedidoId: string, sessionId: string) {
-  const sb = clienteSupabaseServicio();
-  if (!sb) return;
-  const { error } = await sb.from("pedidos").update({ estado: "pagado", pagado_en: new Date().toISOString() }).eq("id", pedidoId).eq("stripe_session_id", sessionId);
-  if (error) console.error("No se pudo marcar el pedido como pagado:", error.message);
+/**
+ * Cómo ha quedado un pedido al llegar el aviso de pago: recién pagado, ya lo estaba (Stripe puede
+ * mandar el mismo aviso más de una vez) o sin base en la que comprobarlo.
+ */
+export type ResultadoPago = "pagado" | "ya-estaba" | "sin-base";
+
+/**
+ * Marca el pedido como pagado si aún no lo estaba (pendiente, o cancelado a mano antes de que
+ * llegara el pago). Lanza si la base falla o el pedido no está: el webhook responde con error y
+ * Stripe vuelve a mandar el aviso más tarde.
+ */
+export async function marcarPagado(pedidoId: string, sessionId: string, sb: Base = clienteSupabaseServicio()): Promise<ResultadoPago> {
+  if (!sb) return "sin-base";
+  const { data, error } = await sb
+    .from("pedidos")
+    .update({ estado: "pagado", pagado_en: new Date().toISOString() })
+    .eq("id", pedidoId)
+    .eq("stripe_session_id", sessionId)
+    .in("estado", ["pendiente", "cancelado"])
+    .select("id");
+  if (error) throw new Error(`No se pudo marcar el pedido como pagado: ${error.message}`);
+  if (data && data.length > 0) return "pagado";
+  const { data: existente, error: errorLectura } = await sb.from("pedidos").select("estado").eq("id", pedidoId).eq("stripe_session_id", sessionId).maybeSingle();
+  if (errorLectura) throw new Error(`No se pudo leer el pedido: ${errorLectura.message}`);
+  if (!existente) throw new Error(`El pedido ${pedidoId} no está en la base`);
+  return "ya-estaba";
 }

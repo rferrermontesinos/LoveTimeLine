@@ -24,16 +24,29 @@ export async function POST(req: Request) {
   if (evento.type === "checkout.session.completed" || evento.type === "checkout.session.async_payment_succeeded") {
     const s = evento.data.object as Stripe.Checkout.Session;
     if (s.payment_status === "paid" && s.client_reference_id) {
-      await marcarPagado(s.client_reference_id, s.id);
+      let resultado;
+      try {
+        resultado = await marcarPagado(s.client_reference_id, s.id);
+      } catch (e) {
+        // Con error, Stripe vuelve a mandar el aviso más tarde.
+        console.error(e instanceof Error ? e.message : e);
+        return NextResponse.json({ error: "pedido" }, { status: 500 });
+      }
+      // El correo, solo al pasar a pagado: el mismo aviso repetido no manda otro.
       const email = s.customer_details?.email;
-      if (email) {
-        await enviarConfirmacion({
-          para: email,
-          pedidoId: s.client_reference_id,
-          totalCents: s.amount_total ?? 0,
-          moneda: s.currency ?? "eur",
-          idioma: s.locale === "en" ? "en" : "es",
-        });
+      if (email && resultado !== "ya-estaba") {
+        try {
+          await enviarConfirmacion({
+            para: email,
+            pedidoId: s.client_reference_id,
+            totalCents: s.amount_total ?? 0,
+            moneda: s.currency ?? "eur",
+            idioma: s.locale === "en" ? "en" : "es",
+          });
+        } catch (e) {
+          // El pedido ya está pagado: un fallo del correo no hace repetir el aviso.
+          console.error(`[correo] No se pudo mandar la confirmación del pedido ${s.client_reference_id}:`, e instanceof Error ? e.message : e);
+        }
       }
     }
   }

@@ -301,6 +301,15 @@ describe("pago cancelado y carta abierta", () => {
     expect(reductor(sinPedido, { tipo: "cancelarPedido" })).toBe(sinPedido);
   });
 
+  it("un pedido pagado no lo tapa otro nuevo; uno pendiente, sí", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "registrarPedido", pedido: pedido("pendiente") });
+    e = reductor(e, { tipo: "registrarPedido", pedido: { ...pedido("pendiente"), id: "p2" } });
+    expect(e.mazo?.pedido?.id).toBe("p2");
+    e = reductor(e, { tipo: "pedidoPagado" });
+    expect(reductor(e, { tipo: "registrarPedido", pedido: { ...pedido("pendiente"), id: "p3" } })).toBe(e);
+  });
+
   it("recuerda la carta abierta sin ocupar un paso de deshacer", () => {
     let e = nuevo();
     e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019), carta("b", 2020)] });

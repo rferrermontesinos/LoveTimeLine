@@ -15,6 +15,9 @@ import { formatearImporte } from "@/domain/precios/cotizar";
 import { textoEn, type Extra } from "@/domain/precios/tipos";
 import { obtenerCatalogo } from "@/lib/servidor/catalogo";
 
+/** Los precios y los packs salen del catálogo: con la base conectada, la página se rehace cada 5 minutos. */
+export const revalidate = 300;
+
 const MODOS = ["clasico", "historia"] as const;
 const COLOR_MODO: Record<(typeof MODOS)[number], string> = {
   clasico: "var(--color-amarillo)",

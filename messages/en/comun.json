@@ -58,7 +58,7 @@
     "titulo": "Privacy",
     "intro": "The photos in your deck are personal data and often show children. This is how we handle them:",
     "prototipoTitulo": "In this prototype",
-    "prototipo": "Photos are read and stored only in your browser (IndexedDB). They’re never uploaded to a server. The print file is also generated on your device. You can delete everything with “Start another deck”.",
+    "prototipo": "Photos are read and stored only in your browser (IndexedDB). They’re never uploaded to a server, except the ones other people send you with a link to ask for photos: they leave their phone encrypted, wait on a server in the European Union that can’t open them, and are deleted from it as soon as you add them to your deck or, at the latest, when the link expires ({dias} days). The print file is also generated on your device. You can delete everything with “Start another deck”.",
     "realTitulo": "When there are real orders",
     "real": {
       "1": "Photos will be stored on servers in the European Union, in private storage, and only viewable through signed links that expire within minutes.",

@@ -58,7 +58,7 @@
     "titulo": "Privacidad",
     "intro": "Las fotos de tu mazo son datos personales y muchas veces salen menores. Las tratamos así:",
     "prototipoTitulo": "En este prototipo",
-    "prototipo": "Las fotos se leen y se guardan solo en tu navegador (IndexedDB). No se suben a ningún servidor. El archivo de impresión también se genera en tu dispositivo. Puedes borrarlo todo con «Empezar otro mazo».",
+    "prototipo": "Las fotos se leen y se guardan solo en tu navegador (IndexedDB). No se suben a ningún servidor, salvo las que te mandan otras personas con un enlace para pedir fotos: salen cifradas de su móvil, esperan en un servidor de la Unión Europea que no puede abrirlas y se borran de él en cuanto las añades al mazo o, como tarde, cuando caduca el enlace ({dias} días). El archivo de impresión también se genera en tu dispositivo. Puedes borrarlo todo con «Empezar otro mazo».",
     "realTitulo": "Cuando haya pedidos reales",
     "real": {
       "1": "Las fotos se guardarán en servidores de la Unión Europea, en almacenamiento privado, y solo se podrán ver con enlaces firmados que caducan en minutos.",

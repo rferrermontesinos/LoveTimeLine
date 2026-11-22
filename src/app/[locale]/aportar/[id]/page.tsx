@@ -24,7 +24,7 @@ export default async function PaginaAportar({ params }: { params: Promise<{ loca
   const t = await getTranslations("colaboracion.aportar");
   return (
     <>
-      <CintaPrototipo />
+      <CintaPrototipo conDetalle={false} />
       <header className="border-b border-linea/80">
         <div className="mx-auto flex h-16 max-w-[760px] items-center px-4 sm:px-6">
           <Marca />

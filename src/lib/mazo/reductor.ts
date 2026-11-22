@@ -234,7 +234,8 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       if (!mismaSeleccion(m, a.desde)) return e;
       return conHistorial(e, { ...m, packId: a.packId, extras: a.extras, mecanicas: a.mecanicas }, false);
     case "registrarPedido":
-      return conHistorial(e, { ...m, pedido: a.pedido }, false);
+      // Un pedido pagado no lo tapa otro: es lo que dice que este mazo ya está pedido.
+      return m.pedido?.estado === "pagado" ? e : conHistorial(e, { ...m, pedido: a.pedido }, false);
     case "pedidoPagado":
       return m.pedido ? conHistorial(e, { ...m, pedido: { ...m.pedido, estado: "pagado" } }, false) : e;
     case "cancelarPedido":

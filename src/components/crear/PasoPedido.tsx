@@ -71,6 +71,9 @@ export function PasoPedido() {
   const puedePagar = validacion.puedePagar && cotizacion.sePuedePagar && todasListas;
   // Sin conexión no se llega a Stripe; con el mazo cambiado en otra pestaña, esta no puede guardar el pedido.
   const enConflicto = guardado.tipo === "conflicto";
+  // Un mazo ya pagado no se vuelve a pagar: el pedido nuevo taparía el pagado (y, si se cancelara
+  // en Stripe, se perdería el aviso de que este mazo ya está pedido).
+  const yaPagado = mazo.pedido?.estado === "pagado";
   const extras = catalogo.extras.filter((x) => x.activo).sort((a, b) => a.orden - b.orden);
   const base = baseMazo(cotizacion);
   const idCaja = extraCajaPersonalizada(catalogo)?.id ?? null;
@@ -157,6 +160,7 @@ export function PasoPedido() {
   };
 
   const pagar = async () => {
+    if (mazo.pedido?.estado === "pagado") return;
     setPagando(true);
     setError(null);
     try {
@@ -171,7 +175,6 @@ export function PasoPedido() {
           extras: mazo.extras,
           mecanicas: mazo.mecanicas,
           idioma: locale,
-          titulo: mazo.titulo,
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
@@ -327,14 +330,16 @@ export function PasoPedido() {
             <Boton
               tamano="lg"
               className="mt-5 w-full"
-              disabled={!puedePagar || !revisado || pagando || sinConexion || enConflicto}
+              disabled={!puedePagar || !revisado || pagando || sinConexion || enConflicto || yaPagado}
               onClick={() => void pagar()}
               aria-describedby={`${id}-estado-pago`}
             >
               {pagando ? t("pagando") : t("pagarPrueba", { total: dinero(cotizacion.totalCents) })}
             </Boton>
             <p id={`${id}-estado-pago`} className="mt-2 min-h-5 text-sm" aria-live="polite">
-              {!todasListas ? (
+              {yaPagado ? (
+                <span className="text-tinta-2">{t("yaPedidoSinDescarga")}</span>
+              ) : !todasListas ? (
                 <span className="text-rojo-texto">{t("faltanCartas", { n: pendientes.length })}</span>
               ) : !puedePagar && bloqueantes.length > 0 ? (
                 <span className="text-rojo-texto">{t("bloquea")}</span>

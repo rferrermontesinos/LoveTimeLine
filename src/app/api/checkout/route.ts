@@ -33,17 +33,30 @@ export async function POST(req: Request) {
   const base = { pedidoId, totalCents: cotizacion.totalCents, moneda: cotizacion.moneda, cartasFisicas: cotizacion.cartasFisicas };
   const cliente = stripe();
   if (!cliente) {
-    await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "simulado" });
+    try {
+      await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "simulado" });
+    } catch (e) {
+      console.error(e instanceof Error ? e.message : e);
+      return NextResponse.json({ error: "pedido" }, { status: 502 });
+    }
     return NextResponse.json({ modo: "simulado", ...base });
   }
 
   const origen = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || new URL(req.url).origin;
+  let sesion;
   try {
-    const sesion = await crearSesionStripe({ stripe: cliente, catalogo, solicitud, cotizacion, pedidoId, origen });
-    await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "stripe", stripeSessionId: sesion.id });
-    return NextResponse.json({ modo: "stripe", ...base, url: sesion.url, sessionId: sesion.id });
+    sesion = await crearSesionStripe({ stripe: cliente, catalogo, solicitud, cotizacion, pedidoId, origen });
   } catch (e) {
     console.error("Stripe no ha creado la sesión de pago:", e instanceof Error ? e.message : e);
     return NextResponse.json({ error: "stripe" }, { status: 502 });
   }
+  try {
+    await registrarPedido({ pedidoId, solicitud, cotizacion, catalogo, modo: "stripe", stripeSessionId: sesion.id });
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : e);
+    // Sin el pedido guardado, el pago no se podría reconocer: la sesión se cierra antes de que nadie pague.
+    await cliente.checkout.sessions.expire(sesion.id).catch(() => undefined);
+    return NextResponse.json({ error: "pedido" }, { status: 502 });
+  }
+  return NextResponse.json({ modo: "stripe", ...base, url: sesion.url, sessionId: sesion.id });
 }

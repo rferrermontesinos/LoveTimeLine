@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BRAND_CONTACT_EMAIL, BRAND_NAME } from "@config/brand";
+import { LIMITES } from "@datos/functions/colaboracion/servicio";
 import { Cabecera, CintaPrototipo } from "@/components/marco/Cabecera";
 import { CREDITOS_FOTOS } from "@/components/marco/creditosFotos";
 import { Pie } from "@/components/marco/Pie";
@@ -27,7 +28,7 @@ export default async function Privacidad({ params }: { params: Promise<{ locale:
           <p className="text-md">{t("intro")}</p>
           <section className="space-y-3 rounded-[var(--radius-carta)] bg-verde p-6 text-tinta">
             <h2 className="tipo-subtitular text-xl">{t("prototipoTitulo")}</h2>
-            <p>{t("prototipo")}</p>
+            <p>{t("prototipo", { dias: LIMITES.diasEnlace })}</p>
           </section>
           <section className="space-y-3">
             <h2 className="tipo-subtitular text-xl">{t("realTitulo")}</h2>

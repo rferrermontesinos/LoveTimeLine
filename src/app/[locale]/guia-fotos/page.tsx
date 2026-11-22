@@ -9,6 +9,9 @@ import { packsActivos } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { obtenerCatalogo } from "@/lib/servidor/catalogo";
 
+/** Los precios y los packs salen del catálogo: con la base conectada, la página se rehace cada 5 minutos. */
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "guia" });
