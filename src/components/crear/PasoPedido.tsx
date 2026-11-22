@@ -7,7 +7,7 @@ import { VistaCaja } from "@/components/carta/VistaCaja";
 import { Boton } from "@/components/ui/Boton";
 import { Aviso, Interruptor } from "@/components/ui/Piezas";
 import { GRAVEDAD, validarMazo, type Aviso as AvisoMazo } from "@/domain/mazo/validar";
-import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from "@/domain/precios/cotizar";
+import { baseMazo, CARTAS_PORTADA, formatearImporte, precioDeExtra, type LineaCotizacion } from "@/domain/precios/cotizar";
 import { textoEn } from "@/domain/precios/tipos";
 import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
@@ -352,7 +352,7 @@ export function PasoPedido() {
               <span className="font-bold">{t("total")}</span>
               <span className="tipo-titular text-3xl leading-none">{dinero(cotizacion.totalCents)}</span>
             </div>
-            <p className="mt-3 text-sm text-tinta-2">{t("cartasImpresas", { n: cotizacion.cartasFisicas })}</p>
+            <p className="mt-3 text-sm text-tinta-2">{t("cartasImpresas", { n: cotizacion.cartasFisicas, extras: cotizacion.cartasFisicas > Math.max(cotizacion.cartas, cotizacion.minimo) + CARTAS_PORTADA ? "si" : "no" })}</p>
 
             <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm font-semibold">
               <input type="checkbox" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-tinta)]" />

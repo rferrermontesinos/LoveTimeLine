@@ -1,7 +1,7 @@
 {
   "estilo": {
     "titulo": "Choose the style",
-    "texto": "Colours, title, box and game extras. The preview updates as you go.",
+    "texto": "{extras, select, si {Colours, title, dedication, box and game extras} other {Colours, title, dedication and box}}. The preview updates as you go.",
     "estilo": "Style",
     "tinta": "Colours",
     "tintaAyuda": "The main colour goes on the corners and the date side; the second one on the details of cards without a photo.",

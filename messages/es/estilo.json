@@ -1,7 +1,7 @@
 {
   "estilo": {
     "titulo": "Elige el estilo",
-    "texto": "Colores, título, caja y extras de juego. La vista previa cambia al momento.",
+    "texto": "{extras, select, si {Colores, título, dedicatoria, caja y extras de juego} other {Colores, título, dedicatoria y caja}}. La vista previa cambia al momento.",
     "estilo": "Estilo",
     "tinta": "Colores",
     "tintaAyuda": "El color principal va en las esquinas y en la cara de la fecha; el segundo, en los detalles de las cartas sin foto.",

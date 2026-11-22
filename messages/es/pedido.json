@@ -17,7 +17,7 @@
       "caja": "{n, plural, one {Caja extra} other {# cajas extra}}",
       "envio": "Envío en España"
     },
-    "cartasImpresas": "Se imprimen {n} cartas: recuerdos, portada y extras de juego.",
+    "cartasImpresas": "Se imprimen {n} cartas: {extras, select, si {recuerdos, portada y extras de juego} other {recuerdos y portada}}.",
     "confirmacion": "He revisado fotos, fechas y textos: se imprimirá tal cual.",
     "pagarPrueba": "Pagar {total} (prueba)",
     "pagando": "Preparando el pago…",

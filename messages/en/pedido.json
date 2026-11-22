@@ -17,7 +17,7 @@
       "caja": "{n, plural, one {Extra box} other {# extra boxes}}",
       "envio": "Shipping in Spain"
     },
-    "cartasImpresas": "{n} cards will be printed: memories, cover and game extras.",
+    "cartasImpresas": "{n} cards will be printed: {extras, select, si {memories, cover and game extras} other {memories and cover}}.",
     "confirmacion": "I’ve checked photos, dates and texts: it will be printed as is.",
     "pagarPrueba": "Pay {total} (test)",
     "pagando": "Preparing the payment…",

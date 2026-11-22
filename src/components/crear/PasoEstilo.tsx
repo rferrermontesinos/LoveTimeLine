@@ -60,7 +60,7 @@ export function PasoEstilo() {
     <div className="space-y-6">
       <header>
         <h1 className="tipo-titular text-[clamp(2.2rem,6vw,3.4rem)] leading-[0.95]">{t("titulo")}</h1>
-        <p className="mt-2 max-w-2xl text-md text-tinta-2">{t("texto")}</p>
+        <p className="mt-2 max-w-2xl text-md text-tinta-2">{t("texto", { extras: mecanicas.length > 0 ? "si" : "no" })}</p>
       </header>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)]">
