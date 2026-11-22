@@ -47,7 +47,7 @@ function entradasDe(cliente: ClienteColaboracion, enlace: EnlaceDueno, espera: A
         }
         try {
           const r = await abrirAportacion(paquete, enlace.llaves, enlace.id);
-          return { foto: r.foto, grupo: `lote:${r.lote}`, autor: r.autor };
+          return { foto: r.foto, grupo: `lote:${r.lote}`, autor: r.autor, deQuienManda: r.deQuienManda };
         } catch (e) {
           // Un paquete que nunca se podrá abrir no se guarda más.
           if (esInservible(e)) await cliente.quitar(enlace.id, a.id, enlace.token).catch(() => undefined);

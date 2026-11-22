@@ -1,7 +1,8 @@
 /**
  * Lo que va dentro de cada aportación cifrada: los datos de la foto (nombre, huella, medidas, la
- * fecha que se le ha propuesto en el móvil de quien la manda), la copia de trabajo y la miniatura.
- * La foto original no viaja: la copia es un JPEG nuevo, sin GPS ni el resto de metadatos.
+ * fecha que se le ha propuesto en el móvil de quien la manda y, desde el 22-11-2026, la fecha y la
+ * frase que le haya puesto esa persona), la copia de trabajo y la miniatura. La foto original no
+ * viaja: la copia es un JPEG nuevo, sin GPS ni el resto de metadatos.
  *
  * Formato: largo de los datos (4 bytes) · datos en JSON · largo de la copia (4 bytes) · copia · miniatura.
  *
@@ -9,6 +10,7 @@
  */
 import { esFechaValida, type FechaCarta } from "@/domain/fechas/fecha";
 import { MAX_SUGERENCIAS, type Confianza, type FuenteDetectada, type MotivoRevision, type PistaFecha, type ResultadoFecha } from "@/domain/fechas/proponer";
+import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import { concatenar } from "./cifrado";
 
 export const VERSION_APORTACION = 1;
@@ -36,7 +38,18 @@ export interface DatosAportacion {
   /** Fotos mandadas de una vez: sirve para reconocer una sesión de fotos de fotos. */
   lote: string;
   enviadaEn: number;
+  /**
+   * La fecha que le ha puesto quien la manda, escrita o con una sugerencia; null si ha borrado la
+   * que traía. Sin el campo, no la ha tocado y vale `propuesta`. Opcional porque los paquetes de
+   * antes del 22-11-2026 no lo traen: por eso la versión sigue siendo la 1.
+   */
+  fecha?: FechaCarta | null;
+  /** La frase para la carta que ha escrito quien la manda, si ha escrito alguna (desde el 22-11-2026). */
+  descripcion?: string;
 }
+
+/** Lo que pone quien manda la foto para su carta: la fecha (si la ha tocado) y la frase. */
+export type DeQuienManda = Pick<DatosAportacion, "fecha" | "descripcion">;
 
 export interface Aportacion {
   datos: DatosAportacion;
@@ -84,6 +97,14 @@ function texto(x: unknown, max: number): string | null {
   return limpio.length > 0 && limpio.length <= max ? limpio : null;
 }
 
+/**
+ * Una frase tal como viaja: los saltos de línea y demás caracteres de control pasan a espacios, y
+ * sin espacios al principio ni al final. Se cuenta por caracteres, como en Cartas (un emoji, uno).
+ */
+export function limpiarFrase(x: string): string {
+  return x.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+}
+
 function fecha(x: unknown): FechaCarta | null {
   if (!esObjeto(x)) return null;
   const f: FechaCarta = { anio: x.anio as number };
@@ -125,7 +146,7 @@ export function validarDatos(x: unknown): DatosAportacion {
   if (x.autor !== null && !autor) throw new ErrorAportacion("autor");
   if (typeof x.lote !== "string" || !/^[A-Za-z0-9_-]{8,64}$/.test(x.lote)) throw new ErrorAportacion("lote");
   if (typeof x.enviadaEn !== "number" || !Number.isFinite(x.enviadaEn) || x.enviadaEn < 0) throw new ErrorAportacion("envío");
-  return {
+  const datos: DatosAportacion = {
     v: VERSION_APORTACION,
     nombreArchivo,
     tipoArchivo: x.tipoArchivo.toLowerCase(),
@@ -139,6 +160,17 @@ export function validarDatos(x: unknown): DatosAportacion {
     lote: x.lote,
     enviadaEn: x.enviadaEn,
   };
+  if (x.fecha !== undefined) {
+    const puesta = x.fecha === null ? null : fecha(x.fecha);
+    if (x.fecha !== null && !puesta) throw new ErrorAportacion("fecha puesta");
+    datos.fecha = puesta;
+  }
+  if (x.descripcion !== undefined) {
+    const frase = typeof x.descripcion === "string" ? limpiarFrase(x.descripcion) : null;
+    if (frase === null || [...frase].length > MAX_DESCRIPCION) throw new ErrorAportacion("frase");
+    if (frase) datos.descripcion = frase;
+  }
+  return datos;
 }
 
 /** ¿Empieza como un JPEG? (las copias y miniaturas siempre lo son). */

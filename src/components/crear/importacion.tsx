@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Aviso, CerrarAviso, Franja } from "@/components/ui/Piezas";
+import type { DeQuienManda } from "@/domain/colaboracion/aportacion";
 import { crearDetectorSesion } from "@/domain/fechas/sesion";
 import { cargarMazo, esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
 import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo, type FotoImportada } from "@/lib/importar/procesar";
@@ -34,6 +35,8 @@ export interface FotoLeida {
   grupo: string;
   /** Quien la mandó por el enlace, si dejó su nombre. */
   autor: string | null;
+  /** La fecha y la frase que le puso quien la mandó por el enlace, si las puso. */
+  deQuienManda?: DeQuienManda;
 }
 
 /** Una foto por añadir al mazo. */
@@ -166,7 +169,7 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
             if (nueva) {
               let sesion = sesiones.get(leida.grupo);
               if (!sesion) sesiones.set(leida.grupo, (sesion = crearDetectorSesion(res.entrada.hoy)));
-              let carta = cartaDesdeFoto(leida.foto, propReverso, Date.now());
+              let carta = cartaDesdeFoto(leida.foto, propReverso, Date.now(), leida.deQuienManda);
               const { enBlanco, anteriores } = sesion.registrar(carta.id, leida.foto.propuesta);
               if (anteriores.length) {
                 despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo" });

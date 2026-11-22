@@ -5,7 +5,7 @@
  */
 import path from "node:path";
 import { devices, expect, test, type Page } from "@playwright/test";
-import { conFecha, fotos, leerMazo } from "./mazo-utiles";
+import { conFecha, fotos, leerMazo, sinFechaAlSubir } from "./mazo-utiles";
 
 async function crearEnlace(page: Page): Promise<string> {
   await page.goto("/es/crear?pack=pequeno");
@@ -23,7 +23,7 @@ async function crearEnlace(page: Page): Promise<string> {
 }
 
 test.describe("pedir fotos con un enlace", () => {
-  test("otra persona manda fotos desde su móvil, llegan cifradas y entran en el mazo con su fecha", async ({ page, browser }) => {
+  test("otra persona manda fotos desde su móvil, con el año y una frase si quiere, y entran en el mazo así", async ({ page, browser }) => {
     test.setTimeout(180_000);
     const url = await crearEnlace(page);
     const panel = page.getByTestId("panel-colaboracion");
@@ -46,12 +46,47 @@ test.describe("pedir fotos con un enlace", () => {
     await expect(movil.getByTestId("permiso-aportar")).toContainText("Marca esta casilla para poder mandar las fotos.");
     await movil.getByLabel("Tu nombre").fill("Tía Carmen");
     await movil.getByRole("checkbox", { name: /Tengo permiso/ }).check();
-    const archivos = fotos().filter(conFecha).slice(0, 3);
+    // Dos con su fecha y una que sale sin ella.
+    const enBlanco = fotos().find(sinFechaAlSubir)!;
+    const archivos = [...fotos().filter(conFecha).slice(0, 2), enBlanco];
+    // Se eligen desde el botón, aunque haya que bajar hasta él.
+    await movil.getByRole("button", { name: "Elegir fotos" }).scrollIntoViewIfNeeded();
     await movil.getByTestId("entrada-aportar").setInputFiles(archivos);
+
+    // Antes de mandarlas, las ve como cartas, a la vista y antes que el formulario: con su año abajo,
+    // o en blanco para escribirlo, y una frase si quiere.
+    const cartas = movil.getByTestId("foto-por-mandar");
+    await expect(cartas).toHaveCount(3, { timeout: 60_000 });
+    await expect(movil.getByRole("heading", { name: "Tus 3 fotos" })).toBeVisible();
+    await expect(cartas.first()).toBeInViewport();
+    await expect(movil.getByText("Están haciendo un mazo de cartas", { exact: false })).toBeHidden();
+    await expect(cartas.locator("input:placeholder-shown")).toHaveCount(1);
+    const i = await cartas.evaluateAll((els) => els.findIndex((el) => el.querySelector("input")!.value === ""));
+    const sinAnio = cartas.nth(i);
+    const otra = cartas.nth(i === 0 ? 1 : 0);
+    // Sin elegir precisión ni nada más: solo el año.
+    await expect(movil.getByRole("radio")).toHaveCount(0);
+    const anio = sinAnio.getByRole("textbox", { name: /^Año de la foto \d/ });
+    await anio.fill("2999");
+    await expect(sinAnio.getByRole("alert")).toHaveText("La fecha no puede ser posterior a hoy.");
+    await anio.fill("1998");
+    await expect(sinAnio.getByRole("alert")).toHaveCount(0);
+    // Una frase demasiado larga no sale: se avisa y se queda todo aquí.
+    const frase = otra.getByRole("textbox", { name: /^Frase de la foto \d/ });
+    await frase.fill("x".repeat(95));
+    await expect(otra.getByText("95 / 90")).toBeVisible();
+    await movil.getByRole("button", { name: "Mandar las 3 fotos" }).click();
+    await expect(movil.getByRole("alert").filter({ hasText: "Hay una frase demasiado larga: acórtala un poco." })).toBeVisible();
+    await expect(frase).toBeFocused();
+    await expect(cartas).toHaveCount(3);
+    await frase.fill("Verano en la playa");
+    await movil.getByRole("button", { name: "Mandar las 3 fotos" }).click();
     await expect(movil.getByTestId("resultado-aportar")).toHaveText("¡Hecho! Han llegado 3 fotos.", { timeout: 60_000 });
+    await expect(cartas).toHaveCount(0);
     // La misma foto otra vez no sale de nuevo.
     await movil.getByTestId("entrada-aportar").setInputFiles(archivos.slice(0, 1));
-    await expect(movil.getByTestId("resultado-aportar")).toHaveText("1 ya estaba enviada");
+    await expect(movil.getByTestId("descartes-aportar")).toHaveText("1 ya estaba elegida o enviada");
+    await expect(cartas).toHaveCount(0);
 
     // Quien hace el mazo las ve llegar. Sin su propio permiso de las fotos, no las añade.
     await panel.getByRole("button", { name: "Mirar ahora" }).click();
@@ -65,9 +100,12 @@ test.describe("pedir fotos con un enlace", () => {
     // Ya en el mazo guardado, se borran del servicio: no queda ninguna esperando.
     await expect(panel.getByText("Aún no ha llegado ninguna.", { exact: false })).toBeVisible();
     const mazo = await leerMazo(page);
-    const cartas = (mazo?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown }[];
-    expect(cartas.map((c) => c.nombreArchivo).sort()).toEqual(archivos.map((a) => path.basename(a)).sort());
-    expect(cartas.every((c) => c.fecha)).toBe(true);
+    const enElMazo = (mazo?.cartas ?? []) as { nombreArchivo?: string; fecha: unknown; fuente: unknown; descripcion: string }[];
+    expect(enElMazo.map((c) => c.nombreArchivo).sort()).toEqual(archivos.map((a) => path.basename(a)).sort());
+    expect(enElMazo.every((c) => c.fecha)).toBe(true);
+    // Con el año y la frase que les puso quien las mandó; ese año cuenta como puesto a mano.
+    expect(enElMazo.find((c) => c.nombreArchivo === path.basename(enBlanco))).toMatchObject({ fecha: { anio: 1998 }, fuente: "manual" });
+    expect(enElMazo.filter((c) => c.descripcion === "Verano en la playa")).toHaveLength(1);
     await expect(page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem")).toHaveCount(3);
 
     // Al volver otro día, el enlace sigue ahí, plegado en su línea, y las cartas se ven enseguida.

@@ -126,6 +126,21 @@ describe("subida colaborativa de punta a punta (sin navegador)", () => {
     expect(huellaDelEnlace(`#k=${h}!`)).toBeNull();
   });
 
+  it("lleva la fecha y la frase que pone quien la manda; sin tocar la fecha, no la manda", async () => {
+    const cliente = montar();
+    const dueno = await crearComoDueno(cliente);
+    const { clavePublica } = await cliente.info(dueno.id);
+    const clave = (await claveComprobada(clavePublica, dueno.huellaClave))!;
+    const extra = { autor: null, lote: "lote_prueba_04", enviadaEn: 1 };
+    const conTodo = await prepararAportacion(foto(), { ...extra, fecha: { anio: 1998 }, descripcion: " La boda\nde los abuelos " }, clave, dueno.id);
+    expect((await abrirAportacion(conTodo, dueno.llaves, dueno.id, medidorFalso)).deQuienManda).toEqual({ fecha: { anio: 1998 }, descripcion: "La boda de los abuelos" });
+    // Borrada a propósito: en blanco. Y una frase demasiado larga se corta en vez de estropear el paquete.
+    const borrada = await prepararAportacion(foto(), { ...extra, fecha: null, descripcion: "x".repeat(120) }, clave, dueno.id);
+    expect((await abrirAportacion(borrada, dueno.llaves, dueno.id, medidorFalso)).deQuienManda).toEqual({ fecha: null, descripcion: "x".repeat(90) });
+    const sinTocar = await prepararAportacion(foto(), { ...extra, descripcion: "  " }, clave, dueno.id);
+    expect((await abrirAportacion(sinTocar, dueno.llaves, dueno.id, medidorFalso)).deQuienManda).toEqual({});
+  });
+
   it("recorta el nombre del archivo y deja el autor en null si está vacío", async () => {
     const cliente = montar();
     const dueno = await crearComoDueno(cliente);

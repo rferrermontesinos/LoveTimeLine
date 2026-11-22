@@ -1,5 +1,7 @@
 import { PRINT } from "@config/print";
 import { FRASE_EN_ANVERSO } from "@config/prototipo";
+import type { DeQuienManda } from "@/domain/colaboracion/aportacion";
+import { estadoInicial, puestaAMano } from "@/domain/fechas/estado";
 import { pppEfectivo, recorteCentrado, recorteReversoDesdeAnverso, type Rect } from "@/domain/imagen/recorte";
 import { ordenarPorFecha, rangoAnios } from "@/domain/mazo/ordenar";
 import type { CartaParaValidar } from "@/domain/mazo/validar";
@@ -28,9 +30,13 @@ export function recortesIniciales(ancho: number, alto: number, propReverso: numb
 /**
  * Carta nueva a partir de una foto importada. La fecha solo viene puesta si era segura; si no,
  * queda en blanco con sus sugerencias y el motivo. De los metadatos solo se guarda el resultado.
+ *
+ * Si llega por el enlace con la fecha y la frase que le puso quien la mandó (`deQuienManda`), entra
+ * con ellas: su fecha cuenta como puesta a mano, y así ninguna regla automática la deja en blanco.
  */
-export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: number): CartaFoto {
-  const { automatica, sugerencias, motivo } = f.propuesta;
+export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: number, deQuienManda: DeQuienManda = {}): CartaFoto {
+  const inicial = estadoInicial(f.propuesta);
+  const fecha = deQuienManda.fecha === undefined ? inicial : puestaAMano(inicial, deQuienManda.fecha);
   return {
     tipo: "foto",
     id: f.id,
@@ -41,13 +47,9 @@ export function cartaDesdeFoto(f: FotoImportada, propReverso: number, ahora: num
     alto: f.alto,
     anchoOriginal: f.anchoOriginal,
     altoOriginal: f.altoOriginal,
-    fecha: automatica?.fecha ?? null,
-    fuente: automatica?.fuente ?? null,
-    confianza: automatica?.confianza ?? null,
+    ...fecha,
     revisar: false,
-    motivo: automatica ? undefined : motivo,
-    sugerencias: automatica ? [] : sugerencias.map(({ fecha, fuente, motivo: m }) => ({ fecha, fuente, motivo: m })),
-    descripcion: "",
+    descripcion: deQuienManda.descripcion ?? "",
     descripcionEnAnverso: false,
     ...recortesIniciales(f.ancho, f.alto, propReverso),
     reversoPersonalizado: false,

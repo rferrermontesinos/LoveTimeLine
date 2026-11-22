@@ -3,8 +3,9 @@
  * (fecha, copia de trabajo y miniatura, sin GPS ni otros metadatos) y se cifra para el dueño del
  * mazo antes de salir.
  */
-import { empaquetar, MAX_AUTOR, VERSION_APORTACION, type DatosAportacion } from "@/domain/colaboracion/aportacion";
+import { empaquetar, limpiarFrase, MAX_AUTOR, VERSION_APORTACION, type DatosAportacion, type DeQuienManda } from "@/domain/colaboracion/aportacion";
 import { cifrarAportacion, deBase64url, huella, pareceClavePublica } from "@/domain/colaboracion/cifrado";
+import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import type { FotoImportada } from "@/lib/importar/procesar";
 
 /**
@@ -22,13 +23,15 @@ export async function claveComprobada(clavePublica: string, huellaEsperada: stri
   return (await huella(cruda)) === huellaEsperada ? cruda : null;
 }
 
+/** Lo que acompaña a cada foto: quién la manda (si lo dice), su envío y, si las ha puesto, su fecha y su frase. */
+export interface ExtraAportacion extends DeQuienManda {
+  autor: string | null;
+  lote: string;
+  enviadaEn: number;
+}
+
 /** El paquete cifrado de una foto, listo para mandar. */
-export async function prepararAportacion(
-  foto: FotoImportada,
-  extra: { autor: string | null; lote: string; enviadaEn: number },
-  clavePublica: Uint8Array,
-  invitacionId: string,
-): Promise<Uint8Array<ArrayBuffer>> {
+export async function prepararAportacion(foto: FotoImportada, extra: ExtraAportacion, clavePublica: Uint8Array, invitacionId: string): Promise<Uint8Array<ArrayBuffer>> {
   // Con los límites que comprueba quien lo recibe: nombre de archivo corto y autor sin espacios de más.
   const datos: DatosAportacion = {
     v: VERSION_APORTACION,
@@ -44,6 +47,10 @@ export async function prepararAportacion(
     lote: extra.lote,
     enviadaEn: extra.enviadaEn,
   };
+  if (extra.fecha !== undefined) datos.fecha = extra.fecha;
+  // La pantalla no deja mandar una frase más larga; si llegara, se corta para que el paquete valga.
+  const frase = limpiarFrase([...limpiarFrase(extra.descripcion ?? "")].slice(0, MAX_DESCRIPCION).join(""));
+  if (frase) datos.descripcion = frase;
   const [copia, mini] = await Promise.all([foto.copia.arrayBuffer(), foto.mini.arrayBuffer()]);
   return cifrarAportacion(empaquetar(datos, new Uint8Array(copia), new Uint8Array(mini)), clavePublica, invitacionId);
 }

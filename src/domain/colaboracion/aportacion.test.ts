@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { desempaquetar, empaquetar, ErrorAportacion, esJpeg, medidasJpeg, validarDatos, VERSION_APORTACION, type DatosAportacion } from "./aportacion";
+import { desempaquetar, empaquetar, ErrorAportacion, esJpeg, limpiarFrase, medidasJpeg, validarDatos, VERSION_APORTACION, type DatosAportacion } from "./aportacion";
 
 /** Bytes que empiezan como un JPEG (no hace falta una imagen de verdad para el formato). */
 const jpeg = (n: number, relleno = 0x11) => {
@@ -93,6 +93,41 @@ describe("datos de una aportación", () => {
     const auto = datos().propuesta.automatica!;
     expect(error(() => validarDatos(datos({ propuesta: { ...blanco, automatica: { ...auto, pista: "adivinada" } } })))).toBe("fecha");
     expect(error(() => validarDatos(datos({ propuesta: { ...blanco, automatica: { ...auto, fecha: { anio: 2019, mes: 2, dia: 30 } } } })))).toBe("fecha");
+  });
+});
+
+describe("la fecha y la frase que pone quien manda la foto (desde el 22-11-2026)", () => {
+  it("los paquetes de antes, sin ellas, siguen valiendo y no las traen", () => {
+    const d = validarDatos(JSON.parse(JSON.stringify(datos())));
+    expect(d).not.toHaveProperty("fecha");
+    expect(d).not.toHaveProperty("descripcion");
+  });
+
+  it("acepta su fecha, también en blanco a propósito, y su frase limpia", () => {
+    expect(validarDatos(datos({ fecha: { anio: 1998 } })).fecha).toEqual({ anio: 1998 });
+    expect(validarDatos(datos({ fecha: { anio: 1998, mes: 7, dia: 4 } })).fecha).toEqual({ anio: 1998, mes: 7, dia: 4 });
+    expect(validarDatos(datos({ fecha: null })).fecha).toBeNull();
+    expect(validarDatos(datos({ descripcion: "  El verano\nen la playa\u0000 " })).descripcion).toBe("El verano en la playa");
+    expect(validarDatos(datos({ descripcion: "❤".repeat(90) })).descripcion).toBe("❤".repeat(90));
+    // Una frase vacía es como no haber escrito nada.
+    expect(validarDatos(datos({ descripcion: "   " }))).not.toHaveProperty("descripcion");
+  });
+
+  it("no deja pasar una fecha que no existe ni una frase rara o demasiado larga", () => {
+    expect(error(() => validarDatos(datos({ fecha: { anio: 2019, mes: 2, dia: 30 } })))).toBe("fecha puesta");
+    expect(error(() => validarDatos(datos({ fecha: { anio: 1200 } })))).toBe("fecha puesta");
+    expect(error(() => validarDatos(datos({ fecha: "1998" })))).toBe("fecha puesta");
+    expect(error(() => validarDatos(datos({ descripcion: 7 })))).toBe("frase");
+    expect(error(() => validarDatos(datos({ descripcion: "x".repeat(91) })))).toBe("frase");
+  });
+
+  it("la frase se limpia igual al mandarla y al abrirla", () => {
+    expect(limpiarFrase("\tHola\r\nabuela  ")).toBe("Hola  abuela");
+  });
+
+  it("viajan dentro del paquete", () => {
+    const d = datos({ fecha: { anio: 1998 }, descripcion: "La boda de los abuelos" });
+    expect(desempaquetar(empaquetar(d, jpeg(100), jpeg(50))).datos).toMatchObject({ fecha: { anio: 1998 }, descripcion: "La boda de los abuelos" });
   });
 });
 

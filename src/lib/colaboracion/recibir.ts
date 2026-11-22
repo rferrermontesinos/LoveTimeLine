@@ -3,7 +3,7 @@
  * comprobar que son imágenes de verdad y dejarla lista para entrar en el mazo como una foto más.
  */
 import { PRINT } from "@config/print";
-import { desempaquetar, ErrorAportacion, medidasJpeg } from "@/domain/colaboracion/aportacion";
+import { desempaquetar, ErrorAportacion, medidasJpeg, type DeQuienManda } from "@/domain/colaboracion/aportacion";
 import { descifrarAportacion, ErrorCifrado } from "@/domain/colaboracion/cifrado";
 import { nuevoId, type FotoImportada } from "@/lib/importar/procesar";
 
@@ -13,6 +13,8 @@ export interface FotoRecibida {
   autor: string | null;
   /** Las fotos que mandó de una vez. */
   lote: string;
+  /** La fecha (si la tocó) y la frase que le puso al mandarla. Vacío en los paquetes de antes del 22-11-2026. */
+  deQuienManda: DeQuienManda;
 }
 
 /** Decodifica un JPEG y devuelve sus medidas reales (en el navegador, con createImageBitmap). */
@@ -48,6 +50,9 @@ export async function abrirAportacion(paquete: Uint8Array, llaves: CryptoKeyPair
   const { datos, copia, mini } = desempaquetar(await descifrarAportacion(paquete, llaves, invitacionId));
   const medidas = await medir(copia, PRINT.ladoMaximoCopiaPx, medidor);
   await medir(mini, PRINT.ladoMiniaturaPx, medidor);
+  const deQuienManda: DeQuienManda = {};
+  if (datos.fecha !== undefined) deQuienManda.fecha = datos.fecha;
+  if (datos.descripcion) deQuienManda.descripcion = datos.descripcion;
   return {
     foto: {
       id: nuevoId(),
@@ -65,5 +70,6 @@ export async function abrirAportacion(paquete: Uint8Array, llaves: CryptoKeyPair
     },
     autor: datos.autor,
     lote: datos.lote,
+    deQuienManda,
   };
 }
