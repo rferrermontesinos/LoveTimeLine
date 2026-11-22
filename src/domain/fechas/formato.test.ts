@@ -11,6 +11,14 @@ describe("formato de fechas", () => {
     expect(etiquetaMesCarta(3, "ca")).toBe("MAR");
   });
 
+  it("dos meses nunca comparten etiqueta: si las 3 letras coinciden, lleva las que hagan falta", () => {
+    expect(Array.from({ length: 12 }, (_, i) => etiquetaMesCarta(i + 1, "fr"))).toEqual(["JAN", "FÉV", "MAR", "AVR", "MAI", "JUIN", "JUIL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]);
+    for (const idioma of ["es", "en", "ca", "fr", "el", "de", "it", "pt", "nl", "pl", "ru", "uk", "ja", "zh", "ar", "he", "tr", "sv", "fi"]) {
+      const etiquetas = Array.from({ length: 12 }, (_, i) => etiquetaMesCarta(i + 1, idioma));
+      expect(new Set(etiquetas).size, idioma).toBe(12);
+    }
+  });
+
   it("compone el texto del reverso según la precisión", () => {
     expect(textoFechaCarta({ anio: 2019, mes: 8, dia: 14 }, "es")).toEqual({ anio: "2019", linea: "14 AGO" });
     expect(textoFechaCarta({ anio: 2019, mes: 6 }, "es")).toEqual({ anio: "2019", linea: "JUN" });

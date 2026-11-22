@@ -38,3 +38,15 @@ export function cargarFuentesCartas(plantilla: Plantilla): Promise<void> {
 export function fuentesCartasCargadas(plantilla: Plantilla): boolean {
   return Object.values(plantilla.fuentes).every((f) => cargadas.has(clave(f)));
 }
+
+/**
+ * Para el archivo de impresión, que no puede salir con otra letra: con la de respaldo, el año y
+ * el día de la fecha llegan a pisarse. Reintenta una vez las que falten y, si siguen faltando,
+ * falla, para que quien lo pide lo diga y se pueda volver a intentar.
+ */
+export async function asegurarFuentesCartas(plantilla: Plantilla): Promise<void> {
+  await cargarFuentesCartas(plantilla);
+  if (fuentesCartasCargadas(plantilla)) return;
+  await cargarFuentesCartas(plantilla);
+  if (!fuentesCartasCargadas(plantilla)) throw new Error("No se han podido cargar las fuentes de las cartas");
+}

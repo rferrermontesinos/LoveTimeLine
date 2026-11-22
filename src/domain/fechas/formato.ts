@@ -5,17 +5,36 @@ const ABREVIATURAS: Record<string, string[]> = {
   ca: ["GEN", "FEB", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OCT", "NOV", "DES"],
 };
 
-/** Etiqueta de mes de 3 letras en mayúsculas para la carta, según el idioma del mazo. */
+/** Las etiquetas de los 12 meses de cada idioma, ya calculadas. */
+const ETIQUETAS = new Map<string, string[]>();
+
+/**
+ * Etiqueta de mes en mayúsculas para la carta, según el idioma del mazo: 3 letras, o las que hagan
+ * falta para que dos meses no se confundan en un juego de ordenar fechas (en francés, junio y julio
+ * serían «JUI» los dos: quedan «JUIN» y «JUIL»).
+ */
 export function etiquetaMesCarta(mes: number, idioma: string): string {
   const base = idioma.split("-")[0]!.toLowerCase();
   const tabla = ABREVIATURAS[base];
   if (tabla) return tabla[mes - 1]!;
-  const texto = new Intl.DateTimeFormat(idioma, { month: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2001, mes - 1, 15)));
-  return texto
-    .replace(/[.\s]/g, "")
-    .normalize("NFC")
-    .slice(0, 3)
-    .toLocaleUpperCase(idioma);
+  let etiquetas = ETIQUETAS.get(idioma);
+  if (!etiquetas) {
+    const formato = new Intl.DateTimeFormat(idioma, { month: "short", timeZone: "UTC" });
+    const nombres = Array.from({ length: 12 }, (_, i) =>
+      formato
+        .format(new Date(Date.UTC(2001, i, 15)))
+        .replace(/[.\s]/g, "")
+        .normalize("NFC"),
+    );
+    const prefijo = (n: string, largo: number) => n.slice(0, largo).toLocaleUpperCase(idioma);
+    etiquetas = nombres.map((n, i) => {
+      let largo = 3;
+      while (largo < n.length && nombres.some((otro, j) => j !== i && prefijo(otro, largo) === prefijo(n, largo))) largo++;
+      return prefijo(n, largo);
+    });
+    ETIQUETAS.set(idioma, etiquetas);
+  }
+  return etiquetas[mes - 1]!;
 }
 
 /** Lo que muestra el reverso: el año grande y una línea con día y mes, mes solo, o nada. */

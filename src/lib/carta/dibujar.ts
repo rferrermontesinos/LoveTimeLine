@@ -9,7 +9,7 @@
  */
 import { PRINT } from "@config/print";
 import { textoFechaCarta } from "@/domain/fechas/formato";
-import { colorGlifo, obtenerPaleta, rutaIcono, superficie, type RolFuente, type Superficie, type TextoEnZona } from "@/lib/estilos";
+import { colorGlifo, obtenerPaleta, rutaIcono, superficie, type Plantilla, type RolFuente, type Superficie, type TextoEnZona } from "@/lib/estilos";
 import { ajustarTexto, partirParrafos, type Ajuste } from "./ajuste";
 import type { Cara, DatosCarta, OpcionesDibujo } from "./tipos";
 
@@ -53,6 +53,9 @@ interface Lienzo {
   /** Anchos medidos en esta cara, por fuente y texto (en tamaños de letra). */
   medidas: Map<string, number>;
 }
+
+/** Lo justo para medir textos: el contexto, la plantilla (sus fuentes) y lo ya medido. */
+type Medicion = Pick<Lienzo, "ctx" | "medidas"> & { op: Pick<OpcionesDibujo, "plantilla"> };
 
 function crearLienzo(ctx: Ctx, op: OpcionesDibujo): Lienzo {
   const k = op.pxPorMm;
@@ -123,7 +126,7 @@ export function dibujarCara(ctx: Ctx, cara: Cara, datos: DatosCarta, op: Opcione
 
 /* ───────────────────────── Piezas comunes ───────────────────────── */
 
-function fuenteCss(op: OpcionesDibujo, rol: RolFuente, px: number): string {
+function fuenteCss(op: Pick<OpcionesDibujo, "plantilla">, rol: RolFuente, px: number): string {
   const f = op.plantilla.fuentes[rol];
   return `${f.peso} ${px.toFixed(2)}px "${f.familia}", "Bricolage Grotesque", Arial, sans-serif`;
 }
@@ -133,7 +136,7 @@ function fuente(lz: Lienzo, rol: RolFuente, tamanoMm: number) {
 }
 
 /** Ancho de un texto en tamaños de letra (em), medido con la letra de referencia. */
-function anchoEm(lz: Lienzo, rol: RolFuente, texto: string): number {
+function anchoEm(lz: Medicion, rol: RolFuente, texto: string): number {
   const clave = `${rol}\u0000${texto}`;
   let w = lz.medidas.get(clave);
   if (w === undefined) {
@@ -151,7 +154,7 @@ function anchoEm(lz: Lienzo, rol: RolFuente, texto: string): number {
  * Mide textos en mm a cualquier tamaño. Con espaciado, letra a letra como los dibuja
  * `textoEspaciado` (sin interletraje entre pares).
  */
-function medidor(lz: Lienzo, rol: RolFuente, espaciadoEm = 0) {
+function medidor(lz: Medicion, rol: RolFuente, espaciadoEm = 0) {
   if (!espaciadoEm) return (texto: string, tamanoMm: number) => anchoEm(lz, rol, texto) * tamanoMm;
   return (texto: string, tamanoMm: number) => {
     const letras = [...texto];
@@ -168,7 +171,7 @@ function lineasFijas(lz: Lienzo, rol: RolFuente, texto: string, tamanoMm: number
 
 /** Ajusta un texto a una caja (mm) con su tamaño máximo y mínimo. */
 function ajustar(
-  lz: Lienzo,
+  lz: Medicion,
   rol: RolFuente,
   texto: string,
   anchoMm: number,
@@ -610,6 +613,24 @@ function anversoPortada(lz: Lienzo, d: DatosCarta) {
   pestana(lz, "?", op.plantilla.pestana.tamanoValorAnverso, null, false);
 }
 
+/** La caja (mm) en que va el texto de la dedicatoria: su tarjeta de papel menos el relleno. */
+function cajaDedicatoria(g: Plantilla["portada"]): { ancho: number; alto: number } {
+  return { ancho: W - 2 * (g.margen + g.dedicatoria.relleno), alto: g.dedicatoria.alto - 2 * g.dedicatoria.relleno };
+}
+
+/**
+ * Si la dedicatoria no cabe entera detrás de la portada y se imprimiría cortada con «…». Se mide
+ * con la misma letra y en la misma caja con que se dibuja; para que mida como el archivo de
+ * impresión, con las fuentes de las cartas ya cargadas.
+ */
+export function dedicatoriaRecortada(ctx: Ctx, plantilla: Plantilla, texto: string): boolean {
+  const limpio = texto.trim();
+  if (!limpio) return false;
+  const g = plantilla.portada;
+  const caja = cajaDedicatoria(g);
+  return ajustar({ ctx, op: { plantilla }, medidas: new Map() }, "texto", limpio, caja.ancho, caja.alto, g.dedicatoria).recortado;
+}
+
 function reversoPortada(lz: Lienzo, d: DatosCarta) {
   const { ctx, op } = lz;
   const g = op.plantilla.portada;
@@ -621,7 +642,8 @@ function reversoPortada(lz: Lienzo, d: DatosCarta) {
   ctx.roundRect(lz.X(g.margen), lz.X(ded.arriba), lz.L(W - 2 * g.margen), lz.L(ded.alto), lz.L(ded.radio));
   ctx.fill();
   const texto = (d.dedicatoria ?? "").trim() || op.textos.dedicatoriaPorDefecto;
-  const a = ajustar(lz, "texto", texto, W - 2 * (g.margen + ded.relleno), ded.alto - 2 * ded.relleno, ded);
+  const caja = cajaDedicatoria(g);
+  const a = ajustar(lz, "texto", texto, caja.ancho, caja.alto, ded);
   fuente(lz, "texto", a.tamano);
   ctx.fillStyle = op.estilo.colores.tinta;
   ctx.textAlign = "left";

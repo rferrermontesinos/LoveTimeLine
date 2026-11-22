@@ -75,6 +75,31 @@ describe("fuentes de las cartas", () => {
     expect(pedidas).toEqual(["url(/fonts/cartas/titular.woff2)", "url(/fonts/cartas/texto.woff2)", "url(/fonts/cartas/titular.woff2)"]);
   });
 
+  it("para imprimir, reintenta una vez las que faltan y, si siguen faltando, falla", async () => {
+    const { asegurarFuentesCartas, fuentesCartasCargadas } = await cargar();
+    fallan.add("titular");
+    await expect(asegurarFuentesCartas(plantilla)).rejects.toThrow(/fuentes/);
+    expect(pedidas.filter((p) => p.includes("titular"))).toHaveLength(2);
+    expect(fuentesCartasCargadas(plantilla)).toBe(false);
+  });
+
+  it("para imprimir, si al reintentar cargan, sigue adelante", async () => {
+    const { asegurarFuentesCartas, fuentesCartasCargadas } = await cargar();
+    let intentos = 0;
+    fallan.add("titular");
+    vi.stubGlobal(
+      "FontFace",
+      class extends FontFaceFalsa {
+        override async load() {
+          if (this.origen.includes("titular") && ++intentos === 2) fallan.clear();
+          return super.load();
+        }
+      },
+    );
+    await expect(asegurarFuentesCartas(plantilla)).resolves.toBeUndefined();
+    expect(fuentesCartasCargadas(plantilla)).toBe(true);
+  });
+
   it("en el servidor no hace nada", async () => {
     vi.unstubAllGlobals();
     const { cargarFuentesCartas, fuentesCartasCargadas } = await cargar();

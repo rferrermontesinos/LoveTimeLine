@@ -10,6 +10,7 @@
     "tituloPorDefecto": "Our memories",
     "dedicatoria": "Dedication (optional)",
     "dedicatoriaAyuda": "Printed on the back of the cover. Up to {max} characters.",
+    "dedicatoriaNoCabe": "It doesn’t all fit on the card and would be cut off: shorten it or remove a line break.",
     "idiomaMazo": "Deck language",
     "idiomaMazoAyuda": "Months, card texts and instructions.",
     "mecanicas": "Free game extras",

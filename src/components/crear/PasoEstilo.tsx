@@ -17,6 +17,7 @@ import { cartaPortada, fotoCaja } from "@/lib/mazo/derivados";
 import type { CampoMazo, Mazo } from "@/lib/mazo/tipos";
 import { BloqueCaja } from "./BloqueCaja";
 import { useCrear } from "./contexto";
+import { useDedicatoriaRecortada } from "./useDedicatoriaRecortada";
 
 /**
  * Paso 3: colores (la elección principal), título, dedicatoria, caja, idioma y mecánicas gratis,
@@ -42,6 +43,7 @@ export function PasoEstilo() {
     observador.observe(el);
     return () => observador.disconnect();
   }, []);
+  const dedicatoriaCortada = useDedicatoriaRecortada(mazo?.estiloId, mazo?.dedicatoria ?? "");
 
   if (!mazo) return null;
   const estilo = obtenerEstilo(mazo.estiloId);
@@ -186,7 +188,10 @@ export function PasoEstilo() {
               className="w-full max-w-xl rounded-[12px] border-2 border-tinta bg-blanco px-3 py-2.5 text-base leading-relaxed"
             />
             <p id={`${id}-dedicatoria-ayuda`} className="mt-2 flex max-w-xl justify-between gap-3 text-sm text-tinta-2">
-              <span>{t("dedicatoriaAyuda", { max: MAX_DEDICATORIA })}</span>
+              {/* Si no cabe entera, se dice aquí mismo (pendiente de Marc): si no, solo se vería en la vista previa. */}
+              <span aria-live="polite" data-testid="dedicatoria-ayuda">
+                {dedicatoriaCortada ? <strong className="text-rojo-texto">{t("dedicatoriaNoCabe")}</strong> : t("dedicatoriaAyuda", { max: MAX_DEDICATORIA })}
+              </span>
               <span aria-hidden="true" className="shrink-0 tabular-nums">
                 {[...mazo.dedicatoria].length} / {MAX_DEDICATORIA}
               </span>

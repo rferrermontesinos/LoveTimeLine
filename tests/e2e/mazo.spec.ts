@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { PDFDocument } from "pdf-lib";
+import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
 import { PRINT } from "../../config/print";
 import { leerZip } from "../../src/lib/pdf/zip";
 import catalogo from "../../supabase/catalogo.json";
@@ -195,6 +195,9 @@ test.describe("mazo de principio a fin", () => {
     expect(medidas(soriano.getTrimBox())).toEqual([ancho, alto]);
     expect(medidas(soriano.getBleedBox())).toEqual([ancho + 4, alto + 4]);
     expect(medidas(soriano.getMediaBox())).toEqual([ancho + 4 + 2 * PRINT.marcasCorte.margenMm, alto + 4 + 2 * PRINT.marcasCorte.margenMm]);
+    // Sin ninguna fuente: el rótulo de cada página va como imagen (una sin incrustar no pasa las comprobaciones de la imprenta).
+    const fuentes = pdfSoriano.context.enumerateIndirectObjects().filter(([, o]) => o instanceof PDFDict && o.get(PDFName.of("Type")) === PDFName.of("Font"));
+    expect(fuentes).toHaveLength(0);
 
     // AGR (Tipia): un ZIP con el PDF de las caras, el de los reversos en el mismo orden y una nota; 4 mm de sangrado.
     const agr = await descargar("AGR · Tipia", "ZIP");

@@ -10,6 +10,7 @@
     "tituloPorDefecto": "Nuestros recuerdos",
     "dedicatoria": "Dedicatoria (opcional)",
     "dedicatoriaAyuda": "Va detrás de la portada. Hasta {max} caracteres.",
+    "dedicatoriaNoCabe": "No cabe entera en la carta y se cortaría: acórtala o quita algún salto de línea.",
     "idiomaMazo": "Idioma del mazo",
     "idiomaMazoAyuda": "Meses, textos de las cartas e instrucciones.",
     "mecanicas": "Extras de juego gratis",

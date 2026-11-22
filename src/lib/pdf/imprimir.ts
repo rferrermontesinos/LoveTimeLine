@@ -7,11 +7,11 @@
  * caras y otro con los reversos. Las cartas van en el orden del plan (ver plan.ts): la caja solo si
  * es la personalizada.
  */
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 import { BRAND_NAME } from "@config/brand";
 import { MM_POR_PULGADA, PRINT, paginaImprenta, type PerfilImprenta } from "@config/print";
 import { dibujarCara, medidasCara } from "@/lib/carta/dibujar";
-import { cargarFuentesCartas } from "@/lib/carta/fuentes";
+import { asegurarFuentesCartas } from "@/lib/carta/fuentes";
 import { textosCarta } from "@/lib/carta/textos";
 import type { DatosCarta } from "@/lib/carta/tipos";
 import { obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
@@ -125,8 +125,7 @@ async function nuevoPdf(titulo: string) {
   pdf.setCreator(BRAND_NAME);
   pdf.setSubject("Archivo de impresión / Print file");
   pdf.setCreationDate(new Date());
-  const fuente = await pdf.embedFont(StandardFonts.Helvetica);
-  return { pdf, fuente };
+  return { pdf };
 }
 
 /**
@@ -138,7 +137,8 @@ export async function generarArchivoImpresion(e: EntradaPdf, perfil: PerfilImpre
   const plantilla = obtenerPlantilla(estilo.plantilla);
   const paleta = obtenerPaleta(estilo, e.paletaId);
   const textos = textosCarta(e.idiomaMazo);
-  await cargarFuentesCartas(plantilla);
+  // Sin las fuentes de las cartas no sale: con la de respaldo, el año y el día llegan a pisarse.
+  await asegurarFuentesCartas(plantilla);
 
   const pxPorMm = PRINT.ppp / MM_POR_PULGADA;
   const { ancho: anchoPx, alto: altoPx } = medidasCara({ conSangrado: true, pxPorMm });
@@ -186,8 +186,8 @@ export async function generarArchivoImpresion(e: EntradaPdf, perfil: PerfilImpre
         p.setBleedBox(pt(m), pt(m), pt(pagina.cara.ancho), pt(pagina.cara.alto));
         p.setTrimBox(pt(m + s), pt(m + s), pt(PRINT.carta.anchoMm), pt(PRINT.carta.altoMm));
         if (perfil.marcasCorte) {
+          await rotuloPagina(destino.pdf, p, m + s, `${indice + 1}/${e.plan.length} ${carta.clave.slice(0, 24)} ${cara === "anverso" ? "A" : "B"}`);
           marcasDeCorte(p, m + s, s);
-          rotuloPagina(p, destino.fuente, m + s, `${indice + 1}/${e.plan.length} ${carta.clave.slice(0, 24)} ${cara === "anverso" ? "A" : "B"}`);
         }
         hechas += 1;
         e.alProgresar?.(hechas, total);
@@ -234,9 +234,31 @@ function marcasDeCorte(p: Pagina, borde: number, sangrado: number) {
   }
 }
 
-/** Qué cara es, en pequeño en el margen de las marcas: para que la imprenta no las confunda. */
-function rotuloPagina(p: Pagina, fuente: PDFFont, borde: number, texto: string) {
-  p.drawText(texto, { x: pt(borde + 6), y: pt(1.6), size: 5, font: fuente, color: rgb(0.35, 0.35, 0.35) });
+/** Tamaño del rótulo de cada página, en puntos. */
+const ROTULO_PT = 5;
+
+/**
+ * Qué cara es, en pequeño en el margen de las marcas: para que la imprenta no las confunda. Va como
+ * imagen, gris sobre el blanco del papel: como texto, el PDF llevaría una fuente sin incrustar, y
+ * las comprobaciones de las imprentas lo rechazan. La línea base queda a 1,6 mm del borde de abajo.
+ */
+async function rotuloPagina(pdf: PDFDocument, p: Pagina, borde: number, texto: string) {
+  const px = Math.round((ROTULO_PT / 72) * PRINT.ppp);
+  const letra = `${px}px Arial, Helvetica, sans-serif`;
+  const medida = crearLienzo(1, 1);
+  medida.ctx.font = letra;
+  const anchoPx = Math.ceil(medida.ctx.measureText(texto).width) + 2;
+  const altoPx = Math.ceil(px * 1.3);
+  const base = Math.round(px * 1.05);
+  const l = crearLienzo(anchoPx, altoPx);
+  l.ctx.fillStyle = "#FFFFFF";
+  l.ctx.fillRect(0, 0, anchoPx, altoPx);
+  l.ctx.font = letra;
+  l.ctx.fillStyle = "#595959";
+  l.ctx.fillText(texto, 1, base);
+  const imagen = await pdf.embedJpg(new Uint8Array(await (await l.aBlob("image/jpeg", 0.95)).arrayBuffer()));
+  const mmPorPx = MM_POR_PULGADA / PRINT.ppp;
+  p.drawImage(imagen, { x: pt(borde + 6), y: pt(1.6 - (altoPx - base) * mmPorPx), width: pt(anchoPx * mmPorPx), height: pt(altoPx * mmPorPx) });
 }
 
 /** Principio del nombre de los archivos, sin caracteres raros: «ana-y-leo-48-cartas». */

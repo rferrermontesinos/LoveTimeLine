@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { nuevaCartaTexto } from "./derivados";
 import { ESTADO_INICIAL, reductor, type EstadoMazo } from "./reductor";
 import type { Carta, CartaFoto } from "./tipos";
@@ -190,6 +190,30 @@ describe("añadir cartas y deshacer", () => {
     expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a", "b"]);
   });
 
+  it("deshacer es un cambio más, con su hora: no vuelve a la versión guardada de antes", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(1_000);
+      let e = nuevo();
+      e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "cobalto" });
+      const antes = e.mazo!.actualizadoEn;
+      vi.setSystemTime(2_000);
+      e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "rosa" });
+      vi.setSystemTime(3_000);
+      // Fotos importadas después: también están en el estado que recupera «Deshacer».
+      e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+      vi.setSystemTime(4_000);
+      e = reductor(e, { tipo: "deshacer" });
+      expect(e.mazo?.paletaId).toBe("cobalto");
+      expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a"]);
+      // Con la hora del estado recuperado, otra pestaña que se quedó en él no vería las fotos nuevas.
+      expect(e.mazo?.actualizadoEn).not.toBe(antes);
+      expect(e.mazo?.actualizadoEn).toBe(4_000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("quitar la caja personalizada no borra la foto elegida, por si se vuelve a poner", () => {
     let e = nuevo();
     e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
@@ -251,6 +275,19 @@ describe("añadir cartas y deshacer", () => {
     e = reductor(e, { tipo: "fechaASugerencia", ids: ["a"], motivo: "sesion-de-escaneo", mazoId: "otro" });
     expect(e).toBe(antes);
     e = reductor(e, { tipo: "fechaASugerencia", ids: ["a"], motivo: "sesion-de-escaneo", mazoId: "m1" });
+    expect(e.mazo?.cartas[0]).toMatchObject({ fecha: null, motivo: "sesion-de-escaneo" });
+  });
+
+  it("tras quitar las fechas de una sesión de escaneo, cada «Deshacer» sigue recuperando algo que se ve", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "cobalto" });
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)] });
+    // Entrar en un campo y salir sin tocarlo deja un punto sin cambios.
+    e = reductor(e, { tipo: "puntoDeshacer" });
+    e = reductor(e, { tipo: "fechaASugerencia", ids: ["a"], motivo: "sesion-de-escaneo" });
+    e = reductor(e, { tipo: "deshacer" });
+    // El primer «Deshacer» ya devuelve la paleta, sin quedarse en el punto que no cambió nada.
+    expect(e.mazo?.paletaId).toBe("rosa");
     expect(e.mazo?.cartas[0]).toMatchObject({ fecha: null, motivo: "sesion-de-escaneo" });
   });
 });

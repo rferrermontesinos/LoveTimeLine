@@ -230,8 +230,10 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         if (!ids.has(c.id) || !fecha || !fuente || fuente === "manual") return c;
         return { ...c, fecha: null, fuente: null, confianza: null, revisar: false, motivo: a.motivo, sugerencias: [{ fecha, fuente, motivo: a.motivo }] };
       };
-      const pasado = e.pasado.map((p) => ({ ...p, cartas: p.cartas.map(enBlanco) }));
-      return { ...conHistorial(e, { ...m, cartas: m.cartas.map(enBlanco) }, false), pasado };
+      const cartas = m.cartas.map(enBlanco);
+      // Los estados con las mismas cartas que ahora comparten la lista nueva (ver «anadirCartas»).
+      const pasado = e.pasado.map((p) => ({ ...p, cartas: p.cartas === m.cartas ? cartas : p.cartas.map(enBlanco) }));
+      return { ...conHistorial(e, { ...m, cartas }, false), pasado };
     }
     case "confirmarFecha":
       return conHistorial(e, {
@@ -278,10 +280,12 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       while (i >= 0 && mismoContenido(e.pasado[i]!, m)) i--;
       const anterior = e.pasado[i];
       if (!anterior) return e.pasado.length ? { ...e, pasado: [] } : e;
-      // El paso actual no se deshace: solo los cambios del mazo.
+      // El paso actual no se deshace: solo los cambios del mazo. Y es un cambio más, con su hora:
+      // con la del estado recuperado, otra pestaña que se quedó en esa versión no vería que ha
+      // cambiado (lo de fuera de «Deshacer», como las fotos importadas después) y lo pisaría.
       return {
         ...e,
-        mazo: { ...anterior, paso: m.paso, cartaAbierta: m.cartaAbierta, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido },
+        mazo: { ...anterior, paso: m.paso, cartaAbierta: m.cartaAbierta, consentimientoFotos: m.consentimientoFotos, pedido: m.pedido, actualizadoEn: Date.now() },
         pasado: e.pasado.slice(0, i),
       };
     }

@@ -1,7 +1,7 @@
 /**
  * Lo que puede pasar mientras entran fotos y al deshacer (revisión de pantallas del 22-11-2026):
  * pagar a medias, empezar otro mazo a medias, las mismas fotos dos veces, girar y deshacer, borrar
- * todas y dónde queda el foco.
+ * todas y dónde queda el foco. Y, de la revisión de la impresión, la dedicatoria que no cabe.
  */
 import { expect, test, type Page } from "@playwright/test";
 import { conFecha, fotos, leerMazo } from "./mazo-utiles";
@@ -157,5 +157,23 @@ test.describe("deshacer y foco", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(encuadrar).toBeFocused();
+  });
+});
+
+test.describe("impresión", () => {
+  test("una dedicatoria que no cabe entera en la carta lo dice mientras se escribe", async ({ page }, info) => {
+    test.skip(info.project.name === "movil", "La medida es la misma; basta con probarla en escritorio.");
+    await empezar(page);
+    await page.getByTestId("entrada-fotos").setInputFiles(fotos().filter(conFecha).slice(0, 1));
+    await expect(page.getByText("1 foto añadida")).toBeVisible({ timeout: 60_000 });
+    await irA(page, "Estilo");
+    const campo = page.getByRole("textbox", { name: /Dedicatoria/ });
+    const ayuda = page.getByTestId("dedicatoria-ayuda");
+    // Once líneas cortas, en los 140 caracteres: en la carta caben diez.
+    const firmas = ["Con amor,", "Papá", "Mamá", "La abuela Rosa", "El tío Marc", "Los primos", "Tita", "Laia", "Pau", "Jan", "Nil"];
+    await campo.fill(firmas.join("\n"));
+    await expect(ayuda).toHaveText("No cabe entera en la carta y se cortaría: acórtala o quita algún salto de línea.");
+    await campo.fill(firmas.slice(0, 10).join("\n"));
+    await expect(ayuda).toHaveText(/^Va detrás de la portada/);
   });
 });

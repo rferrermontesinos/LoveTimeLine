@@ -261,6 +261,9 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     pararTemporizador();
     await encolar(async () => {
       await borrarTodo();
+      // Hasta que se pinte el mazo vacío, el último aún es el borrado: si la pestaña se oculta o se
+      // cierra justo ahora, no se vuelve a guardar (ya sin sus fotos).
+      ultimo.current = null;
       base.current = null;
       marcarEscrito(null);
       enConflicto.current = false;
