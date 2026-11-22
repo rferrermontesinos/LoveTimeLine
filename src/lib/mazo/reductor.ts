@@ -26,11 +26,17 @@ export type Accion =
   /**
    * Añade cartas al final. Las importadas (fotos) quedan fuera de «Deshacer»: también se suman a
    * los estados anteriores, para que deshacer otro cambio no las quite. Con `deshacible` (un
-   * recuerdo sin foto escrito a mano) es un cambio más, que «Deshacer» quita.
+   * recuerdo sin foto escrito a mano) es un cambio más, que «Deshacer» quita. Con `mazoId` (las de
+   * una importación), solo se añaden a ese mazo: si entretanto se ha empezado otro, no entran.
    */
-  | { tipo: "anadirCartas"; cartas: Carta[]; deshacible?: boolean }
+  | { tipo: "anadirCartas"; cartas: Carta[]; deshacible?: boolean; mazoId?: string }
   | { tipo: "actualizarCarta"; id: string; cambios: CambiosCarta; deshacible?: boolean }
   | { tipo: "actualizarCartas"; ids: string[]; cambios: CambiosCarta }
+  /**
+   * La foto guardada de una carta ha cambiado (se ha girado): su tamaño y su recorte nuevos valen
+   * también en los estados anteriores, porque «Deshacer» no vuelve a girar la foto guardada. No se deshace.
+   */
+  | { tipo: "fotoCambiada"; id: string; cambios: Pick<CambiosCarta, "ancho" | "alto" | "recorteAnverso" | "recorteReverso" | "reversoPersonalizado" | "pppConfirmado"> }
   | { tipo: "puntoDeshacer" }
   | { tipo: "borrarCartas"; ids: string[] }
   | { tipo: "ponerFecha"; ids: string[]; fecha: FechaCarta }
@@ -43,13 +49,21 @@ export type Accion =
   /**
    * La fecha puesta sola pasa a ser una sugerencia y la carta queda en blanco: las fotos de una
    * sesión de fotos de fotos que se detecta a mitad de la subida. No toca las fechas puestas a
-   * mano. Es parte de la importación: no se deshace, y «Deshacer» no devuelve esas fechas.
+   * mano. Es parte de la importación: no se deshace, y «Deshacer» no devuelve esas fechas. Con
+   * `mazoId`, solo en ese mazo.
    */
-  | { tipo: "fechaASugerencia"; ids: string[]; motivo: MotivoRevision }
+  | { tipo: "fechaASugerencia"; ids: string[]; motivo: MotivoRevision; mazoId?: string }
   | { tipo: "ordenarPorFecha" }
-  | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo] }
+  /**
+   * Cambia un campo del mazo. Con `deshacible: false` (el pack que cambia el enlace de la portada
+   * al abrir, y su «Deshacer» del aviso) no se deshace y vale también en los estados anteriores:
+   * así ningún «Deshacer» posterior lo devuelve sin avisar.
+   */
+  | { tipo: "cambiar"; campo: CampoMazo; valor: Mazo[CampoMazo]; deshacible?: boolean }
   /** Foto de la caja personalizada (null: la de la portada). */
   | { tipo: "ponerCaja"; caja: FotoCaja | null }
+  /** El cliente imprime la foto de la caja aunque tenga poca resolución (ver claveFotoCaja). */
+  | { tipo: "confirmarCajaBaja"; clave: string }
   /**
    * Ajusta pack, extras y mecánicas a lo que ofrece el catálogo (borradores antiguos). No se deshace.
    * `desde` es la selección de la que se calculó: si el mazo ya tiene otra (el arranque acaba de
@@ -147,6 +161,7 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
     case "consentir":
       return conHistorial(e, { ...m, consentimientoFotos: a.ahora }, false);
     case "anadirCartas": {
+      if (a.mazoId !== undefined && a.mazoId !== m.id) return e;
       const cartas = [...m.cartas, ...a.cartas];
       if (a.deshacible) return conHistorial(e, { ...m, cartas });
       // Los estados que tenían las mismas cartas que ahora comparten la lista nueva: así
@@ -160,6 +175,13 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         { ...m, cartas: m.cartas.map((c) => (c.id === a.id ? aplicarCambios(c, a.cambios) : c)) },
         a.deshacible !== false,
       );
+    case "fotoCambiada": {
+      const cambiar = (c: Carta) => (c.id === a.id ? aplicarCambios(c, a.cambios) : c);
+      const cartas = m.cartas.map(cambiar);
+      // Los estados con las mismas cartas que ahora comparten la lista nueva (ver «anadirCartas»).
+      const pasado = e.pasado.map((p) => ({ ...p, cartas: p.cartas === m.cartas ? cartas : p.cartas.map(cambiar) }));
+      return { ...conHistorial(e, { ...m, cartas }, false), pasado };
+    }
     case "actualizarCartas": {
       const ids = new Set(a.ids);
       return conHistorial(e, { ...m, cartas: m.cartas.map((c) => (ids.has(c.id) ? aplicarCambios(c, a.cambios) : c)) });
@@ -201,6 +223,7 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
       return aceptadas ? conHistorial(e, { ...m, cartas }) : e;
     }
     case "fechaASugerencia": {
+      if (a.mazoId !== undefined && a.mazoId !== m.id) return e;
       const ids = new Set(a.ids);
       const enBlanco = (c: Carta): Carta => {
         const { fecha, fuente } = c;
@@ -226,10 +249,16 @@ export function reductor(e: EstadoMazo, a: Accion): EstadoMazo {
         nuevo.paletaId = obtenerPaleta(estilo, m.paletaId).id;
       }
       if (a.campo === "paletaId") nuevo.paletaId = obtenerPaleta(obtenerEstilo(m.estiloId), String(a.valor)).id;
+      if (a.deshacible === false) {
+        const pasado = e.pasado.map((p) => ({ ...p, [a.campo]: nuevo[a.campo] }));
+        return { ...conHistorial(e, nuevo, false), pasado };
+      }
       return conHistorial(e, nuevo, a.campo !== "paso" && a.campo !== "titulo" && a.campo !== "dedicatoria");
     }
     case "ponerCaja":
       return conHistorial(e, { ...m, caja: a.caja });
+    case "confirmarCajaBaja":
+      return m.cajaBajaConfirmada === a.clave ? e : conHistorial(e, { ...m, cajaBajaConfirmada: a.clave });
     case "normalizarSeleccion":
       if (!mismaSeleccion(m, a.desde)) return e;
       return conHistorial(e, { ...m, packId: a.packId, extras: a.extras, mecanicas: a.mecanicas }, false);

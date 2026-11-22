@@ -11,10 +11,11 @@ import { baseMazo, formatearImporte, precioDeExtra, type LineaCotizacion } from 
 import { textoEn } from "@/domain/precios/tipos";
 import { useRouter } from "@/i18n/navigation";
 import { useMazo } from "@/lib/mazo/contexto";
-import { esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, paraValidar } from "@/lib/mazo/derivados";
+import { claveFotoCaja, esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, paraValidar, pppFotoCaja, proporcionCaja } from "@/lib/mazo/derivados";
 import { esFoto, esTexto } from "@/lib/mazo/tipos";
 import type { Pedido } from "@/lib/mazo/tipos";
 import { useCrear } from "./contexto";
+import { useImportacion } from "./importacion";
 import { LineaDelMazo } from "./LineaDelMazo";
 import { OfertasPedido } from "./Ofertas";
 import { OpcionesPack } from "./SelectorPack";
@@ -46,21 +47,23 @@ export function PasoPedido() {
   const [pagando, setPagando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sinConexion = useSinConexion();
+  // Mientras entran fotos, el mazo cambia: se paga el que queda cuando acaban (el que se guarda e imprime).
+  const { importando } = useImportacion();
 
-  const validacion = useMemo(
-    () =>
-      mazo && cotizacion
-        ? validarMazo({
-            cartas: mazo.cartas.map(paraValidar),
-            minimo: cotizacion.minimo,
-            maximo: catalogo.ampliacion.maxCartas,
-            hoy,
-            pppMinimo: PRINT.pppMinimo,
-            cajaSinFoto: esCajaPersonalizada(mazo, catalogo) && !fotoCaja(mazo),
-          })
-        : null,
-    [mazo, cotizacion, catalogo, hoy],
-  );
+  const validacion = useMemo(() => {
+    if (!mazo || !cotizacion) return null;
+    // La foto de la caja personalizada, si la lleva: con poca resolución se pide confirmación, como en las cartas.
+    const deCaja = esCajaPersonalizada(mazo, catalogo) ? fotoCaja(mazo) : null;
+    return validarMazo({
+      cartas: mazo.cartas.map(paraValidar),
+      minimo: cotizacion.minimo,
+      maximo: catalogo.ampliacion.maxCartas,
+      hoy,
+      pppMinimo: PRINT.pppMinimo,
+      cajaSinFoto: esCajaPersonalizada(mazo, catalogo) && !deCaja,
+      pppCajaSinConfirmar: deCaja && mazo.cajaBajaConfirmada !== claveFotoCaja(deCaja) ? pppFotoCaja(deCaja, proporcionCaja(mazo)) : null,
+    });
+  }, [mazo, cotizacion, catalogo, hoy]);
   const sinCompletar = useMemo(() => new Set(pendientes), [pendientes]);
 
   if (!mazo || !cotizacion || !validacion) return null;
@@ -112,6 +115,8 @@ export function PasoPedido() {
         return t("avisos.fotos-duplicadas", { n: a.grupos.reduce((s, g) => s + g.length - 1, 0) });
       case "caja-sin-foto":
         return t("avisos.caja-sin-foto");
+      case "caja-baja-resolucion":
+        return t("avisos.caja-baja-resolucion", { ppp: a.ppp });
       default:
         return t(`avisos.${a.tipo}`, { n: a.cartas.length });
     }
@@ -142,6 +147,25 @@ export function PasoPedido() {
           {t("elegirFotoCaja")}
         </Boton>
       );
+    if (a.tipo === "caja-baja-resolucion")
+      return (
+        <div className="flex flex-wrap gap-2">
+          <Boton
+            tamano="sm"
+            variante="secundario"
+            className="max-sm:min-h-11"
+            onClick={() => {
+              const deCaja = fotoCaja(mazo);
+              if (deCaja) despachar({ tipo: "confirmarCajaBaja", clave: claveFotoCaja(deCaja) });
+            }}
+          >
+            {t("confirmarBaja")}
+          </Boton>
+          <Boton tamano="sm" variante="fantasma" className="max-sm:min-h-11" onClick={() => irAPaso(3, undefined, "caja")}>
+            {t("cambiarFotoCaja")}
+          </Boton>
+        </div>
+      );
     const carta = primeraCarta(a);
     return (
       <div className="flex flex-wrap gap-2">
@@ -160,7 +184,7 @@ export function PasoPedido() {
   };
 
   const pagar = async () => {
-    if (mazo.pedido?.estado === "pagado") return;
+    if (mazo.pedido?.estado === "pagado" || importando) return;
     setPagando(true);
     setError(null);
     try {
@@ -330,7 +354,7 @@ export function PasoPedido() {
             <Boton
               tamano="lg"
               className="mt-5 w-full"
-              disabled={!puedePagar || !revisado || pagando || sinConexion || enConflicto || yaPagado}
+              disabled={!puedePagar || !revisado || pagando || sinConexion || enConflicto || yaPagado || importando}
               onClick={() => void pagar()}
               aria-describedby={`${id}-estado-pago`}
             >
@@ -339,6 +363,10 @@ export function PasoPedido() {
             <p id={`${id}-estado-pago`} className="mt-2 min-h-5 text-sm" aria-live="polite">
               {yaPagado ? (
                 <span className="text-tinta-2">{t("yaPedidoSinDescarga")}</span>
+              ) : importando ? (
+                <span className="text-tinta-2" data-testid="motivo-importando">
+                  {t("importando")}
+                </span>
               ) : !todasListas ? (
                 <span className="text-rojo-texto">{t("faltanCartas", { n: pendientes.length })}</span>
               ) : !puedePagar && bloqueantes.length > 0 ? (

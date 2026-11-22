@@ -173,12 +173,23 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
     relojPorDefecto ||= r.relojPorDefecto;
     return r.fecha;
   };
-  const original = leer([meta?.DateTimeOriginal]);
-  const digitalizada = leer([meta?.DateTimeDigitized, meta?.XmpDateTimeDigitized, meta?.XmpCreateDate, meta?.IptcDigitalCreationDate]);
+  const deMetadatos = {
+    original: leer([meta?.DateTimeOriginal]),
+    digitalizada: leer([meta?.DateTimeDigitized, meta?.XmpDateTimeDigitized, meta?.XmpCreateDate, meta?.IptcDigitalCreationDate]),
+    anotada: leer([meta?.IptcDateCreated, meta?.DateCreated]),
+  };
   const modificada = leer([meta?.ModifyDate, meta?.XmpModifyDate]);
-  const anotada = leer([meta?.IptcDateCreated, meta?.DateCreated]);
+  // Una captura de pantalla que solo se reconoce por sus metadatos (las del iPhone se llaman
+  // IMG_1234.PNG): sus fechas son las de la captura, no las del recuerdo. Va como un «Screenshot_…».
+  const capturaPorMetadatos = !!meta?.esCaptura;
+  const fechaCaptura = capturaPorMetadatos ? (deMetadatos.original ?? deMetadatos.digitalizada ?? deMetadatos.anotada ?? modificada) : null;
+  const original = capturaPorMetadatos ? null : deMetadatos.original;
+  const digitalizada = capturaPorMetadatos ? null : deMetadatos.digitalizada;
+  const anotada = capturaPorMetadatos ? null : deMetadatos.anotada;
   const nombre: FechaDesdeNombre | null = fechaDesdeNombre(e.nombreArchivo, { hoy });
   const carpeta = fechaDesdeCarpeta(ruta, { hoy });
+  // La fecha de envío o de captura de la propia foto: lo que salga en ella no puede ser posterior.
+  const fechaEnvioOCaptura = nombre && (nombre.origen === "mensajeria" || nombre.origen === "captura") ? nombre.fecha : fechaCaptura;
 
   const senales = senalesDeEscaneo(meta, ruta);
   const conSenales = senales.length > 0;
@@ -198,13 +209,17 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
     senales,
   });
 
-  // 1. Fecha de la cámara.
+  // 1. Fecha de la cámara. La del nombre que pone el móvil, como la de los metadatos, no vale si es
+  //    la de un reloj sin configurar (IMG_20000101_000500).
+  const nombreDeCamara = nombre?.origen === "camara" && !conSenales && !capturaPorMetadatos ? nombre : null;
+  const relojEnNombre = !!nombreDeCamara && esFechaDeRelojPorDefecto(nombreDeCamara.fecha);
+  relojPorDefecto ||= relojEnNombre;
   let deCamara: Candidata | null = null;
   if (original && (!conSenales || digitalizadaDespues)) {
     // Con señales de escaneo, solo vale la original anterior al escaneo: la apuntó quien escaneó.
     deCamara = { fecha: original, fuente: "exif", pista: camara && !conSenales ? "camara" : "metadatos" };
-  } else if (nombre?.origen === "camara" && !conSenales) {
-    deCamara = { fecha: nombre.fecha, fuente: "nombre", pista: "camara" };
+  } else if (nombreDeCamara && !relojEnNombre) {
+    deCamara = { fecha: nombreDeCamara.fecha, fuente: "nombre", pista: "camara" };
   } else if (!original && digitalizada && camara && !escaneo) {
     // Sin original, la de creación de una cámara (xmp:CreateDate de Lightroom, por ejemplo).
     deCamara = { fecha: digitalizada, fuente: "exif", pista: "camara" };
@@ -226,11 +241,23 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
       ? { fecha: anotada, fuente: "exif", pista: "metadatos" }
       : null;
   const escrita = escritaEnNombre ?? anotadaUtil;
-  const deCarpeta: Candidata | null = carpeta && !preparando(carpeta) ? { fecha: carpeta, fuente: "carpeta", pista: "escrito" } : null;
+  // Una carpeta posterior al envío o a la captura («Copia móvil 2024/IMG-20190814-WA0001.jpg») no
+  // puede ser la del recuerdo: la foto ya existía antes.
+  const carpetaPosible = carpeta && !(fechaEnvioOCaptura && rangoDias(carpeta)[0] > rangoDias(fechaEnvioOCaptura)[1]) ? carpeta : null;
+  const deCarpeta: Candidata | null = carpetaPosible && !preparando(carpetaPosible) ? { fecha: carpetaPosible, fuente: "carpeta", pista: "escrito" } : null;
 
   if (deCamara) {
     // Una fecha escrita anterior a la de la cámara: una foto de una foto antigua («abuelos 1958»).
-    if (escrita && anterior(escrita.fecha, deCamara.fecha)) return resultado(escrita);
+    if (escrita && anterior(escrita.fecha, deCamara.fecha)) {
+      // Salvo un año pegado a otras letras («AnaLeo_1987», «boda-1987»), que puede ser el contador
+      // de un fotógrafo: con una cámara de verdad diciendo otra cosa, no está claro. En blanco, con las dos.
+      const dudosa = escrita === escritaEnNombre && nombre?.patron === "anio" && nombre.pegado && deCamara.pista === "camara" && !preparando(deCamara.fecha);
+      if (!dudosa) return resultado(escrita);
+      return enBlanco("exif-y-nombre-no-coinciden", [
+        { fecha: deCamara.fecha, fuente: deCamara.fuente, motivo: "exif-y-nombre-no-coinciden" },
+        { fecha: escrita.fecha, fuente: escrita.fuente, motivo: "exif-y-nombre-no-coinciden" },
+      ]);
+    }
     if (deCarpeta && deCamara.fecha.anio - deCarpeta.fecha.anio >= ANIOS_CARPETA_OTRA_EPOCA) return resultado(deCarpeta);
     if (!preparando(deCamara.fecha)) return resultado(deCamara);
     // Cámara de estos días: vale lo que haya escrito una persona; si no, en blanco.
@@ -243,12 +270,14 @@ export function proponerFecha(e: EntradaPropuesta): ResultadoFecha {
   const otra = escrita ?? deCarpeta;
   if (otra) return resultado(otra);
 
-  // 4. Envío o captura: en blanco; si no puede ser de preparar el mazo, con su mes como sugerencia.
-  if (nombre && !conSenales && (nombre.origen === "mensajeria" || nombre.origen === "captura")) {
-    const deMensajeria = nombre.origen === "mensajeria";
-    if (!puedeSerReciente(nombre.fecha, hoy, DIAS_PREPARACION_ENVIO)) {
+  // 4. Envío o captura (por el nombre o, en las del iPhone, por los metadatos): en blanco; si no
+  //    puede ser de preparar el mazo, con su mes como sugerencia.
+  if (fechaEnvioOCaptura && !conSenales) {
+    const deMensajeria = nombre?.origen === "mensajeria";
+    const fuente: FuenteDetectada = nombre && (nombre.origen === "mensajeria" || nombre.origen === "captura") ? "nombre" : "exif";
+    if (!puedeSerReciente(fechaEnvioOCaptura, hoy, DIAS_PREPARACION_ENVIO)) {
       const motivoMes: MotivoRevision = deMensajeria ? "mes-de-envio" : "mes-de-captura";
-      return enBlanco(motivoMes, [{ fecha: conPrecision(nombre.fecha, "mes"), fuente: "nombre", motivo: motivoMes }]);
+      return enBlanco(motivoMes, [{ fecha: conPrecision(fechaEnvioOCaptura, "mes"), fuente, motivo: motivoMes }]);
     }
     return enBlanco(deMensajeria ? "fecha-de-envio" : "captura-de-pantalla", []);
   }

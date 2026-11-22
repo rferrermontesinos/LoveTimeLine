@@ -46,13 +46,19 @@ export interface MetadatosFecha {
   SensingMethod?: string;
   /** Hay datos de exposición (tiempo, diafragma, ISO, focal u objetivo): los escribe una cámara. */
   tieneExposicion?: boolean;
+  /**
+   * Es una captura de pantalla según sus metadatos: las del iPhone se llaman IMG_1234.PNG y solo lo
+   * dicen en el comentario («Screenshot»). Del comentario no se guarda nada más.
+   */
+  esCaptura?: boolean;
 }
 
 /**
  * Fechas que ponen las cámaras con el reloj sin configurar (y los «ceros» de algunos sistemas:
- * 1904 en Mac, 1970 en Unix, 1980 en FAT). Solo cuentan con día: «2000» a secas es un año normal.
+ * 1900, 1904 en Mac, 1970 en Unix, que al oeste de Greenwich es el 31 de diciembre de 1969, y 1980
+ * en FAT). Solo cuentan con día: «2000» a secas es un año normal.
  */
-const RELOJ_POR_DEFECTO = new Set(["1904-01-01", "1970-01-01", "1980-01-01", "2000-01-01", "2001-01-01", "2002-01-01"]);
+const RELOJ_POR_DEFECTO = new Set(["1900-01-01", "1904-01-01", "1969-12-31", "1970-01-01", "1980-01-01", "2000-01-01", "2001-01-01", "2002-01-01"]);
 
 export function esFechaDeRelojPorDefecto(f: FechaCarta): boolean {
   return precisionDe(f) === "dia" && RELOJ_POR_DEFECTO.has(aIso(f));
@@ -167,6 +173,18 @@ function enumerado(v: unknown, tabla: Record<number, string>): string | undefine
   return t;
 }
 
+/**
+ * El comentario de una captura de pantalla: «Screenshot» en el UserComment del XMP (texto o
+ * {value}) o en el de EXIF (bytes, con su juego de caracteres delante: «ASCII\0\0\0Screenshot»).
+ */
+function esComentarioDeCaptura(...valores: unknown[]): boolean {
+  return valores.some((v) => {
+    // En bytes, sin los ceros: así se lee también en UTF-16 («UNICODE\0S\0c\0r…»).
+    const t = v instanceof Uint8Array ? String.fromCharCode(...v.subarray(0, 80)).replace(/\0/g, "") : texto(v);
+    return !!t && /screen\s?shot/i.test(t);
+  });
+}
+
 function programasHistorial(v: unknown): string[] | undefined {
   const entradas = Array.isArray(v) ? v : v === undefined ? [] : [v];
   const programas = entradas.flatMap((e) => {
@@ -212,6 +230,8 @@ export function metadatosDesdeExifr(salida: unknown): MetadatosFecha | null {
     FileSource: enumerado(exif.FileSource, FUENTES_ARCHIVO),
     SensingMethod: enumerado(exif.SensingMethod, METODOS_SENSOR),
     tieneExposicion: CLAVES_EXPOSICION.some((k) => exif[k] !== undefined && exif[k] !== null) || undefined,
+    // exifr deja el UserComment de EXIF aparte (`userComment`, en bytes) y el del XMP en el bloque exif.
+    esCaptura: esComentarioDeCaptura(exif.UserComment, salida.userComment) || undefined,
   };
   const limpio = Object.fromEntries(Object.entries(meta).filter(([, v]) => v !== undefined)) as MetadatosFecha;
   return Object.keys(limpio).length ? limpio : null;

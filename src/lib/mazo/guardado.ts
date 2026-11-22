@@ -30,11 +30,13 @@ export function mismaVersion(a: VersionMazo | null, b: VersionMazo | null): bool
 
 /**
  * Cambios que se guardan sin esperar al guardado automático: los que apuntan a fotos ya escritas
- * en el almacén (cartas importadas, la foto propia de la caja). Si el navegador se cierra de golpe
- * en mitad de una importación, el mazo guardado ya tiene las cartas de las fotos leídas.
+ * en el almacén (cartas importadas, la foto propia de la caja, una foto girada). Si el navegador se
+ * cierra de golpe en mitad de una importación, el mazo guardado ya tiene las cartas de las fotos
+ * leídas; y una foto girada no se queda con el tamaño y el recorte de antes.
  */
 export function guardarSinEsperar(a: Accion): boolean {
   if (a.tipo === "anadirCartas") return a.cartas.some(esFoto);
+  if (a.tipo === "fotoCambiada") return true;
   return a.tipo === "ponerCaja" && a.caja?.origen === "propia";
 }
 

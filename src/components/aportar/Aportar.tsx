@@ -12,7 +12,7 @@ import { idAleatorio } from "@/domain/colaboracion/cifrado";
 import { cambiarBorrador, estadoBorrador, type BorradorFecha } from "@/domain/fechas/borrador";
 import { aSugerencia, estadoInicial, puestaAMano, type EstadoFecha } from "@/domain/fechas/estado";
 import type { FechaCarta } from "@/domain/fechas/fecha";
-import { crearDetectorSesion } from "@/domain/fechas/sesion";
+import { crearDetectorSesion, propuestaDeSesion } from "@/domain/fechas/sesion";
 import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
 import { clienteColaboracion, ErrorServicio } from "@/lib/colaboracion/api";
 import { huellaDelEnlace } from "@/lib/colaboracion/enlace";
@@ -294,8 +294,10 @@ export function Aportar({ id }: { id: string }) {
           if (parar) throw new Error(parar);
           const extra: ExtraAportacion = { autor, lote: lote.current ?? idAleatorio(12), enviadaEn: Date.now(), descripcion: p.frase };
           if (p.fechaTocada) extra.fecha = p.fecha;
+          // Una foto de una sesión de fotos de fotos va sin año, como aquí: con su fecha como sugerencia.
+          const foto = !p.fechaTocada && p.motivo === "sesion-de-escaneo" ? { ...p.foto, propuesta: propuestaDeSesion(p.foto.propuesta) } : p.foto;
           try {
-            await cliente.aportar(id, await prepararAportacion(p.foto, extra, listo.clave, id));
+            await cliente.aportar(id, await prepararAportacion(foto, extra, listo.clave, id));
           } catch (e) {
             if (e instanceof ErrorServicio && e.estado === 409) parar = "lleno";
             if (e instanceof ErrorServicio && (e.estado === 404 || e.estado === 410)) parar = "caducado";

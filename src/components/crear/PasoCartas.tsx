@@ -62,6 +62,12 @@ export function PasoCartas() {
   const { entradas, elegirFotos } = useElegirFotos();
   const [cara, setCara] = useState<"anverso" | "reverso">("reverso");
   const [encuadre, setEncuadre] = useState(false);
+  // Cada vez que se abre el encuadre, uno nuevo (con el recorte de ahora). Al cerrarse no se rehace:
+  // así el foco vuelve al botón que lo abrió.
+  const [aperturasEncuadre, setAperturasEncuadre] = useState(0);
+  // Recién borrada la última carta: la pantalla vacía ofrece «Deshacer», con el foco en él (una vez).
+  const [ultimaBorrada, setUltimaBorrada] = useState(false);
+  const enfocarDeshacer = useRef(false);
   const [emojis, setEmojis] = useState(false);
   const [girando, setGirando] = useState(false);
   const editor = useRef<HTMLDivElement>(null);
@@ -152,6 +158,23 @@ export function PasoCartas() {
       <div className="space-y-4 py-10 text-center">
         <p className="text-md">{t("cartas.sinCartas")}</p>
         <div className="flex flex-wrap justify-center gap-2">
+          {ultimaBorrada && puedeDeshacer && (
+            <Boton
+              ref={(el) => {
+                if (el && enfocarDeshacer.current) {
+                  enfocarDeshacer.current = false;
+                  el.focus();
+                }
+              }}
+              variante="secundario"
+              onClick={() => {
+                setUltimaBorrada(false);
+                despachar({ tipo: "deshacer" });
+              }}
+            >
+              ↶ {t("comun.deshacer")}
+            </Boton>
+          )}
           <Boton onClick={() => irAPaso(1)}>{t("cartas.irAFotos")}</Boton>
           <Boton variante="secundario" onClick={() => abrirRecuerdo()}>
             + {t("crear.recuerdo.boton")}
@@ -249,7 +272,12 @@ export function PasoCartas() {
     setGirando(true);
     const nuevo = await girarFoto(carta.id, 1);
     if (nuevo) {
-      actualizar({ ancho: nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, adornos: foto.adornos, pppConfirmado: false });
+      // La foto guardada ya está girada: «Deshacer» no la devuelve, así que el giro no se deshace.
+      despachar({
+        tipo: "fotoCambiada",
+        id: carta.id,
+        cambios: { ancho: nuevo.ancho, alto: nuevo.alto, ...recortesIniciales(nuevo.ancho, nuevo.alto, proporcionReversoDe(mazo)), reversoPersonalizado: false, pppConfirmado: false },
+      });
       tocarVersion(carta.id);
     }
     setGirando(false);
@@ -335,7 +363,15 @@ export function PasoCartas() {
             <div className="flex flex-wrap justify-center gap-2">
               {foto && (
                 <>
-                  <Boton variante="secundario" tamano="sm" className="max-sm:min-h-11" onClick={() => setEncuadre(true)}>
+                  <Boton
+                    variante="secundario"
+                    tamano="sm"
+                    className="max-sm:min-h-11"
+                    onClick={() => {
+                      setAperturasEncuadre((n) => n + 1);
+                      setEncuadre(true);
+                    }}
+                  >
                     ⤧ {t("cartas.encuadrar")}
                   </Boton>
                   <Boton variante="secundario" tamano="sm" className="max-sm:min-h-11" onClick={girar} disabled={girando}>
@@ -354,6 +390,8 @@ export function PasoCartas() {
                   const otra = orden[indice + 1] ?? orden[indice - 1] ?? null;
                   despachar({ tipo: "borrarCartas", ids: [carta.id] });
                   setCartaActiva(otra);
+                  setUltimaBorrada(otra === null);
+                  enfocarDeshacer.current = otra === null;
                 }}
               >
                 {t("cartas.borrarCarta")}
@@ -499,7 +537,7 @@ export function PasoCartas() {
         </div>
       </section>
 
-      {foto && <DialogoEncuadre key={`${carta.id}-${version}-${encuadre}`} carta={foto} abierto={encuadre} alCerrar={() => setEncuadre(false)} icono={icono} version={version} />}
+      {foto && <DialogoEncuadre key={`${carta.id}-${version}-${aperturasEncuadre}`} carta={foto} abierto={encuadre} alCerrar={() => setEncuadre(false)} icono={icono} version={version} />}
       <Dialogo abierto={emojis} alCerrar={() => setEmojis(false)} titulo={t("adornos.titulo")} ancho="max-w-3xl">
         {emojis && foto && (
           <EditorAdornos

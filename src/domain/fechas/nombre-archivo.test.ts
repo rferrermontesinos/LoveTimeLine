@@ -199,3 +199,53 @@ describe("fechaDesdeNombre: de dónde sale la fecha", () => {
     expect(origenDeNombre("IMG_1234.jpg")).toBe("escrito");
   });
 });
+
+describe("fechaDesdeNombre: contadores en cualquier parte, copias y cursos", () => {
+  it.each([
+    "IMG_E1987.JPG", // foto editada en el iPhone
+    "Copia de IMG_1987.JPG", // copia en Google Drive
+    "Copy of DSC_2003.JPG",
+    "Boda Ana y Leo - DSC_1987.jpg",
+    "viaje IMG_2015 (1).jpg",
+  ])("%s: el número es un contador de cámara, no un año", (nombre) => {
+    expect(iso(nombre)).toBeNull();
+  });
+
+  it("dice si un año suelto va pegado a otras letras, que puede ser el contador de un fotógrafo", () => {
+    const pegado = (nombre: string) => fechaDesdeNombre(nombre, { hoy })?.pegado;
+    expect(pegado("AnaLeo_1987.jpg")).toBe(true);
+    expect(pegado("boda-1987-iglesia.jpg")).toBe(true);
+    expect(pegado("abuelos 1958.jpg")).toBe(false);
+    expect(pegado("Fiesta (1999).jpg")).toBe(false);
+    expect(pegado("1958.jpg")).toBe(false);
+    // Solo se dice en los años sueltos.
+    expect(pegado("2019-08-14 playa.jpg")).toBeUndefined();
+  });
+
+  it("un curso o una temporada son dos años, no un mes", () => {
+    expect(iso("curso 2011-12.jpg")).toBeNull();
+    expect(iso("Temporada 2009-10 final.jpg")).toBeNull();
+    expect(iso("graduación promoción 2010-11.jpg")).toBeNull();
+    // Sin esas palabras, «2011-12» sigue siendo diciembre de 2011.
+    expect(iso("2011-12 Navidad.jpg")).toBe("2011-12");
+    // Y con ellas, un mes que no es el del año siguiente también.
+    expect(iso("curso 2011-06 fin.jpg")).toBe("2011-06");
+  });
+});
+
+describe("fechaDesdeNombre: Pixel", () => {
+  it("la hora de los nombres PXL_ va en UTC: cerca de medianoche, el día es el de aquí", () => {
+    const zona = process.env.TZ;
+    process.env.TZ = "Europe/Madrid";
+    try {
+      // Las 22:30 UTC del 14 de agosto son las 00:30 del 15 en España.
+      expect(iso("PXL_20190814_223000123.jpg")).toBe("2019-08-15");
+      expect(iso("PXL_20190814_123045123.MP.jpg")).toBe("2019-08-14");
+      expect(patron("PXL_20190814_223000123.jpg")).toBe("fecha-compacta");
+      expect(fechaDesdeNombre("PXL_20190814_223000123.jpg", { hoy })?.origen).toBe("camara");
+    } finally {
+      if (zona === undefined) delete process.env.TZ;
+      else process.env.TZ = zona;
+    }
+  });
+});

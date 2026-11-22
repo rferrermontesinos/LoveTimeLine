@@ -84,6 +84,9 @@ describe("migrar un mazo guardado", () => {
     expect(actual.cartaAbierta).toBeUndefined();
     expect(migrarMazo({ ...actual, cartaAbierta: "a" })?.cartaAbierta).toBe("a");
     expect(migrarMazo({ ...actual, cartaAbierta: null })?.cartaAbierta).toBeNull();
+    // La confirmación de la foto de la caja, solo si es una clave.
+    expect(migrarMazo({ ...actual, cajaBajaConfirmada: "f1|0|0|600|400" })?.cajaBajaConfirmada).toBe("f1|0|0|600|400");
+    expect(migrarMazo({ ...actual, cajaBajaConfirmada: 7 })?.cajaBajaConfirmada).toBeUndefined();
     expect(migrarMazo({ ...actual, cartaAbierta: 7 })?.cartaAbierta).toBeUndefined();
   });
 

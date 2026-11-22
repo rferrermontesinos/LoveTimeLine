@@ -76,9 +76,18 @@ interface ValorImportacion {
   tomarIntento: () => boolean;
   /** Para los botones «Elegir fotos»: sin permiso, cuenta el intento y devuelve false. */
   puedeElegir: () => boolean;
+  /** Hay fotos entrando en el mazo o esperando turno: hasta que acaben, no se puede pagar. */
+  importando: boolean;
+  /**
+   * Para la subida en curso y descarta las que esperaban turno (al empezar otro mazo): lo que llegue
+   * de ellas ya no entra en ningún mazo. Termina cuando lo que estaba a medias ha acabado.
+   */
+  detener: () => Promise<void>;
 }
 
 const Ctx = createContext<ValorImportacion | null>(null);
+
+type DetectorSesion = ReturnType<typeof crearDetectorSesion>;
 
 /** Los archivos elegidos o soltados: solo las imágenes, por nombre (las de cámara, en el orden en que se hicieron). */
 function entradasDeArchivos(archivos: File[]): { entradas: EntradaImportacion[]; descartados: number } {
@@ -127,20 +136,52 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
   const [intentosSinPermiso, setIntentos] = useState(0);
   const atendidos = useRef(0);
   const cola = useRef<Promise<void>>(Promise.resolve());
+  // Subidas en marcha o esperando turno en la cola.
+  const [enCurso, setEnCurso] = useState(0);
+  // Cada «Empezar otro mazo» abre una generación nueva: lo que siga llegando de la anterior se descarta.
+  const generacion = useRef(0);
   // El mazo de cada momento, para leerlo al empezar cada subida de la cola (no el de cuando se pidió).
   const mazoActual = useRef(mazo);
+  // Huellas de las fotos ya mandadas al mazo que aún no se ven en `mazo` (React lo pinta después): la
+  // siguiente subida de la cola las cuenta como repetidas aunque empiece antes de que se pinten.
+  const enCamino = useRef<{ mazoId: string | null; hashes: Set<string> }>({ mazoId: null, hashes: new Set() });
+  // Las sesiones de fotos de fotos de cada envío por el enlace duran de una vez a otra: un mismo envío
+  // se puede añadir en dos veces (lo que había llegado y, más tarde, el resto).
+  const sesionesDeEnvios = useRef<{ mazoId: string | null; porGrupo: Map<string, DetectorSesion> }>({ mazoId: null, porGrupo: new Map() });
   useEffect(() => {
     mazoActual.current = mazo;
+    const c = enCamino.current;
+    if (!mazo || c.mazoId !== mazo.id) {
+      enCamino.current = { mazoId: mazo?.id ?? null, hashes: new Set() };
+      return;
+    }
+    if (c.hashes.size === 0) return;
+    const enMazo = new Set(mazo.cartas.filter(esFoto).map((x) => x.hash));
+    for (const h of c.hashes) if (enMazo.has(h)) c.hashes.delete(h);
   }, [mazo]);
 
-  /** `descartados`: archivos que no son imágenes, que cuentan como no leídos. */
+  /**
+   * `descartados`: archivos que no son imágenes, que cuentan como no leídos. `gen`: la generación en
+   * que se pidió; si entretanto se ha empezado otro mazo, no se hace nada.
+   */
   const subir = useCallback(
-    async (entradas: EntradaImportacion[], descartados: number) => {
+    async (entradas: EntradaImportacion[], descartados: number, gen: number) => {
+      const vigente = () => gen === generacion.current;
       const m = mazoActual.current;
-      if (!m || (entradas.length === 0 && descartados === 0)) return;
-      const vistos = new Set(m.cartas.filter(esFoto).map((c) => c.hash));
-      // Una sesión de fotos de fotos se busca dentro de cada grupo (una subida, un envío por el enlace).
-      const sesiones = new Map<string, ReturnType<typeof crearDetectorSesion>>();
+      if (!vigente() || !m || (entradas.length === 0 && descartados === 0)) return;
+      if (enCamino.current.mazoId !== m.id) enCamino.current = { mazoId: m.id, hashes: new Set() };
+      const llegando = enCamino.current.hashes;
+      const vistos = new Set([...m.cartas.filter(esFoto).map((c) => c.hash), ...llegando]);
+      // Una sesión de fotos de fotos se busca dentro de cada grupo: una subida, o un envío por el enlace.
+      if (sesionesDeEnvios.current.mazoId !== m.id) sesionesDeEnvios.current = { mazoId: m.id, porGrupo: new Map() };
+      const deEnvios = sesionesDeEnvios.current.porGrupo;
+      const sesiones = new Map<string, DetectorSesion>();
+      const detectorDe = (grupo: string, hoy: Date) => {
+        const tabla = grupo.startsWith("lote:") ? deEnvios : sesiones;
+        let d = tabla.get(grupo);
+        if (!d) tabla.set(grupo, (d = crearDetectorSesion(hoy)));
+        return d;
+      };
       const propReverso = proporcionReversoDe(m);
       // Cómo queda cada carta añadida (una sesión puede dejar en blanco las de antes).
       const finales = new Map<string, CartaFoto>();
@@ -154,25 +195,26 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         entradas,
         concurrenciaRecomendada(),
         async (entrada) => {
+          if (!vigente()) return null;
           const leida = await entrada.leer();
-          if (!leida) return null;
+          if (!leida || !vigente()) return null;
           if (vistos.has(leida.foto.hash)) return { leida, nueva: false };
           vistos.add(leida.foto.hash);
           await guardarFoto(leida.foto.id, leida.foto.copia, leida.foto.mini);
           return { leida, nueva: true };
         },
         (res) => {
+          if (!vigente()) return;
           hechas++;
           if (res.ok && res.valor) {
             const { leida, nueva } = res.valor;
             if (res.entrada.alGuardar) porAvisar.push({ hash: leida.foto.hash, alGuardar: res.entrada.alGuardar });
             if (nueva) {
-              let sesion = sesiones.get(leida.grupo);
-              if (!sesion) sesiones.set(leida.grupo, (sesion = crearDetectorSesion(res.entrada.hoy)));
+              const sesion = detectorDe(leida.grupo, res.entrada.hoy);
               let carta = cartaDesdeFoto(leida.foto, propReverso, Date.now(), leida.deQuienManda);
               const { enBlanco, anteriores } = sesion.registrar(carta.id, leida.foto.propuesta);
               if (anteriores.length) {
-                despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo" });
+                despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo", mazoId: m.id });
                 for (const id of anteriores) {
                   const c = finales.get(id);
                   if (c) finales.set(id, { ...c, fecha: null, motivo: "sesion-de-escaneo" });
@@ -186,7 +228,8 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
               if (leida.autor) autores.add(leida.autor);
               // Cada carta entra en el mazo en cuanto su foto está guardada: si la subida se corta
               // (se cierra la pestaña, se va la batería), lo subido hasta ahí ya está en el mazo.
-              despachar({ tipo: "anadirCartas", cartas: [carta] });
+              llegando.add(carta.hash);
+              despachar({ tipo: "anadirCartas", cartas: [carta], mazoId: m.id });
             } else r.repetidas++;
           } else if (!res.ok) {
             if (esErrorDeEspacio(res.error)) r.sinEspacio++;
@@ -198,6 +241,7 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
           setProgreso({ hechas, total: entradas.length });
         },
       );
+      if (!vigente()) return;
       const cartas = [...finales.values()];
       const sinFecha = cartas.filter((c) => !c.fecha);
       setProgreso(null);
@@ -216,12 +260,27 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
 
   const encolar = useCallback(
     (entradas: EntradaImportacion[], descartados = 0): Promise<void> => {
-      const siguiente = cola.current.then(() => subir(entradas, descartados));
-      cola.current = siguiente.catch((e) => console.warn("Subida interrumpida", e));
+      const gen = generacion.current;
+      setEnCurso((n) => n + 1);
+      const siguiente = cola.current.then(() => subir(entradas, descartados, gen));
+      cola.current = siguiente.catch((e) => console.warn("Subida interrumpida", e)).finally(() => setEnCurso((n) => Math.max(0, n - 1)));
       return cola.current;
     },
     [subir],
   );
+
+  const detener = useCallback(async () => {
+    generacion.current++;
+    esperando.current = [];
+    setEnEspera(0);
+    setProgreso(null);
+    setResumen(null);
+    enCamino.current = { mazoId: null, hashes: new Set() };
+    sesionesDeEnvios.current = { mazoId: null, porGrupo: new Map() };
+    // Lo que estaba a medias (leer o guardar una foto) acaba enseguida: se espera, con un límite,
+    // para que no escriba en el dispositivo después de borrarlo.
+    await Promise.race([cola.current, new Promise((ok) => setTimeout(ok, 3000))]);
+  }, []);
 
   const importar = useCallback(
     (archivos: File[]) => {
@@ -282,8 +341,10 @@ export function ProveedorImportacion({ children }: { children: ReactNode }) {
         setIntentos((n) => n + 1);
         return false;
       },
+      importando: enCurso > 0,
+      detener,
     }),
-    [progreso, resumen, cerrarResumen, importar, importarEntradas, consentir, enEspera, intentosSinPermiso],
+    [progreso, resumen, cerrarResumen, importar, importarEntradas, consentir, enEspera, intentosSinPermiso, enCurso, detener],
   );
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

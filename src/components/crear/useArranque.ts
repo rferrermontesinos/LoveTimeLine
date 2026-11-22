@@ -35,7 +35,9 @@ export function useArranque(packUrl: string | null): Arranque | null {
     if (decision.tipo === "crear") {
       despachar(accionCrearMazo({ id: nuevoId(), ahora: Date.now(), packId: decision.packId, idiomaMazo: locale, titulo: t("tituloPorDefecto"), catalogo }));
     } else if (decision.tipo === "cambiarPack") {
-      despachar({ tipo: "cambiar", campo: "packId", valor: decision.a });
+      // Fuera de «Deshacer», como el «Deshacer» de su aviso: si no, deshacer otra cosa más tarde
+      // devolvería un pack u otro sin avisar (y con él, el precio y el mínimo de cartas).
+      despachar({ tipo: "cambiar", campo: "packId", valor: decision.a, deshacible: false });
     }
     // Ya usado: si se queda en la URL, al recargar volvería a cambiar el pack.
     const limpia = urlSinPack(window.location.href);

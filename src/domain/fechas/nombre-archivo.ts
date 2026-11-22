@@ -1,5 +1,5 @@
 import { esNombreDeEscaneo, PATRONES_CARPETA_ESCANEO, sinDiacriticos } from "./escaneo";
-import { ANIO_MINIMO, crearFecha, esFutura, type FechaCarta } from "./fecha";
+import { ANIO_MINIMO, crearFecha, esFutura, fechaDeInstante, type FechaCarta } from "./fecha";
 
 /**
  * De dónde sale la fecha de un nombre de archivo, que dice cuánto fiarse de ella:
@@ -30,6 +30,11 @@ export interface FechaDesdeNombre {
     | "anio-mes"
     | "anio";
   origen: OrigenNombre;
+  /**
+   * Solo en un año suelto: va pegado a otras letras con «_» o «-» («AnaLeo_1987», «boda-1987»), en
+   * vez de separado («abuelos 1958»). Puede ser el contador de un fotógrafo.
+   */
+  pegado?: boolean;
 }
 
 const ANIO = "(18[5-9]\\d|19\\d{2}|20\\d{2})";
@@ -74,6 +79,20 @@ const RE_ANIO = new RegExp(`(?<!\\d)${ANIO}(?!\\d)`, "g");
  * así, todo junto, se queda sin año: mejor en blanco que con un año falso.
  */
 const RE_CONTADOR = /^(?:(?:img|imgp|_igp|sdim|sany|dsc[nf_]?|_dsc|_dsf|_mg|pict?|gopr|gh\d{2}|mvi|vid|sam|wp|p|dji|cimg|hpim|imag|dcp|crw)[_-]?\d+|[a-z\d_]{4}\d{4}(?![a-z\d]))/i;
+/**
+ * Contadores de cámara en cualquier parte del nombre: «Boda Ana y Leo - DSC_1987», «Copia de
+ * IMG_1987», «IMG_E1987» (una foto editada en el iPhone). Solo los prefijos inconfundibles.
+ */
+const RE_CONTADOR_DENTRO = /(?<![a-z])(?:img_e|img|imgp|_igp|sdim|sany|dsc[nf_]?|_dsc|_dsf|_mg|pict?|gopr|gh\d{2}|mvi|dji|cimg|hpim|imag|dcp|crw)[_-]?\d{3,}/gi;
+/** Lo que añaden los sistemas al copiar: «Copia de IMG_1987.JPG», «Copy of DSC_2003.JPG». */
+const RE_PREFIJO_COPIA = /^(?:copia\s+de|copy\s+of|kopie\s+von|copie\s+de)\s+/i;
+/** Lo que separa un año suelto de lo demás («abuelos 1958», «(1958)»); «_» y «-» lo dejan pegado. */
+const RE_SEPARA_ANIO = /[\s()[\]{},.;:'"«»]/;
+/**
+ * Un curso o una temporada («curso 2011-12», «Temporada 2009-10»): «AAAA-AA» con el año siguiente
+ * no es año y mes, sino dos años. Sin una de estas palabras, «2011-12» sigue siendo diciembre.
+ */
+const RE_PALABRA_CURSO = /(?<![\p{L}])(?:curso|cursos|temporada|season|school|escolar|course|liga|campeonato|promoci[oó]n)(?![\p{L}])/iu;
 /** Resoluciones y medidas: 1920x1080, 2048px. */
 const RE_MEDIDAS = /\d{3,5}\s?[x×]\s?\d{3,5}|\d{3,5}\s?px/gi;
 
@@ -159,7 +178,18 @@ function buscarFecha(nombreArchivo: string, hoy: Date): Omit<FechaDesdeNombre, "
     if (f && f.anio >= 2004) return { fecha: f, patron: "marca-tiempo" };
   }
 
-  // 2. Fecha completa con separadores (2019-08-14, Screenshot_2019-08-14-12-30-45, photo_2019-08-14_...).
+  // 2. Pixel (PXL_20190814_223000123): la hora del nombre va en UTC, así que el día es el de aquí
+  //    (a las 00:30 del 15 de agosto en España, el nombre dice 14 de agosto a las 22:30).
+  const pxl = /^PXL_(\d{4})(\d{2})(\d{2})_([01]\d|2[0-3])([0-5]\d)([0-5]\d)/i.exec(base);
+  if (pxl) {
+    const [a, m, d, h, mi, s] = pxl.slice(1).map(Number) as [number, number, number, number, number, number];
+    if (crearFecha(a, m, d)) {
+      const f = valida(fechaDeInstante(new Date(Date.UTC(a, m - 1, d, h, mi, s))), hoy);
+      if (f) return { fecha: f, patron: "fecha-compacta" };
+    }
+  }
+
+  // 2b. Fecha completa con separadores (2019-08-14, Screenshot_2019-08-14-12-30-45, photo_2019-08-14_...).
   const fc = RE_COMPLETA.exec(base);
   if (fc) {
     const f = valida(crearFecha(Number(fc[1]), Number(fc[2]), Number(fc[3])), hoy);
@@ -199,21 +229,31 @@ function buscarFecha(nombreArchivo: string, hoy: Date): Omit<FechaDesdeNombre, "
     if (f) return { fecha: f, patron: "mes-escrito" };
   }
 
-  // 6. Año y mes (2015-08 Menorca).
+  // 6. Año y mes (2015-08 Menorca). Un curso o una temporada («curso 2011-12») son dos años: sin fecha.
   const am = RE_ANIO_MES.exec(base);
   if (am) {
-    const f = valida(crearFecha(Number(am[1]), Number(am[2])), hoy);
+    const anio = Number(am[1]);
+    const mes = Number(am[2]);
+    if (mes === (anio + 1) % 100 && RE_PALABRA_CURSO.test(base)) return null;
+    const f = valida(crearFecha(anio, mes), hoy);
     if (f) return { fecha: f, patron: "anio-mes" };
   }
 
   // 7. Año suelto (verano 2015), sin contadores de cámara ni medidas, y solo si no hay dos años distintos.
-  const limpio = base.replace(RE_CONTADOR, " ").replace(RE_MEDIDAS, " ");
-  const anios = new Set<number>();
-  for (const m of limpio.matchAll(RE_ANIO)) anios.add(Number(m[1]));
+  const limpio = base.replace(RE_PREFIJO_COPIA, "").replace(RE_CONTADOR, " ").replace(RE_CONTADOR_DENTRO, " ").replace(RE_MEDIDAS, " ");
+  const encontrados = [...limpio.matchAll(RE_ANIO)];
+  const anios = new Set(encontrados.map((m) => Number(m[1])));
   if (anios.size === 1) {
     const [anio] = [...anios];
     const f = valida(crearFecha(anio!), hoy);
-    if (f) return { fecha: f, patron: "anio" };
+    if (f) {
+      const suelto = (i: number) => {
+        const antes = limpio[i - 1];
+        const despues = limpio[i + 4];
+        return (antes === undefined || RE_SEPARA_ANIO.test(antes)) && (despues === undefined || RE_SEPARA_ANIO.test(despues));
+      };
+      return { fecha: f, patron: "anio", pegado: !encontrados.some((m) => suelto(m.index!)) };
+    }
   }
   return null;
 }

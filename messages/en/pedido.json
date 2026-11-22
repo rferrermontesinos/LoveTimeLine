@@ -36,7 +36,8 @@
       "revisar-fechas": "{n, plural, one {# date is worth checking} other {# dates are worth checking}}.",
       "fechas-duplicadas": "{n, plural, one {There is # repeated date} other {There are # repeated dates}}: in the game, any order between those cards counts.",
       "fotos-duplicadas": "{n, plural, one {There is # repeated photo} other {There are # repeated photos}}.",
-      "caja-sin-foto": "The personalised box has no photo yet: choose one or remove that extra."
+      "caja-sin-foto": "The personalised box has no photo yet: choose one or remove that extra.",
+      "caja-baja-resolucion": "The box photo may look a little blurry when printed ({ppp} ppi). You can change it or print it as it is."
     },
     "confirmarBaja": "Print anyway",
     "anadirFotos": "Add photos",
@@ -45,6 +46,7 @@
     "sinFotoCaja": "No photo yet: upload one or pick one from your deck.",
     "elegirFotoCaja": "Choose a photo",
     "yaPedido": "You’ve already ordered this deck. You can keep editing it and download the print files again.",
+    "importando": "Photos are still being added to your deck. You can pay as soon as they’re done.",
     "yaPedidoSinDescarga": "You’ve already ordered this deck.",
     "verPedido": "See the order",
     "bloquea": "Before paying, fix what’s marked in red.",

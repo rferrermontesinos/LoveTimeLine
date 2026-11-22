@@ -51,6 +51,17 @@ export function crearDetectorSesion(hoy: Date, minimo = MINIMO_SESION_ESCANEO) {
   };
 }
 
+/**
+ * La propuesta de una foto que ha resultado ser de una sesión de fotos de fotos: su fecha puesta sola
+ * pasa a ser solo una sugerencia. Es como viaja por el enlace, para que entre en el mazo tal como la
+ * vio quien la mandó (el dueño puede añadir el envío en dos veces y no ver la sesión entera).
+ */
+export function propuestaDeSesion(r: ResultadoFecha): ResultadoFecha {
+  const a = r.automatica;
+  if (!a) return r;
+  return { ...r, automatica: null, motivo: "sesion-de-escaneo", sugerencias: [{ fecha: a.fecha, fuente: a.fuente, motivo: "sesion-de-escaneo" }] };
+}
+
 /** Lo que hace falta de una carta guardada para mejorar sus fechas con las reglas actuales. */
 export interface CartaConSugerencias {
   id: string;

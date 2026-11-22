@@ -146,6 +146,7 @@ describe("importación cortada", () => {
   it("las cartas de fotos ya guardadas y la foto propia de la caja se guardan sin esperar", () => {
     expect(guardarSinEsperar({ tipo: "anadirCartas", cartas: [foto] })).toBe(true);
     expect(guardarSinEsperar({ tipo: "ponerCaja", caja: { origen: "propia", id: "c1" } as Mazo["caja"] })).toBe(true);
+    expect(guardarSinEsperar({ tipo: "fotoCambiada", id: "a", cambios: { ancho: 10, alto: 20 } })).toBe(true);
     // Lo demás espera al guardado automático, que agrupa los cambios seguidos.
     expect(guardarSinEsperar({ tipo: "anadirCartas", cartas: [texto], deshacible: true })).toBe(false);
     expect(guardarSinEsperar({ tipo: "ponerCaja", caja: { origen: "carta", cartaId: "f1" } })).toBe(false);

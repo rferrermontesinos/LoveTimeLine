@@ -49,7 +49,7 @@ function Contenido() {
   const locale = useLocale();
   const { estado, mazo, despachar, almacenOk, reiniciarTodo, alAbrir } = useMazo();
   const { catalogo, pasoActual, avisoPendientes, recuerdo, cerrarRecuerdo, recuerdoAnadido, irAPaso } = useCrear();
-  const { intentosSinPermiso, cerrarResumen } = useImportacion();
+  const { intentosSinPermiso, cerrarResumen, detener } = useImportacion();
   const [borrando, setBorrando] = useState(false);
   // `?pack=` y `?pago=` se leen en el navegador (no como props del servidor) y una sola vez, al
   // abrir: en cuanto se usan salen de la URL, y la página guardada de esa entrada del historial
@@ -129,6 +129,8 @@ function Contenido() {
     const pack = packId ?? packPorDefecto(catalogo)?.id;
     if (!pack) return;
     setBorrando(true);
+    // Si aún entraban fotos, se paran: las que faltaban no pasan al mazo nuevo.
+    await detener();
     // Su enlace para pedir fotos se cierra: nadie podría abrir ya lo que llegara.
     await cerrarEnlaceDelMazo(mazo.id);
     await reiniciarTodo();
@@ -201,7 +203,7 @@ function Contenido() {
                   variante="secundario"
                   className="max-sm:min-h-11"
                   onClick={() => {
-                    despachar({ tipo: "cambiar", campo: "packId", valor: avisoArranque.de });
+                    despachar({ tipo: "cambiar", campo: "packId", valor: avisoArranque.de, deshacible: false });
                     setAvisoCerrado(true);
                   }}
                 >

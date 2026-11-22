@@ -140,6 +140,11 @@ export interface Mazo {
   cartaAbierta?: string | null;
   /** Ver POLITICA_FECHAS. Opcional: los mazos antiguos no la traen. */
   politicaFechas?: number;
+  /**
+   * La foto de la caja (con su recorte, ver claveFotoCaja) que el cliente ha confirmado imprimir
+   * aunque tenga poca resolución. Con otra foto u otro recorte, se vuelve a preguntar.
+   */
+  cajaBajaConfirmada?: string | null;
   cartas: Carta[];
   pedido: Pedido | null;
 }

@@ -31,7 +31,9 @@ export type Aviso =
   | { tipo: "fechas-duplicadas"; grupos: { iso: string; cartas: string[] }[] }
   | { tipo: "fotos-duplicadas"; grupos: string[][] }
   /** Se paga la caja personalizada y no hay ninguna foto que ponerle (un mazo solo con recuerdos sin foto). */
-  | { tipo: "caja-sin-foto" };
+  | { tipo: "caja-sin-foto" }
+  /** La foto de la caja personalizada se queda corta de resolución y aún no se ha confirmado. */
+  | { tipo: "caja-baja-resolucion"; ppp: number };
 
 export type Gravedad = "bloquea" | "confirmar" | "aviso";
 
@@ -45,6 +47,7 @@ export const GRAVEDAD: Record<Aviso["tipo"], Gravedad> = {
   "caja-sin-foto": "bloquea",
   // Pide confirmación al cliente, pero no bloquea: puede imprimirla igualmente.
   "baja-resolucion": "confirmar",
+  "caja-baja-resolucion": "confirmar",
   "revisar-fechas": "aviso",
   "fechas-duplicadas": "aviso",
   "fotos-duplicadas": "aviso",
@@ -63,6 +66,8 @@ export function validarMazo(e: {
   pppMinimo: number;
   /** El mazo lleva la caja personalizada, pero ninguna foto para ella. */
   cajaSinFoto?: boolean;
+  /** Resolución de la foto de la caja personalizada, si la lleva y no se ha confirmado ya; si no, null. */
+  pppCajaSinConfirmar?: number | null;
 }): ResultadoValidacion {
   const { cartas } = e;
   const avisos: Aviso[] = [];
@@ -83,6 +88,8 @@ export function validarMazo(e: {
   if (largas.length) avisos.push({ tipo: "descripcion-larga", cartas: largas });
 
   if (e.cajaSinFoto) avisos.push({ tipo: "caja-sin-foto" });
+  const pppCaja = e.pppCajaSinConfirmar;
+  if (typeof pppCaja === "number" && pppCaja < e.pppMinimo) avisos.push({ tipo: "caja-baja-resolucion", ppp: pppCaja });
 
   const baja = cartas.filter((c) => c.ppp !== null && c.ppp < e.pppMinimo && !c.pppConfirmado).map((c) => c.id);
   if (baja.length) avisos.push({ tipo: "baja-resolucion", cartas: baja });

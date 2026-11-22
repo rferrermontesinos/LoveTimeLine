@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { esDispositivoEscaner, esNombreDeEscaneo, senalesDeEscaneo, sinDiacriticos } from "./escaneo";
 import { proponerFecha, type ResultadoFecha } from "./proponer";
-import { crearDetectorSesion, diaDeSesion, idsEnSesionGuardada, MINIMO_SESION_ESCANEO } from "./sesion";
+import { crearDetectorSesion, diaDeSesion, idsEnSesionGuardada, MINIMO_SESION_ESCANEO, propuestaDeSesion } from "./sesion";
 
 describe("senalesDeEscaneo: metadatos", () => {
   it.each([
@@ -154,5 +154,15 @@ describe("sesiones de fotos de fotos en una subida", () => {
     const cartas = [...["a", "b", "c", "d", "e"].map((id) => carta(id, 25)), carta("f", 24), ...["g", "h", "i", "j", "k"].map((id) => carta(id, 20, "fecha-de-envio"))];
     expect([...idsEnSesionGuardada(cartas)].sort()).toEqual(["a", "b", "c", "d", "e"]);
     expect(idsEnSesionGuardada(cartas.slice(1))).toEqual(new Set());
+  });
+
+  it("propuestaDeSesion: la fecha puesta sola pasa a sugerencia, como viaja por el enlace", () => {
+    const r = propuestaDeSesion(camara("2026-11-02"));
+    expect(r).toMatchObject({ automatica: null, motivo: "sesion-de-escaneo", sugerencias: [{ fecha: { anio: 2026, mes: 11, dia: 2 }, fuente: "exif", motivo: "sesion-de-escaneo" }] });
+    // Y el detector del dueño ya no la cuenta: no hay nada que dejar en blanco.
+    expect(diaDeSesion(r, hoy)).toBeNull();
+    // Una propuesta ya en blanco no cambia.
+    const enBlanco = proponerFecha({ nombreArchivo: "foto.jpg", hoy });
+    expect(propuestaDeSesion(enBlanco)).toBe(enBlanco);
   });
 });

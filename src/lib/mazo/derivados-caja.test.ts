@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import catalogoJson from "../../../supabase/catalogo.json";
 import type { Catalogo, Extra } from "@/domain/precios/tipos";
-import { cajaPropia, datosCaja, datosPortada, esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, nuevaCartaTexto, pppFotoCaja, proporcionCaja, varianteCaja } from "./derivados";
+import { cajaPropia, claveFotoCaja, datosCaja, datosPortada, esCajaPersonalizada, extraCajaPersonalizada, fotoCaja, nuevaCartaTexto, pppFotoCaja, proporcionCaja, varianteCaja } from "./derivados";
 import type { CartaFoto, FotoCaja, Mazo } from "./tipos";
 
 const catalogo = catalogoJson as unknown as Catalogo;
@@ -160,5 +160,13 @@ describe("foto propia de la caja", () => {
     // Una foto pequeña (640 × 480) no llega a los 300 ppp.
     const pequena = cajaPropia({ id: "p", nombreArchivo: "p.jpg", tipoArchivo: "image/jpeg", hash: "p", ancho: 640, alto: 480, anchoOriginal: 640, altoOriginal: 480 }, PROPORCION);
     expect(pppFotoCaja(pequena, PROPORCION)).toBe(200);
+  });
+
+  it("claveFotoCaja cambia con otra foto u otro recorte: una confirmación de poca resolución deja de valer", () => {
+    const recorte = { x: 10, y: 20.4, ancho: 600, alto: 400 };
+    const clave = claveFotoCaja({ id: "f1", recorte });
+    expect(clave).toBe("f1|10|20|600|400");
+    expect(claveFotoCaja({ id: "f2", recorte })).not.toBe(clave);
+    expect(claveFotoCaja({ id: "f1", recorte: { ...recorte, x: 40 } })).not.toBe(clave);
   });
 });

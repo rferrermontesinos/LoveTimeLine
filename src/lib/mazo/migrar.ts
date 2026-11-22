@@ -60,6 +60,7 @@ export function migrarMazo(guardado: unknown): Mazo | null {
     paso,
     // Opcional: los mazos guardados antes no la tienen y se abren sin carta abierta.
     cartaAbierta: typeof m.cartaAbierta === "string" || m.cartaAbierta === null ? m.cartaAbierta : undefined,
+    cajaBajaConfirmada: typeof m.cajaBajaConfirmada === "string" ? m.cajaBajaConfirmada : undefined,
     cartas,
   };
 }
@@ -104,6 +105,9 @@ export function mejorarFechasGuardadas(cartas: Carta[]): Carta[] {
         return deEstosDias(s0) ? c : poner(s0, "media");
       case "exif-y-nombre-no-coinciden": {
         // Primero iba la escrita en el nombre; ahora solo gana a la de la cámara si es anterior.
+        // Ojo si se sube POLITICA_FECHAS: desde la política 3 este motivo también es el de un año
+        // pegado a otras letras frente a una cámara («AnaLeo_1987», con la de la cámara primero), que
+        // debe seguir en blanco. Esas cartas no pasan por aquí mientras la política no cambie.
         const s1 = c.sugerencias?.[1];
         const elegida = s0.fuente === "nombre" && s1 && !anterior(s0.fecha, s1.fecha) ? s1 : s0;
         return deEstosDias(elegida) ? c : poner(elegida, "media");

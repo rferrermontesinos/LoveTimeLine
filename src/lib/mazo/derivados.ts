@@ -224,6 +224,12 @@ export function fotoCaja(mazo: Pick<Mazo, "cartas" | "portadaId" | "caja">): Fot
   return carta ? { id: carta.id, ancho: carta.ancho, recorte: carta.recorteReverso } : null;
 }
 
+/** Qué foto, y con qué recorte, va en la caja: si cambia, una confirmación de poca resolución ya no vale. */
+export function claveFotoCaja(foto: Pick<FotoDeCaja, "id" | "recorte">): string {
+  const r = foto.recorte;
+  return [foto.id, r.x, r.y, r.ancho, r.alto].map((v) => (typeof v === "number" ? Math.round(v) : v)).join("|");
+}
+
 /**
  * Proporción (ancho / alto) de la foto en la cara de la caja personalizada: la misma que en la
  * portada, a todo el ancho con sangrado y hasta la banda del título.

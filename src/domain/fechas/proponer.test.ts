@@ -536,3 +536,78 @@ describe("fechasCompatibles", () => {
     expect(fechasCompatibles({ anio: 2015 }, { anio: 2019, mes: 8, dia: 14 })).toBe(false);
   });
 });
+
+describe("metadatosDesdeExifr: capturas de pantalla", () => {
+  const bytes = (texto: string) => Uint8Array.from(texto, (c) => c.charCodeAt(0));
+
+  it("reconoce el comentario «Screenshot» del XMP o de EXIF, y no guarda nada más del comentario", () => {
+    expect(metadatosDesdeExifr({ exif: { UserComment: { lang: "x-default", value: "Screenshot" } } })).toEqual({ esCaptura: true });
+    expect(metadatosDesdeExifr({ ifd0: { Make: "Apple" }, userComment: bytes("ASCII\0\0\0Screenshot") })).toEqual({ Make: "Apple", esCaptura: true });
+    expect(metadatosDesdeExifr({ userComment: bytes("UNICODE\0S\0c\0r\0e\0e\0n\0s\0h\0o\0t\0") })).toEqual({ esCaptura: true });
+    expect(metadatosDesdeExifr({ ifd0: { Make: "Apple" }, exif: { UserComment: "Cumpleaños de la abuela" } })).toEqual({ Make: "Apple" });
+  });
+});
+
+describe("proponerFecha: revisión de fechas del 22-11-2026", () => {
+  it("una captura del iPhone (IMG_1234.PNG) se reconoce por sus metadatos y no se pone sola", () => {
+    // De hace meses: en blanco, con su mes como sugerencia, como un «Screenshot_…».
+    const antigua = proponer({ nombreArchivo: "IMG_1234.PNG", exif: { DateCreated: "2026-08-10T12:00:00", esCaptura: true } });
+    expect(antigua).toMatchObject({ automatica: null, motivo: "mes-de-captura" });
+    expect(isoSugerencias(antigua)).toEqual(["2026-08 exif mes-de-captura"]);
+    // De estos días: en blanco y sin sugerencia (puede ser de preparar el mazo).
+    const reciente = proponer({ nombreArchivo: "IMG_1234.PNG", exif: { DateCreated: "2026-11-01T12:00:00", esCaptura: true } });
+    expect(reciente).toMatchObject({ automatica: null, sugerencias: [], motivo: "captura-de-pantalla" });
+    // Las de antes, en JPEG con la marca del iPhone y DateTimeOriginal, tampoco.
+    const conCamara = proponer({ nombreArchivo: "IMG_0456.JPG", exif: { ...IPHONE, DateTimeOriginal: "2017:03:02 10:00:00", esCaptura: true } });
+    expect(conCamara.automatica).toBeNull();
+    expect(isoSugerencias(conCamara)).toEqual(["2017-03 exif mes-de-captura"]);
+  });
+
+  it.each(["IMG_E1987.JPG", "Copia de IMG_1987.JPG", "Boda Ana y Leo - DSC_1987.jpg", "Copy of DSC_2003.JPG"])(
+    "%s: el contador no pasa por un año escrito y vale la cámara",
+    (nombreArchivo) => {
+      expect(isoAuto(proponer({ nombreArchivo, exif: { ...IPHONE, DateTimeOriginal: "2021:07:10 18:00:00" } }))).toBe("2021-07-10");
+    },
+  );
+
+  it("un año pegado a otras letras («AnaLeo_1987») frente a una cámara que dice otra cosa: en blanco, con las dos", () => {
+    const r = proponer({ nombreArchivo: "AnaLeo_1987.jpg", exif: { ...CANON, DateTimeOriginal: "2019:08:14 12:00:00" } });
+    expect(r).toMatchObject({ automatica: null, motivo: "exif-y-nombre-no-coinciden" });
+    expect(isoSugerencias(r)).toEqual(["2019-08-14 exif exif-y-nombre-no-coinciden", "1987 nombre exif-y-nombre-no-coinciden"]);
+    // Separado («abuelos 1958»), es una foto de una foto antigua: gana lo escrito.
+    expect(isoAuto(proponer({ nombreArchivo: "abuelos 1958.jpg", exif: { ...IPHONE, DateTimeOriginal: "2019:08:14 12:00:00" } }))).toBe("1958");
+    // Con una cámara de estos días (una foto de la copia en papel para el mazo), también.
+    expect(isoAuto(proponer({ nombreArchivo: "Navidad_2008.jpg", exif: { ...IPHONE, DateTimeOriginal: "2026:11:03 12:00:00" } }))).toBe("2008");
+    // Y sin cámara, el año pegado vale como cualquier otro.
+    expect(isoAuto(proponer({ nombreArchivo: "Navidad_2008.jpg" }))).toBe("2008");
+  });
+
+  it("una carpeta posterior al envío o a la captura no puede ser la del recuerdo", () => {
+    const wa = proponer({ nombreArchivo: "IMG-20190814-WA0001.jpg", rutaArchivo: "Copia movil 2024/IMG-20190814-WA0001.jpg" });
+    expect(wa.automatica).toBeNull();
+    expect(isoSugerencias(wa)).toEqual(["2019-08 nombre mes-de-envio"]);
+    const captura = proponer({ nombreArchivo: "Screenshot_2019-08-14-12-30-45.png", rutaArchivo: "Mazo Navidad 2025/Screenshot_2019-08-14-12-30-45.png" });
+    expect(captura.automatica).toBeNull();
+    expect(isoSugerencias(captura)).toEqual(["2019-08 nombre mes-de-captura"]);
+    // Una carpeta anterior sí vale: la foto se mandó después del viaje.
+    expect(isoAuto(proponer({ nombreArchivo: "IMG-20190814-WA0001.jpg", rutaArchivo: "Menorca 2015/IMG-20190814-WA0001.jpg" }))).toBe("2015");
+  });
+
+  it("la fecha de un reloj sin configurar no vale tampoco cuando el móvil la pone en el nombre", () => {
+    for (const nombreArchivo of ["20000101_000500.jpg", "IMG_20000101_000500.jpg", "IMG_19700101_010000.jpg"]) {
+      const r = proponer({ nombreArchivo, exif: { ...IPHONE, DateTimeOriginal: "2000:01:01 00:05:00" } });
+      expect(r).toMatchObject({ automatica: null, motivo: "reloj-de-camara" });
+      expect(proponer({ nombreArchivo })).toMatchObject({ automatica: null, motivo: "reloj-de-camara" });
+    }
+    // Ni el «cero» de Unix al oeste de Greenwich, ni el de 1900.
+    for (const DateTimeOriginal of ["1969:12:31 19:00:00", "1900:01:01 00:00:00"]) {
+      expect(proponer({ nombreArchivo: "IMG_0001.JPG", exif: { ...CANON, DateTimeOriginal } })).toMatchObject({ automatica: null, motivo: "reloj-de-camara" });
+    }
+  });
+
+  it("un curso en el nombre o en la carpeta no se lee como un mes", () => {
+    expect(isoAuto(proponer({ nombreArchivo: "curso 2011-12.jpg", exif: { ...IPHONE, DateTimeOriginal: "2019:08:14 12:00:00" } }))).toBe("2019-08-14");
+    expect(proponer({ nombreArchivo: "IMG_0001.JPG", rutaArchivo: "Temporada 2009-10/IMG_0001.JPG" }).automatica).toBeNull();
+    expect(isoAuto(proponer({ nombreArchivo: "IMG_0001.JPG", rutaArchivo: "2009-10 Otoño/IMG_0001.JPG" }))).toBe("2009-10");
+  });
+});

@@ -41,6 +41,18 @@ describe("validarMazo", () => {
     expect(validarMazo({ cartas, minimo: 40, maximo: 300, hoy, pppMinimo: 300, cajaSinFoto: false }).puedePagar).toBe(true);
   });
 
+  it("la foto de la caja con poca resolución pide confirmación, como las cartas", () => {
+    const cartas = mazo(40).map((c, i) => ({ ...c, fecha: { anio: 1980 + i } }));
+    const r = validarMazo({ cartas, minimo: 40, maximo: 300, hoy, pppMinimo: 300, pppCajaSinConfirmar: 200 });
+    expect(r.avisos).toEqual([{ tipo: "caja-baja-resolucion", ppp: 200 }]);
+    expect(GRAVEDAD["caja-baja-resolucion"]).toBe("confirmar");
+    expect(r.puedePagar).toBe(false);
+    // Con resolución suficiente, ya confirmada (null) o sin caja personalizada, nada.
+    for (const pppCajaSinConfirmar of [300, null, undefined]) {
+      expect(validarMazo({ cartas, minimo: 40, maximo: 300, hoy, pppMinimo: 300, pppCajaSinConfirmar }).puedePagar).toBe(true);
+    }
+  });
+
   it("la baja resolución pide confirmación pero no bloquea una vez confirmada", () => {
     const base = Array.from({ length: 40 }, (_, i) => carta(String(1980 + i)));
     const conBaja = [...base.slice(1), { ...base[0]!, ppp: 180 }];

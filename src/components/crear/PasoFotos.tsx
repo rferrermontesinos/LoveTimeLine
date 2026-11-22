@@ -48,6 +48,10 @@ export function PasoFotos() {
   const [borrado, setBorrado] = useState<Borrado | null>(null);
   const permiso = useRef<HTMLLabelElement>(null);
   const casilla = useRef<HTMLInputElement>(null);
+  const botonSeleccionar = useRef<HTMLButtonElement>(null);
+  // Tras borrar con la selección, el foco va al «Deshacer» del aviso (la barra de la selección,
+  // con el botón que tenía el foco, desaparece).
+  const enfocarDeshacer = useRef(false);
   const consentido = !!mazo?.consentimientoFotos;
   const cartas = mazo?.cartas;
   const ordenadas = useMemo(() => ordenarPorFecha(cartas ?? []), [cartas]);
@@ -96,7 +100,38 @@ export function PasoFotos() {
     setBorrado({ n: ids.length, antes: mazo, despues: null });
     despachar({ tipo: "borrarCartas", ids });
     salirDeSeleccion();
+    enfocarDeshacer.current = true;
   };
+  /** Tras una acción de la selección, el foco no se pierde: vuelve a «Seleccionar». */
+  const focoASeleccionar = () => requestAnimationFrame(() => botonSeleccionar.current?.focus());
+  // También con todas borradas: si no, no habría forma de deshacerlo en el móvil.
+  const avisoBorrado = borradoVigente && (
+    <Aviso
+      tono="exito"
+      accion={
+        <Boton
+          ref={(el) => {
+            if (el && enfocarDeshacer.current) {
+              enfocarDeshacer.current = false;
+              el.focus();
+            }
+          }}
+          variante="secundario"
+          tamano="sm"
+          className="max-sm:min-h-11"
+          onClick={() => {
+            despachar({ tipo: "deshacer" });
+            setBorrado(null);
+            focoASeleccionar();
+          }}
+        >
+          ↶ {t("comun.deshacer")}
+        </Boton>
+      }
+    >
+      <span className="font-semibold">{t("fotos.borradas", { n: borradoVigente.n })}</span>
+    </Aviso>
+  );
   const cuadricula = (lista: Carta[]) => (
     <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-6 lg:grid-cols-8">
       {lista.map((c) => (
@@ -200,6 +235,7 @@ export function PasoFotos() {
                 {t("fotos.anadirCarpeta")}
               </Boton>
               <Boton
+                ref={botonSeleccionar}
                 variante={modoSeleccion ? "primario" : "secundario"}
                 tamano="sm"
                 className="max-sm:min-h-11"
@@ -217,32 +253,14 @@ export function PasoFotos() {
       {!hayCartas ? (
         <>
           <EstadoImportacion />
-          {!progreso && enEspera === 0 && <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>}
+          {avisoBorrado}
+          {!progreso && enEspera === 0 && !borradoVigente && <p className="rounded-[14px] bg-papel-2 p-6 text-center text-tinta-2">{t("fotos.vacio")}</p>}
         </>
       ) : (
         <section aria-labelledby={`${id}-cartas`} className="space-y-4">
           <EstadoImportacion />
           {modoSeleccion && seleccion.size === 0 && <p className="text-sm text-tinta-2">{t("fotos.seleccionAyuda")}</p>}
-          {borradoVigente && (
-            <Aviso
-              tono="exito"
-              accion={
-                <Boton
-                  variante="secundario"
-                  tamano="sm"
-                  className="max-sm:min-h-11"
-                  onClick={() => {
-                    despachar({ tipo: "deshacer" });
-                    setBorrado(null);
-                  }}
-                >
-                  ↶ {t("comun.deshacer")}
-                </Boton>
-              }
-            >
-              <span className="font-semibold">{t("fotos.borradas", { n: borradoVigente.n })}</span>
-            </Aviso>
-          )}
+          {avisoBorrado}
 
           {conFecha.length > 0 && cuadricula(conFecha)}
           {sinFecha.length > 0 && (
@@ -294,6 +312,7 @@ export function PasoFotos() {
                 despachar({ tipo: "ponerFecha", ids: [...seleccion], fecha: fechaLote });
                 setDialogoFecha(false);
                 salirDeSeleccion();
+                focoASeleccionar();
               }}
             >
               {t("fechas.aplicarA", { n: seleccion.size })}

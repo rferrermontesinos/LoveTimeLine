@@ -207,6 +207,52 @@ describe("añadir cartas y deshacer", () => {
     e = reductor(e, { tipo: "deshacer" });
     expect(e.mazo?.cartas.map((c) => c.id)).toEqual(["a"]);
   });
+
+  it("girar una foto no se deshace: deshacer otro cambio anterior no le devuelve el tamaño ni el recorte de antes", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [{ ...carta("a", 2019), ancho: 2000, alto: 1500 }] });
+    e = reductor(e, { tipo: "actualizarCarta", id: "a", cambios: { descripcion: "En la playa" } });
+    const girada = { ancho: 1500, alto: 2000, recorteAnverso: { x: 0, y: 10, ancho: 1500, alto: 1900 }, recorteReverso: { x: 0, y: 0, ancho: 1500, alto: 1200 }, reversoPersonalizado: false, pppConfirmado: false };
+    e = reductor(e, { tipo: "fotoCambiada", id: "a", cambios: girada });
+    expect(e.mazo?.cartas[0]).toMatchObject(girada);
+    e = reductor(e, { tipo: "deshacer" });
+    // Se deshace la frase, pero la carta sigue con las medidas de la foto girada.
+    expect(e.mazo?.cartas[0]).toMatchObject({ ...girada, descripcion: "" });
+    expect(e.pasado).toEqual([]);
+  });
+
+  it("el pack que cambia el enlace al abrir, y su «Deshacer», no vuelven con otro «Deshacer»", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "cambiar", campo: "paletaId", valor: "cobalto" });
+    e = reductor(e, { tipo: "cambiar", campo: "packId", valor: "grande", deshacible: false });
+    e = reductor(e, { tipo: "actualizarCarta", id: "x", cambios: { descripcion: "Hola" } });
+    e = reductor(e, { tipo: "cambiar", campo: "packId", valor: "pequeno", deshacible: false });
+    e = reductor(e, { tipo: "cambiar", campo: "titulo", valor: "Ana y Leo" });
+    e = reductor(e, { tipo: "deshacer" });
+    e = reductor(e, { tipo: "deshacer" });
+    // Se deshace la paleta, pero el pack sigue siendo el que se eligió en el aviso.
+    expect(e.mazo).toMatchObject({ packId: "pequeno", paletaId: "rosa" });
+  });
+
+  it("confirmar la foto de la caja con poca resolución se puede deshacer y no se repite", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "confirmarCajaBaja", clave: "f1|0|0|600|400" });
+    expect(e.mazo?.cajaBajaConfirmada).toBe("f1|0|0|600|400");
+    expect(reductor(e, { tipo: "confirmarCajaBaja", clave: "f1|0|0|600|400" })).toBe(e);
+    e = reductor(e, { tipo: "deshacer" });
+    expect(e.mazo?.cajaBajaConfirmada).toBeUndefined();
+  });
+
+  it("lo que llega de una importación de otro mazo no entra en este («Empezar otro mazo» a medias)", () => {
+    let e = nuevo();
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("a", 2019)], mazoId: "m1" });
+    const antes = e;
+    e = reductor(e, { tipo: "anadirCartas", cartas: [carta("b", 2020)], mazoId: "otro" });
+    e = reductor(e, { tipo: "fechaASugerencia", ids: ["a"], motivo: "sesion-de-escaneo", mazoId: "otro" });
+    expect(e).toBe(antes);
+    e = reductor(e, { tipo: "fechaASugerencia", ids: ["a"], motivo: "sesion-de-escaneo", mazoId: "m1" });
+    expect(e.mazo?.cartas[0]).toMatchObject({ fecha: null, motivo: "sesion-de-escaneo" });
+  });
 });
 
 describe("cartas de texto", () => {

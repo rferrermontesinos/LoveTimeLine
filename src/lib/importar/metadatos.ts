@@ -23,7 +23,8 @@ export const OPCIONES_EXIFR = {
   interop: false,
   ifd1: false,
   makerNote: false,
-  userComment: false,
+  // Solo para reconocer las capturas de pantalla (dicen «Screenshot»); no se guarda el comentario.
+  userComment: true,
   reviveValues: false,
   mergeOutput: false,
 } as const;
