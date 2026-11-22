@@ -206,15 +206,23 @@ export function PasoPedido() {
       const pedido: Pedido = {
         id: r.pedidoId,
         modo: r.modo,
-        estado: r.modo === "simulado" ? "pagado" : "pendiente",
+        estado: "pendiente",
         totalCents: r.totalCents,
         moneda: r.moneda,
         cartasFisicas: r.cartasFisicas,
         fecha: Date.now(),
         stripeSessionId: r.sessionId,
       };
+      // El simulado ya está pagado, pero solo cuenta como pagado aquí si queda guardado.
+      const simulado = r.modo === "simulado";
       despachar({ tipo: "registrarPedido", pedido });
-      await guardarAhora({ ...mazo, pedido, actualizadoEn: Date.now() });
+      // Sin el pedido en el dispositivo (sin espacio, otra pestaña), al volver del pago no se
+      // sabría qué mazo es: no se sigue, el mazo se queda sin pedido y el aviso del guardado dice por qué.
+      if (!(await guardarAhora({ ...mazo, pedido: simulado ? { ...pedido, estado: "pagado" } : pedido, actualizadoEn: Date.now() }))) {
+        despachar({ tipo: "cancelarPedido" });
+        throw new Error("Pedido sin guardar");
+      }
+      if (simulado) despachar({ tipo: "pedidoPagado" });
       if (r.modo === "stripe" && r.url) {
         window.location.assign(r.url);
         return;

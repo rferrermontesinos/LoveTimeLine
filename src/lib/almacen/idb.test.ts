@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mazo } from "@/lib/mazo/tipos";
-import { borrarFotos, escribirMazo, esErrorDeEspacio, guardarFoto, idsDeFotos } from "./idb";
+import { almacenDisponible, borrarFotos, escribirMazo, esErrorDeEspacio, guardarFoto, idsDeFotos } from "./idb";
 
 /**
  * Un almacén falso en memoria con la misma promesa que idb-keyval: `update` lee y escribe en la
@@ -11,7 +11,10 @@ const almacen = vi.hoisted(() => ({ datos: new Map<string, unknown>(), fallo: nu
 vi.mock("idb-keyval", () => ({
   createStore: () => ({}),
   get: async (k: string) => almacen.datos.get(k),
-  set: async (k: string, v: unknown) => void almacen.datos.set(k, v),
+  set: async (k: string, v: unknown) => {
+    if (almacen.fallo) throw almacen.fallo;
+    almacen.datos.set(k, v);
+  },
   del: async (k: string) => void almacen.datos.delete(k),
   delMany: async (ks: string[]) => ks.forEach((k) => almacen.datos.delete(k)),
   keys: async () => [...almacen.datos.keys()],
@@ -94,5 +97,20 @@ describe("fotos sueltas", () => {
     expect([...datos.keys()].sort()).toEqual(["foto:b:copia", "foto:b:mini", "mazo-actual"]);
     await borrarFotos([]);
     expect(await idsDeFotos()).toEqual(new Set(["b"]));
+  });
+});
+
+describe("almacén disponible", () => {
+  it("lleno sigue disponible: lo guardado se puede leer y lo que no quepa se avisa al guardar", async () => {
+    almacen.fallo = new DOMException("lleno", "QuotaExceededError");
+    expect(await almacenDisponible()).toBe(true);
+  });
+
+  it("si el navegador no deja usarlo (modo privado, bloqueado), no lo está", async () => {
+    almacen.fallo = new DOMException("bloqueado", "InvalidStateError");
+    expect(await almacenDisponible()).toBe(false);
+    almacen.fallo = null;
+    expect(await almacenDisponible()).toBe(true);
+    expect(datos.has("prueba")).toBe(false);
   });
 });

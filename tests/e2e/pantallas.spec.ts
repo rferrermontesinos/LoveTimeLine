@@ -1,10 +1,11 @@
 /**
  * Lo que puede pasar mientras entran fotos y al deshacer (revisión de pantallas del 22-11-2026):
  * pagar a medias, empezar otro mazo a medias, las mismas fotos dos veces, girar y deshacer, borrar
- * todas y dónde queda el foco. Y, de la revisión de la impresión, la dedicatoria que no cabe.
+ * todas y dónde queda el foco. De la revisión de la impresión, la dedicatoria que no cabe. Y, de la
+ * del guardado, el móvil que se queda sin espacio.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { conFecha, fotos, leerMazo } from "./mazo-utiles";
+import { conFecha, fotos, guardado, leerMazo, ponerAnioALasSinFecha } from "./mazo-utiles";
 
 /** Empieza un mazo con el pack pequeño y da el permiso de las fotos. */
 async function empezar(page: Page) {
@@ -175,5 +176,85 @@ test.describe("impresión", () => {
     await expect(ayuda).toHaveText("No cabe entera en la carta y se cortaría: acórtala o quita algún salto de línea.");
     await campo.fill(firmas.slice(0, 10).join("\n"));
     await expect(ayuda).toHaveText(/^Va detrás de la portada/);
+  });
+});
+
+/**
+ * El dispositivo se queda sin espacio, como un móvil lleno: el navegador no deja guardar nada más
+ * (leer sí). Se ejecuta en el navegador: no puede usar nada de fuera de la función.
+ */
+function llenarDispositivo() {
+  const w = window as unknown as { __guardarOriginal?: Pick<IDBObjectStore, "put" | "add"> };
+  w.__guardarOriginal ??= { put: IDBObjectStore.prototype.put, add: IDBObjectStore.prototype.add };
+  const lleno = () => {
+    throw new DOMException("No queda espacio en el dispositivo", "QuotaExceededError");
+  };
+  IDBObjectStore.prototype.put = lleno;
+  IDBObjectStore.prototype.add = lleno;
+}
+
+/** Se libera espacio: se vuelve a poder guardar. */
+function liberarDispositivo() {
+  const w = window as unknown as { __guardarOriginal?: Pick<IDBObjectStore, "put" | "add"> };
+  if (!w.__guardarOriginal) return;
+  IDBObjectStore.prototype.put = w.__guardarOriginal.put;
+  IDBObjectStore.prototype.add = w.__guardarOriginal.add;
+}
+
+test.describe("sin espacio en el dispositivo", () => {
+  test("el mazo guardado se abre tal cual y, al cambiar algo, avisa de que no se guarda", async ({ page }) => {
+    await empezar(page);
+    await page.getByTestId("entrada-fotos").setInputFiles(fotos().filter(conFecha).slice(0, 2));
+    await expect(page.getByText("2 fotos añadidas")).toBeVisible({ timeout: 60_000 });
+    await expect.poll(async () => (await leerMazo(page))?.cartas.length).toBe(2);
+    await expect(guardado(page)).toHaveText(/Guardado en este dispositivo/);
+
+    // Se llena el móvil y se vuelve otro día: el mazo está, no es «tu navegador no deja guardar».
+    await page.addInitScript(llenarDispositivo);
+    await page.reload();
+    await expect(page.getByTestId("aviso-reanudar")).toHaveText("Seguimos donde lo dejaste");
+    await expect(page.getByRole("region", { name: /^Tus cartas/ }).getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByText(/Tu navegador no deja guardar/)).toHaveCount(0);
+
+    // Lo que se cambie no cabe: se dice, con la forma de volver a intentarlo.
+    await irA(page, "Cartas");
+    await page.getByRole("textbox", { name: /frase/i }).first().fill("En la playa");
+    await expect(guardado(page)).toHaveText("Sin guardar: no queda espacio en este dispositivo");
+    await expect(page.getByText(/^Tus últimos cambios no se han guardado: no queda espacio/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Volver a intentarlo" })).toBeVisible();
+  });
+
+  test("no se paga sin guardar el pedido; con espacio otra vez, sí", async ({ page }, info) => {
+    test.skip(info.project.name === "movil", "La lógica es la misma; basta con probarla en escritorio.");
+    test.setTimeout(240_000);
+    await empezar(page);
+    const archivos = fotos();
+    await page.getByTestId("entrada-fotos").setInputFiles(archivos);
+    await expect(page.getByText(`${archivos.length} fotos añadidas`)).toBeVisible({ timeout: 120_000 });
+    await ponerAnioALasSinFecha(page, 2016);
+    await irA(page, "Pedido");
+    await expect(page.getByRole("heading", { name: "Revisa y haz el pedido" })).toBeVisible();
+    await expect(guardado(page)).toHaveText(/Guardado en este dispositivo/);
+    await page.getByRole("checkbox", { name: /He revisado/ }).check();
+    const pagar = page.getByRole("button", { name: /Pagar .* \(prueba\)/ });
+    await expect(pagar).toBeEnabled();
+
+    // Sin espacio, el pedido no quedaría en el dispositivo y al volver del pago no se sabría de qué
+    // mazo es: no se sigue, y se dice por qué.
+    await page.evaluate(llenarDispositivo);
+    await pagar.click();
+    await expect(page.getByText("No se ha podido preparar el pago. Inténtalo de nuevo.")).toBeVisible();
+    await expect(guardado(page)).toHaveText("Sin guardar: no queda espacio en este dispositivo");
+    await expect(page).toHaveURL(/\/es\/crear/);
+    await expect(pagar).toBeEnabled();
+
+    // Se libera espacio: lo que se guarda es el mazo sin pedido, y ya se puede pagar.
+    await page.evaluate(liberarDispositivo);
+    await page.getByRole("button", { name: "Volver a intentarlo" }).click();
+    await expect(guardado(page)).toHaveText(/Guardado en este dispositivo/);
+    expect((await leerMazo(page))?.pedido ?? null).toBeNull();
+    await pagar.click();
+    await expect(page).toHaveURL(/\/es\/pedido\/confirmado$/);
+    await expect(page.getByRole("heading", { name: "Pedido de prueba hecho" })).toBeVisible();
   });
 });

@@ -16,13 +16,18 @@ function t(): UseStore {
 const CLAVE_MAZO = "mazo-actual";
 const clave = (id: string, tipo: "copia" | "mini") => `foto:${id}:${tipo}`;
 
+/**
+ * El navegador deja usar el almacén. Lleno no es «sin almacén»: lo guardado se sigue pudiendo leer
+ * (si no, el mazo de quien se queda sin espacio en el móvil parecería perdido), y lo que no quepa
+ * se avisa al guardarlo.
+ */
 export async function almacenDisponible(): Promise<boolean> {
   try {
     await set("prueba", 1, t());
     await del("prueba", t());
     return true;
-  } catch {
-    return false;
+  } catch (e) {
+    return esErrorDeEspacio(e);
   }
 }
 

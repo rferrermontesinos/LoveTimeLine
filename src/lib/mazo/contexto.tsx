@@ -27,8 +27,11 @@ interface ValorContexto extends EstadoMazo {
   /** El mazo tal como estaba guardado al abrir la página (null si no había): para «Seguimos donde lo dejaste». */
   alAbrir: Mazo | null;
   reiniciarTodo: () => Promise<void>;
-  /** Guarda ya, sin esperar al guardado automático (antes de salir hacia el pago). */
-  guardarAhora: (mazo?: Mazo | null) => Promise<void>;
+  /**
+   * Guarda ya, sin esperar al guardado automático (antes de salir hacia el pago). Dice si lo
+   * guardado en el dispositivo es ya lo último (sin almacén, como en modo privado, también).
+   */
+  guardarAhora: (mazo?: Mazo | null) => Promise<boolean>;
   /**
    * Trae lo guardado (tras cambiar el mazo en otra pestaña) y vuelve a guardar desde ahí. Si allí
    * se borró sin empezar otro, lo de esta pestaña pasa a ser lo guardado.
@@ -83,9 +86,9 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
   const canal = useRef<CanalPestanas | null>(null);
   const hayOtras = useRef(false);
   /** Lecturas y escrituras de una en una, para que la comprobación de versión no se cruce consigo misma. */
-  const cola = useRef<Promise<void>>(Promise.resolve());
+  const cola = useRef<Promise<unknown>>(Promise.resolve());
 
-  const encolar = useCallback((tarea: () => Promise<void>): Promise<void> => {
+  const encolar = useCallback(<T,>(tarea: () => Promise<T>): Promise<T> => {
     const siguiente = cola.current.then(tarea);
     cola.current = siguiente.catch(() => undefined);
     return siguiente;
@@ -123,19 +126,24 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     setGuardado({ tipo: "conflicto", otroMazo: guardadoAhora?.id !== ultimo.current?.id });
   }, []);
 
+  /** Guarda lo último de esta pestaña. Dice si queda en el dispositivo (o no hay almacén ni nada que guardar). */
   const escribir = useCallback(
     () =>
-      encolar(async () => {
+      encolar(async (): Promise<boolean> => {
         const mazo = ultimo.current;
-        if (!cargado.current || sinAlmacen.current || enConflicto.current || !mazo || mazo === escrito.current) return;
+        if (!cargado.current || enConflicto.current) return false;
+        if (sinAlmacen.current || !mazo || mazo === escrito.current) return true;
         const r = await escribirMazo(mazo, base.current);
         if (r.ok) {
           base.current = versionDe(mazo);
           marcarEscrito(mazo);
           setGuardado({ tipo: "guardado", en: Date.now() });
           if (base.current) canal.current?.enviar({ tipo: "guardado", pestana: pestana.current, version: base.current });
-        } else if (r.motivo === "conflicto") avisarConflicto(r.guardado);
+          return true;
+        }
+        if (r.motivo === "conflicto") avisarConflicto(r.guardado);
         else setGuardado({ tipo: r.motivo === "espacio" ? "sin-espacio" : "error" });
+        return false;
       }),
     [encolar, avisarConflicto, marcarEscrito],
   );
@@ -276,7 +284,7 @@ export function ProveedorMazo({ children }: { children: ReactNode }) {
     async (mazo?: Mazo | null) => {
       pararTemporizador();
       if (mazo) ultimo.current = mazo;
-      await escribir();
+      return escribir();
     },
     [escribir],
   );

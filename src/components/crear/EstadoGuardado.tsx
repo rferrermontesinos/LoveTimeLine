@@ -80,7 +80,7 @@ export function AvisoGuardado() {
   const { guardado, guardarAhora, recargar } = useMazo();
   const [ocupado, setOcupado] = useState(false);
 
-  const hacer = async (accion: () => Promise<void>) => {
+  const hacer = async (accion: () => Promise<unknown>) => {
     setOcupado(true);
     try {
       await accion();
