@@ -41,6 +41,13 @@ describe("crear un enlace desde el portal (/api/enlaces)", () => {
     expect(r.status).toBe(403);
   });
 
+  it("un espacio o un salto de línea pegados con el secreto en Vercel no lo rompen", async () => {
+    const { buscar, pedidas } = servicio();
+    const r = await crearEnlaceEnServicio(peticion(await cuerpoDeEnlace()), { base: "https://ejemplo.supabase.co/functions/v1/colaboracion", secreto: ` ${SECRETO}\n`, buscar });
+    expect(r.status).toBe(201);
+    expect(pedidas[0]!.headers.get("x-clave-servicio")).toBe(SECRETO);
+  });
+
   it("en local, el servicio es una ruta de la propia web", async () => {
     const { buscar, pedidas } = servicio();
     await crearEnlaceEnServicio(peticion(await cuerpoDeEnlace(), "http://localhost:3100/api/enlaces"), { base: "/api/colaboracion", secreto: SECRETO, buscar });

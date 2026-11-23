@@ -183,6 +183,7 @@ export interface OpcionesServicio {
    * `x-clave-servicio` (lo pone la ruta /api/enlaces del portal, detrás de su acceso privado). Así
    * nadie de fuera crea enlaces: ni llena el servicio ni se hace páginas «Manda tus fotos» en la web.
    * Vacío: no se puede crear ninguno. Sin la opción (null), no se comprueba: solo pruebas y local.
+   * Los espacios y saltos de línea de alrededor no cuentan: la clave se pega a mano en dos paneles.
    */
   claveServicio?: string | null;
 }
@@ -190,7 +191,7 @@ export interface OpcionesServicio {
 export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {}): (req: Request) => Promise<Response> {
   const ahora = opciones.ahora ?? (() => Date.now());
   const l: Limites = { ...LIMITES, ...opciones.limites };
-  const claveServicio = opciones.claveServicio ?? null;
+  const claveServicio = opciones.claveServicio == null ? null : opciones.claveServicio.trim();
 
   /** Borra los enlaces caducados y todo lo que guardaban. */
   async function purgar(limite = 50): Promise<number> {
@@ -214,7 +215,7 @@ export function crearServicio(almacen: Almacen, opciones: OpcionesServicio = {})
 
   async function crearInvitacion(req: Request): Promise<Response> {
     if (claveServicio !== null) {
-      const dada = req.headers.get("x-clave-servicio") ?? "";
+      const dada = (req.headers.get("x-clave-servicio") ?? "").trim();
       if (!claveServicio || !iguales(dada, claveServicio)) return error("no-autorizado", 403);
     }
     let cuerpo: unknown;

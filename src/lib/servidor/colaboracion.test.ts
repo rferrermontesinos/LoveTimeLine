@@ -166,6 +166,16 @@ describe("servicio de la subida colaborativa", () => {
     const vacia = preparar({ claveServicio: "" });
     expect((await vacia.pedir("POST", "/invitaciones", { cuerpo })).status).toBe(403);
     expect((await vacia.pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "" } })).status).toBe(403);
+    const blanca = preparar({ claveServicio: "  \n" });
+    expect((await blanca.pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": " " } })).status).toBe(403);
+  });
+
+  it("los espacios y saltos de línea alrededor del secreto pegado a mano no cuentan", async () => {
+    const llaves = await crearLlavesDueno();
+    const cuerpo = JSON.stringify({ clavePublica: aBase64url(await clavePublicaCruda(llaves)), huellaToken: await huellaToken(tokenNuevo()) });
+    const { pedir } = preparar({ claveServicio: "  secreto-del-portal-0123456789\n" });
+    expect((await pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "secreto-del-portal-0123456789" } })).status).toBe(201);
+    expect((await pedir("POST", "/invitaciones", { cuerpo, cabeceras: { "x-clave-servicio": "secreto-del-portal-012345678" } })).status).toBe(403);
   });
 
   it("un enlace solo puede ocupar parte del espacio de todos", () => {

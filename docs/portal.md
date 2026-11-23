@@ -203,7 +203,7 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 
 | Qué | Cómo | Estado |
 | --- | --- | --- |
-| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla, subida colaborativa: cifrado, paquetes, servicio y límites) | `pnpm test` (Vitest) | 795 pruebas en 56 archivos |
+| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla, subida colaborativa: cifrado, paquetes, servicio y límites) | `pnpm test` (Vitest) | 797 pruebas en 56 archivos |
 | Configurador de principio a fin (empezar en Fotos con un pack, fechas solas y sugeridas de un toque con salto a la siguiente, la misma fecha a varias, fechas de preparar el mazo y fotos de fotos, Estilo y Pedido con cartas pendientes, «Siguiente» con la fecha en blanco, recuerdo sin foto desde las ideas, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 22 |
 | Pantallas que no pierden nada: pagar o empezar otro mazo mientras entran fotos, las mismas fotos dos veces, girar y deshacer, borrar todas con su «Deshacer», el foco, poner solo el año a muchas cartas con Intro, la dedicatoria que no cabe y el dispositivo sin espacio (abrir el mazo y pagar) | `tests/e2e/pantallas.spec.ts` | 20 |
 | Volver sin conexión y service worker tras un despliegue | `tests/e2e/sin-conexion.spec.ts` | 4 |
