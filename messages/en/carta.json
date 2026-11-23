@@ -1,0 +1,16 @@
+{
+  "carta": {
+    "pregunta": "When was it?",
+    "comodin": "Joker",
+    "comodinRegla": "Use it before placing a card: ask the deck maker for a hint (“before or after this card?”) or swap one of your cards for the top card of the deck. Then it goes back in the box.",
+    "enBlancoFoto": "Stick a photo or draw here",
+    "enBlancoFrase": "What happened?",
+    "enBlancoAnio": "Year",
+    "enBlancoDiaMes": "Day and month",
+    "portadaRecuerdos": "{n, plural, one {# memory} other {# memories}}",
+    "portadaReverso": "To play, see the instructions in the box.",
+    "dedicatoriaPorDefecto": "To keep adding memories.",
+    "cajaTexto": "A game for putting your memories in order. Place each card before or after the ones on the table, then flip it over: did you get it right?",
+    "cajaLema": "Your story, in a deck of cards."
+  }
+}

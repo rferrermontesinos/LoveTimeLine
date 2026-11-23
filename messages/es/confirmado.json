@@ -1,0 +1,32 @@
+{
+  "confirmado": {
+    "titulo": "¡Pedido hecho!",
+    "tituloSimulado": "Pedido de prueba hecho",
+    "texto": "En la versión real te llegaría un correo y el mazo en {min}–{max} días laborables.",
+    "archivo": "Archivos de impresión",
+    "textoPrototipo": "Para las pruebas de impresión: descarga el archivo de la imprenta a la que lo vayas a mandar y envíalo tal cual.",
+    "descargaPendiente": "Podrás descargarlo en cuanto se confirme el pago.",
+    "generando": "Generando cara {hecha} de {total}…",
+    "volver": "Volver a mi mazo",
+    "sinMazo": "No encontramos el mazo en este dispositivo.",
+    "referencia": "Referencia: {id}",
+    "comprobando": "Comprobando el pago…",
+    "pendiente": "El pago aún no está confirmado. Si acabas de pagar, espera unos segundos y recarga la página.",
+    "pdfListo": "Archivo listo. Si no se ha descargado solo, vuelve a pulsar el botón.",
+    "pdfError": "No se ha podido generar el PDF. Inténtalo otra vez.",
+    "resumen": "{cartas} cartas impresas · {total}",
+    "siguientes": "Y ahora",
+    "paso1": "Descarga el archivo de la imprenta a la que lo mandes: cada una pide su sangrado, sus marcas de corte y su orden de páginas.",
+    "paso1SinDescarga": "Revisamos cada carta y mandamos tu mazo a imprimir.",
+    "aJugar": "Cuando tengáis el mazo en la mano, barajad y a jugar: los modos de juego y las reglas están en «Cómo se juega».",
+    "comoJugar": "Ver cómo se juega",
+    "imprentas": "Imprentas",
+    "otraImprenta": "Otra imprenta",
+    "especificaciones": "{sangrado} mm de sangrado · {marcas, select, si {con marcas de corte} other {sin marcas de corte}} · {paginas, select, separadas {caras y reversos en dos PDF, dentro de un ZIP} other {cada carta seguida de su reverso}}",
+    "descargar": "Descargar {archivo}",
+    "descargarPara": "Descargar {archivo} para {imprenta}",
+    "colorConvierten": "Piden CMYK FOGRA39: el archivo va en RGB y lo convierten ellos.",
+    "colorPreguntar": "Piden CMYK FOGRA39 y el archivo va en RGB: al mandarlo, pídeles que lo conviertan.",
+    "leeme": "{titulo} · {cartas} cartas de {ancho} × {alto} mm para {imprenta}\n\n{caras}: {paginas} páginas, una por cara.\n{reversos}: {paginas} páginas, en el mismo orden: la página 1 es el reverso de la página 1 de {caras}, y así con todas.{caja, select, si {\nLa última página de cada archivo es la caja.} other {}}\n\nSangrado: {sangrado} mm por cada lado (páginas de {anchoPagina} × {altoPagina} mm), sin marcas de corte.\nResolución: {ppp} ppp. Color: RGB (sRGB).\nEsquinas redondeadas de {radio} mm."
+  }
+}

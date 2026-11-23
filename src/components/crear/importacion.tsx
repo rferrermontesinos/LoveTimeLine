@@ -1,0 +1,498 @@
+"use client";
+
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Aviso, CerrarAviso, Franja } from "@/components/ui/Piezas";
+import type { DeQuienManda } from "@/domain/colaboracion/aportacion";
+import { crearDetectorSesion } from "@/domain/fechas/sesion";
+import { cargarMazo, esErrorDeEspacio, guardarFoto } from "@/lib/almacen/idb";
+import { archivosDeArrastre, concurrenciaRecomendada, enCola, esImagenCompatible, procesarArchivo, type FotoImportada } from "@/lib/importar/procesar";
+import { useMazo } from "@/lib/mazo/contexto";
+import { cartaDesdeFoto, proporcionReversoDe } from "@/lib/mazo/derivados";
+import { esFoto, type CartaFoto } from "@/lib/mazo/tipos";
+
+/** Cómo ha ido la última subida. */
+export interface ResumenImportacion {
+  anadidas: number;
+  /** De las añadidas, las que se han quedado sin fecha. */
+  sinFecha: number;
+  /** De las sin fecha, las que llegaron hace poco por WhatsApp u otra app de mensajes y perdieron su fecha. */
+  porMensajeria: number;
+  /** De las sin fecha, las que tienen una fecha sugerida: se completan con un toque en Cartas. */
+  conSugerencia: number;
+  repetidas: number;
+  errores: number;
+  /** Fotos que no se han podido guardar porque no queda espacio en el dispositivo. */
+  sinEspacio: number;
+  /** Quienes mandaron por el enlace las fotos añadidas (los que dejaron su nombre). */
+  autores: string[];
+}
+
+/** Una foto lista para entrar en el mazo: de un archivo o llegada por el enlace. */
+export interface FotoLeida {
+  foto: FotoImportada;
+  /** Las fotos del mismo grupo se miran juntas para reconocer una sesión de fotos de fotos. */
+  grupo: string;
+  /** Quien la mandó por el enlace, si dejó su nombre. */
+  autor: string | null;
+  /** La fecha y la frase que le puso quien la mandó por el enlace, si las puso. */
+  deQuienManda?: DeQuienManda;
+}
+
+/** Una foto por añadir al mazo. */
+export interface EntradaImportacion {
+  /** Cuándo se subió: la referencia de «reciente» al buscar sesiones de fotos de fotos. */
+  hoy: Date;
+  /** Null: no hay nada que añadir (otra pestaña ya la ha recogido). */
+  leer: () => Promise<FotoLeida | null>;
+  /** Cuando la foto ya está en el mazo guardado, añadida ahora o porque ya estaba. */
+  alGuardar?: () => Promise<void>;
+}
+
+interface ValorImportacion {
+  progreso: { hechas: number; total: number } | null;
+  resumen: ResumenImportacion | null;
+  cerrarResumen: () => void;
+  /**
+   * Lee las fotos en el navegador y las añade al mazo, una a una según se guardan. Sin el permiso
+   * de las fotos no se lee nada: se quedan esperando hasta que se dé (`enEspera`).
+   */
+  importar: (archivos: File[]) => void;
+  /**
+   * Añade fotos que no son archivos de este dispositivo (las que llegan por el enlace), en la misma
+   * cola que las demás. Necesita el permiso de las fotos. Termina cuando están todas.
+   */
+  importarEntradas: (entradas: EntradaImportacion[]) => Promise<void>;
+  /** Da el permiso de las fotos y añade las que esperaban. */
+  consentir: () => void;
+  /** Fotos elegidas o soltadas antes de dar el permiso. */
+  enEspera: number;
+  /** Sube cada vez que se intenta añadir fotos sin el permiso. */
+  intentosSinPermiso: number;
+  /**
+   * True una sola vez por cada intento sin permiso: quien lo atiende (el paso de fotos) resalta la
+   * casilla. Así, al volver a Fotos más tarde, no se resalta otra vez un intento ya atendido.
+   */
+  tomarIntento: () => boolean;
+  /** Para los botones «Elegir fotos»: sin permiso, cuenta el intento y devuelve false. */
+  puedeElegir: () => boolean;
+  /** Hay fotos entrando en el mazo o esperando turno: hasta que acaben, no se puede pagar. */
+  importando: boolean;
+  /**
+   * Para la subida en curso y descarta las que esperaban turno (al empezar otro mazo): lo que llegue
+   * de ellas ya no entra en ningún mazo. Termina cuando lo que estaba a medias ha acabado.
+   */
+  detener: () => Promise<void>;
+}
+
+const Ctx = createContext<ValorImportacion | null>(null);
+
+type DetectorSesion = ReturnType<typeof crearDetectorSesion>;
+
+/** Los archivos elegidos o soltados: solo las imágenes, por nombre (las de cámara, en el orden en que se hicieron). */
+function entradasDeArchivos(archivos: File[]): { entradas: EntradaImportacion[]; descartados: number } {
+  const hoy = new Date();
+  const imagenes = archivos.filter(esImagenCompatible).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  return {
+    entradas: imagenes.map((archivo) => ({ hoy, leer: async () => ({ foto: await procesarArchivo(archivo, hoy), grupo: "archivos", autor: null }) })),
+    descartados: archivos.length - imagenes.length,
+  };
+}
+
+/**
+ * Espera (poco: las cartas de fotos importadas se guardan al momento) a que el mazo guardado tenga
+ * estas fotos, y avisa a cada una. Las que no lleguen a guardarse no avisan: las del enlace se
+ * quedan en el servicio y se recogen la próxima vez.
+ */
+async function avisarGuardadas(mazoId: string, lista: { hash: string; alGuardar: () => Promise<void> }[]): Promise<void> {
+  const limite = Date.now() + 10_000;
+  let enMazo = new Set<string>();
+  for (;;) {
+    const guardado = await cargarMazo();
+    enMazo = new Set(guardado?.id === mazoId ? guardado.cartas.filter(esFoto).map((c) => c.hash) : []);
+    if (lista.every((x) => enMazo.has(x.hash)) || Date.now() > limite) break;
+    await new Promise((ok) => setTimeout(ok, 250));
+  }
+  await enCola(
+    lista.filter((x) => enMazo.has(x.hash)),
+    4,
+    (x) => x.alGuardar(),
+    (r) => {
+      if (!r.ok) console.warn("No se pudo avisar de una foto ya guardada", r.error);
+    },
+  );
+}
+
+/**
+ * La subida de fotos, compartida por Fotos y Cartas: sigue aunque se cambie de paso, y el
+ * resumen se ve al volver. Las subidas seguidas se encadenan, una detrás de otra.
+ */
+export function ProveedorImportacion({ children }: { children: ReactNode }) {
+  const { mazo, despachar } = useMazo();
+  const [progreso, setProgreso] = useState<{ hechas: number; total: number } | null>(null);
+  const [resumen, setResumen] = useState<ResumenImportacion | null>(null);
+  const esperando = useRef<File[]>([]);
+  const [enEspera, setEnEspera] = useState(0);
+  const [intentosSinPermiso, setIntentos] = useState(0);
+  const atendidos = useRef(0);
+  const cola = useRef<Promise<void>>(Promise.resolve());
+  // Subidas en marcha o esperando turno en la cola.
+  const [enCurso, setEnCurso] = useState(0);
+  // Cada «Empezar otro mazo» abre una generación nueva: lo que siga llegando de la anterior se descarta.
+  const generacion = useRef(0);
+  // El mazo de cada momento, para leerlo al empezar cada subida de la cola (no el de cuando se pidió).
+  const mazoActual = useRef(mazo);
+  // Huellas de las fotos ya mandadas al mazo que aún no se ven en `mazo` (React lo pinta después): la
+  // siguiente subida de la cola las cuenta como repetidas aunque empiece antes de que se pinten.
+  const enCamino = useRef<{ mazoId: string | null; hashes: Set<string> }>({ mazoId: null, hashes: new Set() });
+  // Las sesiones de fotos de fotos de cada envío por el enlace duran de una vez a otra: un mismo envío
+  // se puede añadir en dos veces (lo que había llegado y, más tarde, el resto).
+  const sesionesDeEnvios = useRef<{ mazoId: string | null; porGrupo: Map<string, DetectorSesion> }>({ mazoId: null, porGrupo: new Map() });
+  useEffect(() => {
+    mazoActual.current = mazo;
+    const c = enCamino.current;
+    if (!mazo || c.mazoId !== mazo.id) {
+      enCamino.current = { mazoId: mazo?.id ?? null, hashes: new Set() };
+      return;
+    }
+    if (c.hashes.size === 0) return;
+    const enMazo = new Set(mazo.cartas.filter(esFoto).map((x) => x.hash));
+    for (const h of c.hashes) if (enMazo.has(h)) c.hashes.delete(h);
+  }, [mazo]);
+
+  /**
+   * `descartados`: archivos que no son imágenes, que cuentan como no leídos. `gen`: la generación en
+   * que se pidió; si entretanto se ha empezado otro mazo, no se hace nada.
+   */
+  const subir = useCallback(
+    async (entradas: EntradaImportacion[], descartados: number, gen: number) => {
+      const vigente = () => gen === generacion.current;
+      const m = mazoActual.current;
+      if (!vigente() || !m || (entradas.length === 0 && descartados === 0)) return;
+      if (enCamino.current.mazoId !== m.id) enCamino.current = { mazoId: m.id, hashes: new Set() };
+      const llegando = enCamino.current.hashes;
+      const vistos = new Set([...m.cartas.filter(esFoto).map((c) => c.hash), ...llegando]);
+      // Una sesión de fotos de fotos se busca dentro de cada grupo: una subida, o un envío por el enlace.
+      if (sesionesDeEnvios.current.mazoId !== m.id) sesionesDeEnvios.current = { mazoId: m.id, porGrupo: new Map() };
+      const deEnvios = sesionesDeEnvios.current.porGrupo;
+      const sesiones = new Map<string, DetectorSesion>();
+      const detectorDe = (grupo: string, hoy: Date) => {
+        const tabla = grupo.startsWith("lote:") ? deEnvios : sesiones;
+        let d = tabla.get(grupo);
+        if (!d) tabla.set(grupo, (d = crearDetectorSesion(hoy)));
+        return d;
+      };
+      const propReverso = proporcionReversoDe(m);
+      // Cómo queda cada carta añadida (una sesión puede dejar en blanco las de antes).
+      const finales = new Map<string, CartaFoto>();
+      const autores = new Set<string>();
+      const porAvisar: { hash: string; alGuardar: () => Promise<void> }[] = [];
+      const r = { repetidas: 0, errores: descartados, sinEspacio: 0 };
+      setResumen(null);
+      setProgreso({ hechas: 0, total: entradas.length });
+      let hechas = 0;
+      await enCola(
+        entradas,
+        concurrenciaRecomendada(),
+        async (entrada) => {
+          if (!vigente()) return null;
+          const leida = await entrada.leer();
+          if (!leida || !vigente()) return null;
+          if (vistos.has(leida.foto.hash)) return { leida, nueva: false };
+          vistos.add(leida.foto.hash);
+          await guardarFoto(leida.foto.id, leida.foto.copia, leida.foto.mini);
+          return { leida, nueva: true };
+        },
+        (res) => {
+          if (!vigente()) return;
+          hechas++;
+          if (res.ok && res.valor) {
+            const { leida, nueva } = res.valor;
+            if (res.entrada.alGuardar) porAvisar.push({ hash: leida.foto.hash, alGuardar: res.entrada.alGuardar });
+            if (nueva) {
+              const sesion = detectorDe(leida.grupo, res.entrada.hoy);
+              let carta = cartaDesdeFoto(leida.foto, propReverso, Date.now(), leida.deQuienManda);
+              const { enBlanco, anteriores } = sesion.registrar(carta.id, leida.foto.propuesta);
+              if (anteriores.length) {
+                despachar({ tipo: "fechaASugerencia", ids: anteriores, motivo: "sesion-de-escaneo", mazoId: m.id });
+                for (const id of anteriores) {
+                  const c = finales.get(id);
+                  if (c) finales.set(id, { ...c, fecha: null, motivo: "sesion-de-escaneo" });
+                }
+              }
+              if (enBlanco && carta.fecha && carta.fuente && carta.fuente !== "manual") {
+                const sugerencia = { fecha: carta.fecha, fuente: carta.fuente, motivo: "sesion-de-escaneo" as const };
+                carta = { ...carta, fecha: null, fuente: null, confianza: null, motivo: "sesion-de-escaneo", sugerencias: [sugerencia] };
+              }
+              finales.set(carta.id, carta);
+              if (leida.autor) autores.add(leida.autor);
+              // Cada carta entra en el mazo en cuanto su foto está guardada: si la subida se corta
+              // (se cierra la pestaña, se va la batería), lo subido hasta ahí ya está en el mazo.
+              llegando.add(carta.hash);
+              despachar({ tipo: "anadirCartas", cartas: [carta], mazoId: m.id });
+            } else r.repetidas++;
+          } else if (!res.ok) {
+            if (esErrorDeEspacio(res.error)) r.sinEspacio++;
+            else {
+              r.errores++;
+              console.warn("No se pudo leer una foto", res.error);
+            }
+          }
+          setProgreso({ hechas, total: entradas.length });
+        },
+      );
+      if (!vigente()) return;
+      const cartas = [...finales.values()];
+      const sinFecha = cartas.filter((c) => !c.fecha);
+      setProgreso(null);
+      setResumen({
+        anadidas: cartas.length,
+        sinFecha: sinFecha.length,
+        porMensajeria: sinFecha.filter((c) => c.motivo === "fecha-de-envio").length,
+        conSugerencia: sinFecha.filter((c) => (c.sugerencias?.length ?? 0) > 0).length,
+        ...r,
+        autores: [...autores],
+      });
+      if (porAvisar.length) await avisarGuardadas(m.id, porAvisar);
+    },
+    [despachar],
+  );
+
+  const encolar = useCallback(
+    (entradas: EntradaImportacion[], descartados = 0): Promise<void> => {
+      const gen = generacion.current;
+      setEnCurso((n) => n + 1);
+      const siguiente = cola.current.then(() => subir(entradas, descartados, gen));
+      cola.current = siguiente.catch((e) => console.warn("Subida interrumpida", e)).finally(() => setEnCurso((n) => Math.max(0, n - 1)));
+      return cola.current;
+    },
+    [subir],
+  );
+
+  const detener = useCallback(async () => {
+    generacion.current++;
+    esperando.current = [];
+    setEnEspera(0);
+    setProgreso(null);
+    setResumen(null);
+    enCamino.current = { mazoId: null, hashes: new Set() };
+    sesionesDeEnvios.current = { mazoId: null, porGrupo: new Map() };
+    // Lo que estaba a medias (leer o guardar una foto) acaba enseguida: se espera, con un límite,
+    // para que no escriba en el dispositivo después de borrarlo.
+    await Promise.race([cola.current, new Promise((ok) => setTimeout(ok, 3000))]);
+  }, []);
+
+  const importar = useCallback(
+    (archivos: File[]) => {
+      if (archivos.length === 0) return;
+      if (!mazoActual.current?.consentimientoFotos) {
+        esperando.current = [...esperando.current, ...archivos];
+        setEnEspera(esperando.current.length);
+        setIntentos((n) => n + 1);
+        return;
+      }
+      const { entradas, descartados } = entradasDeArchivos(archivos);
+      void encolar(entradas, descartados);
+    },
+    [encolar],
+  );
+
+  const importarEntradas = useCallback(
+    async (entradas: EntradaImportacion[]) => {
+      if (entradas.length === 0) return;
+      if (!mazoActual.current?.consentimientoFotos) {
+        setIntentos((n) => n + 1);
+        return;
+      }
+      await encolar(entradas);
+    },
+    [encolar],
+  );
+
+  const consentir = useCallback(() => {
+    despachar({ tipo: "consentir", ahora: Date.now() });
+    const lista = esperando.current;
+    esperando.current = [];
+    setEnEspera(0);
+    if (lista.length === 0) return;
+    const { entradas, descartados } = entradasDeArchivos(lista);
+    void encolar(entradas, descartados);
+  }, [despachar, encolar]);
+
+  const cerrarResumen = useCallback(() => setResumen(null), []);
+
+  const valor = useMemo<ValorImportacion>(
+    () => ({
+      progreso,
+      resumen,
+      cerrarResumen,
+      importar,
+      importarEntradas,
+      consentir,
+      enEspera,
+      intentosSinPermiso,
+      tomarIntento: () => {
+        if (intentosSinPermiso <= atendidos.current) return false;
+        atendidos.current = intentosSinPermiso;
+        return true;
+      },
+      puedeElegir: () => {
+        if (mazoActual.current?.consentimientoFotos) return true;
+        setIntentos((n) => n + 1);
+        return false;
+      },
+      importando: enCurso > 0,
+      detener,
+    }),
+    [progreso, resumen, cerrarResumen, importar, importarEntradas, consentir, enEspera, intentosSinPermiso, enCurso, detener],
+  );
+  return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
+}
+
+export function useImportacion(): ValorImportacion {
+  const v = useContext(Ctx);
+  if (!v) throw new Error("useImportacion fuera de ProveedorImportacion");
+  return v;
+}
+
+const ACEPTA = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
+
+/**
+ * Las dos entradas de archivo ocultas (fotos sueltas y carpeta entera) y lo que las abre. Sin el
+ * permiso de las fotos no se abren: se cuenta el intento y el paso de fotos resalta la casilla.
+ */
+export function useElegirFotos() {
+  const { importar, puedeElegir } = useImportacion();
+  const fotos = useRef<HTMLInputElement>(null);
+  const carpeta = useRef<HTMLInputElement>(null);
+  const alElegir = (e: ChangeEvent<HTMLInputElement>) => {
+    importar([...(e.target.files ?? [])]);
+    e.target.value = "";
+  };
+  const entradas = (
+    <>
+      <input
+        ref={fotos}
+        type="file"
+        multiple
+        accept={ACEPTA}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        data-testid="entrada-fotos"
+        onChange={alElegir}
+      />
+      <input
+        ref={carpeta}
+        type="file"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+        onChange={alElegir}
+      />
+    </>
+  );
+  return {
+    entradas,
+    elegirFotos: () => {
+      if (puedeElegir()) fotos.current?.click();
+    },
+    elegirCarpeta: () => {
+      if (puedeElegir()) carpeta.current?.click();
+    },
+  };
+}
+
+/** Lleva archivos (no texto ni enlaces arrastrados desde la propia página). */
+function conArchivos(e: DragEvent): boolean {
+  return !!e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+}
+
+/**
+ * Soltar fotos o carpetas en cualquier punto de la página, mientras `activo`. Al arrastrar
+ * archivos encima se ve un aviso a pantalla completa. Además evita que el navegador abra la foto
+ * soltada fuera de una zona (y se pierda el mazo de la pestaña).
+ */
+export function SoltarFotos({ activo }: { activo: boolean }) {
+  const t = useTranslations("fotos");
+  const { importar } = useImportacion();
+  const [encima, setEncima] = useState(false);
+
+  useEffect(() => {
+    if (!activo) return;
+    let temporizador: number | undefined;
+    // `dragover` llega sin parar mientras hay algo encima de la página; cuando deja de llegar, se ha
+    // ido (más fiable que contar dragenter y dragleave, que cada navegador cuenta a su manera).
+    const sobre = (e: DragEvent) => {
+      if (!conArchivos(e) || document.querySelector("dialog[open]")) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+      setEncima(true);
+      window.clearTimeout(temporizador);
+      temporizador = window.setTimeout(() => setEncima(false), 700);
+    };
+    const soltar = (e: DragEvent) => {
+      if (!conArchivos(e) || document.querySelector("dialog[open]")) return;
+      e.preventDefault();
+      window.clearTimeout(temporizador);
+      setEncima(false);
+      if (e.dataTransfer) void archivosDeArrastre(e.dataTransfer).then(importar);
+    };
+    window.addEventListener("dragover", sobre);
+    window.addEventListener("drop", soltar);
+    return () => {
+      window.clearTimeout(temporizador);
+      window.removeEventListener("dragover", sobre);
+      window.removeEventListener("drop", soltar);
+      setEncima(false);
+    };
+  }, [activo, importar]);
+
+  if (!encima) return null;
+  return (
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-papel/80 p-6 backdrop-blur-[2px]">
+      <div className="rounded-[var(--radius-carta)] border-[3px] border-dashed border-cobalto bg-[#E8EDFD] px-10 py-12 text-center shadow-[var(--shadow-flotante)]">
+        <p className="tipo-subtitular text-xl">{t("soltarActivo")}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * La subida en curso (barra de progreso) y, al acabar, cómo ha ido: cuántas se han añadido,
+ * cuántas se han quedado sin fecha y, si alguna llegó por WhatsApp hace poco, por qué.
+ */
+export function EstadoImportacion() {
+  const t = useTranslations("fotos");
+  const locale = useLocale();
+  const tc = useTranslations("crear");
+  const { progreso, resumen, cerrarResumen } = useImportacion();
+  if (progreso) {
+    return (
+      <div className="space-y-2" aria-live="polite">
+        <Franja valor={progreso.total ? progreso.hechas / progreso.total : 0} etiqueta={t("procesando", progreso)} />
+        <p className="text-sm font-semibold">{t("procesando", progreso)}</p>
+      </div>
+    );
+  }
+  if (!resumen) return null;
+  return (
+    <Aviso
+      tono={resumen.sinEspacio ? "error" : resumen.errores ? "aviso" : "exito"}
+      accion={<CerrarAviso etiqueta={tc("cerrarAviso")} alCerrar={cerrarResumen} />}
+    >
+      <p data-testid="resumen-subida">
+        <span className="font-semibold">{t("procesadas", { n: resumen.anadidas })}</span>
+        {resumen.anadidas > 0 && <> · {resumen.sinFecha ? t("resumenSinFecha", { n: resumen.sinFecha }) : t("resumenConFecha", { n: resumen.anadidas })}</>}
+        {resumen.repetidas > 0 && <> · {t("repetidas", { n: resumen.repetidas })}</>}
+        {resumen.errores > 0 && <> · {t("errores", { n: resumen.errores })}</>}
+        {resumen.sinEspacio > 0 && <> · {t("sinEspacio", { n: resumen.sinEspacio })}</>}
+      </p>
+      {resumen.autores.length > 0 && <p className="mt-1">{t("enviadasPor", { autores: new Intl.ListFormat(locale, { type: "conjunction" }).format(resumen.autores) })}</p>}
+      {resumen.conSugerencia > 0 && <p className="mt-1">{t("conSugerencia", { n: resumen.conSugerencia })}</p>}
+      {resumen.porMensajeria > 0 && <p className="mt-1">{t("porMensajeria", { n: resumen.porMensajeria })}</p>}
+    </Aviso>
+  );
+}

@@ -1,0 +1,79 @@
+{
+  "guia": {
+    "metaTitulo": "How to choose the photos for your deck",
+    "metaDescripcion": "iPhone and Android shortcuts to find your best photos without going through them one by one (favourites, people, search and an album), plus which photos make the best cards.",
+    "micro": "Guide",
+    "titulo": "How to choose the photos for your deck",
+    "intro": "You don’t need to go through years of photos one by one. With the shortcuts your phone already has and an album to collect them in, you can have them ready in an afternoon.",
+    "cuantasTitulo": "How many?",
+    "cuantasTexto": "Your pack’s number and a few more: once you see them together, there are always some you’ll leave out.",
+    "packCartas": "{pack}: {n} cards",
+    "atajosTitulo": "Four phone shortcuts",
+    "atajosTexto": "Names may vary a little between versions, but these options are in iPhone Photos and Google Photos.",
+    "iphone": "iPhone",
+    "android": "Android",
+    "atajos": {
+      "favoritas": {
+        "titulo": "Start with your favourites",
+        "texto": "If you once marked a photo as a favourite, there was a reason.",
+        "iphone": "In Photos, open the Favourites album: it has the ones you marked with a heart.",
+        "android": "In Google Photos, go to Collections and open Favourites."
+      },
+      "personas": {
+        "titulo": "Look up each person",
+        "texto": "It’s the quickest way to gather someone’s photos from every period of their life.",
+        "iphone": "In Photos, open People & Pets and tap a face: all their photos appear together. If you give them a name, you can then just type it into search.",
+        "android": "In Google Photos, tap Search and pick a face. If no faces appear, check in the app’s settings that face grouping is turned on."
+      },
+      "buscar": {
+        "titulo": "Search by year, place and occasion",
+        "texto": "That way you find a photo from each period without scrolling through your whole gallery.",
+        "comun": "In both apps’ search you can type things like “2016”, “beach”, “Christmas”, “wedding” or the name of a town."
+      },
+      "album": {
+        "titulo": "Collect them in an album",
+        "texto": "You can fill it over a few days, whenever a photo comes to mind.",
+        "iphone": "In Photos, create an album (for example, “Our deck”) and add each photo you like.",
+        "android": "In Google Photos, create an album and keep adding photos to it.",
+        "despues": "When you upload them, find the album in the photo picker and choose them from there."
+      }
+    },
+    "ordenadorTitulo": "On a computer",
+    "ordenadorTexto": "In the Photos step you can choose a whole folder or drag in lots of photos at once. If they’re in iCloud or Google Photos, download the album, unzip it and choose that folder.",
+    "papelTitulo": "Paper photos",
+    "papelTexto": "Photograph them straight on, in daylight and without flash, or use a scanning app. Your phone will date them the day you photograph them, so we’ll ask you for the date of the memory: if you only know the year, the year is enough.",
+    "otrosTitulo": "Photos other people have",
+    "otrosEnlace": "Ask for them with a link: you create it in the Photos step and send it however you like. The photos reach you with their original date, encrypted, and only you can open them.",
+    "otrosWhatsapp": "If they send them on WhatsApp, ask them to send them as a document rather than as a photo: that way they keep the date they were taken.",
+    "juegoTitulo": "Which photos make the best cards",
+    "juegoTexto": "A good card is a moment someone at the table can place in time, even if they hesitate.",
+    "consejos": {
+      "1": {
+        "titulo": "One from each period",
+        "texto": "Ten different moments beat ten photos from the same trip."
+      },
+      "2": {
+        "titulo": "With clues",
+        "texto": "A haircut, a car, a house, a baby growing up: the details that help you guess the year are what make the game."
+      },
+      "3": {
+        "titulo": "Moments everyone remembers",
+        "texto": "A wedding, a move or a birth work as landmarks, and the small moments only some people remember get everyone talking."
+      },
+      "4": {
+        "titulo": "Everyone at the table",
+        "texto": "Make sure each person playing appears in a few."
+      },
+      "5": {
+        "titulo": "A good memory over a perfect photo",
+        "texto": "A blurry or backlit photo is fine if the moment deserves it. If one might print blurry, we’ll let you know and you decide."
+      },
+      "6": {
+        "titulo": "Don’t know the day? Use the year",
+        "texto": "Cards that only show the year can go in any order next to others from the same year."
+      }
+    },
+    "ctaTitulo": "Got them?",
+    "ctaTexto": "Upload them and watch your deck take shape, card by card."
+  }
+}

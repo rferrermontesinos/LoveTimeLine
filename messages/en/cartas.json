@@ -1,0 +1,84 @@
+{
+  "cartas": {
+    "titulo": "Complete your cards",
+    "texto": "Check each card’s date and add a line if you like. It saves itself.",
+    "posicion": "Card {actual} of {total}",
+    "hecho": "Done: the previous one now has a date ({fecha}). {n, plural, one {# card to go} other {# cards to go}}.",
+    "progreso": {
+      "faltan": "{n, plural, one {# card left to finish} other {# cards left to finish}}",
+      "listas": "{n} of {total} cards ready",
+      "siguiente": "Finish the next one",
+      "casi": "{n, plural, one {Almost there! # card left} other {Almost there! # cards left}}",
+      "unToque": "{n, plural, one {one has a suggested date: if it’s right, one tap does it} other {# have a suggested date: if it’s right, one tap does it}}"
+    },
+    "listo": {
+      "titulo": "Your deck is ready!",
+      "texto": "{n, plural, one {Your card has its date and is all set.} other {All # cards have their date and are all set.}} Next, choose the style.",
+      "tituloFaltan": "Every card is ready",
+      "faltanMinimo": "To fill your pack, you need {n, plural, one {# more card} other {# more cards}}: add photos or a memory without a photo."
+    },
+    "vistaPrevia": "Card preview",
+    "estado": {
+      "lista": "Card ready",
+      "pendiente": "Unfinished: {motivos}",
+      "pendienteOtraVez": "Unfinished: {motivos}. Finish it, or press “Next” again to leave it for later."
+    },
+    "pendiente": {
+      "sin-fecha": "date missing",
+      "fecha-invalida": "the date doesn’t exist",
+      "fecha-futura": "the date is after today",
+      "fecha-por-confirmar": "confirm the date",
+      "descripcion-larga": "the line is over {max} characters",
+      "texto-vacio": "the text is missing",
+      "texto-con-hueco": "fill in the part in brackets"
+    },
+    "cartaSinFoto": "Card without a photo",
+    "sinFechaCorta": "no date",
+    "mazo": {
+      "titulo": "Your deck",
+      "ayuda": "Sorted by date, as it will be played. Tap a card to open it: the ones with a yellow dot still need finishing.",
+      "sinFecha": "No date · {n}",
+      "carta": "{nombre}, {fecha}, {estado, select, lista {ready} other {to finish}}",
+      "anadirFotos": "Add more photos",
+      "arrastrar": "or drop them here"
+    },
+    "sinFoto": {
+      "titulo": "A memory without a photo?",
+      "otro": "Write your own"
+    },
+    "descripcion": "A line about the memory (optional)",
+    "descripcionAyuda": "Shown on the date side. Up to {max} characters.",
+    "descripcionContador": "{n} / {max}",
+    "descripcionEnAnverso": "Also show it on the photo side, as a clue",
+    "textoRecuerdo": "Memory text",
+    "textoRecuerdoAyuda": "Shown on both sides of the card. Up to {max} characters.",
+    "completarHueco": "Fill in <h>{hueco}</h>",
+    "encuadrar": "Frame",
+    "girar": "Rotate",
+    "adornos": "Emojis",
+    "borrarCarta": "Delete card",
+    "borrada": "Card deleted.",
+    "calidadJusta": "It may print a little blurry ({ppp} dpi), but if the memory is good, it’s worth it.",
+    "calidadConfirmar": "Print it anyway",
+    "calidadConfirmada": "It will print like this",
+    "sinCartas": "No cards yet. Add photos in step 1 or write a memory without a photo.",
+    "irAFotos": "Go to photos",
+    "atajos": "Shortcuts: ← and → to move between cards.",
+    "ideas": {
+      "conocimos": "The day we met",
+      "primeraCita": "Our first date",
+      "primerBeso": "Our first kiss",
+      "primerViaje": "Our first trip together",
+      "vivirJuntos": "We moved in together",
+      "llaves": "We got the keys to our home",
+      "prometimos": "We got engaged",
+      "boda": "Our wedding",
+      "nacio": "[name] was born",
+      "abuelo": "Grandpa [name] was born",
+      "bodaAbuelos": "Our grandparents’ wedding",
+      "cole": "[name]’s first day of school",
+      "mascota": "[pet] came home",
+      "bodasPlata": "Silver wedding anniversary"
+    }
+  }
+}

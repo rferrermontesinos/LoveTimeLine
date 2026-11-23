@@ -1,0 +1,61 @@
+/**
+ * Del lado de quien manda fotos por el enlace: cada foto se procesa en su móvil como en el portal
+ * (fecha, copia de trabajo y miniatura, sin GPS ni otros metadatos) y se cifra para el dueño del
+ * mazo antes de salir.
+ */
+import { empaquetar, limpiarFrase, MAX_AUTOR, MAX_LADO, VERSION_APORTACION, type DatosAportacion, type DeQuienManda } from "@/domain/colaboracion/aportacion";
+import { cifrarAportacion, deBase64url, huella, pareceClavePublica } from "@/domain/colaboracion/cifrado";
+import { MAX_DESCRIPCION } from "@/domain/mazo/limites";
+import type { FotoImportada } from "@/lib/importar/procesar";
+
+/**
+ * La clave pública del dueño, solo si su huella es la del enlace: así el servicio no puede dar
+ * otra clave y quedarse con las fotos. Null si no coincide.
+ */
+export async function claveComprobada(clavePublica: string, huellaEsperada: string): Promise<Uint8Array<ArrayBuffer> | null> {
+  let cruda: Uint8Array<ArrayBuffer>;
+  try {
+    cruda = deBase64url(clavePublica);
+  } catch {
+    return null;
+  }
+  if (!pareceClavePublica(cruda)) return null;
+  return (await huella(cruda)) === huellaEsperada ? cruda : null;
+}
+
+/** Lo que acompaña a cada foto: quién la manda (si lo dice), su envío y, si las ha puesto, su fecha y su frase. */
+export interface ExtraAportacion extends DeQuienManda {
+  autor: string | null;
+  lote: string;
+  enviadaEn: number;
+}
+
+/** El nombre con el que llega una foto al mazo: «foto-» y el principio de su huella. */
+export const nombreNeutro = (hash: string) => `foto-${hash.slice(0, 8)}.jpg`;
+
+/** El paquete cifrado de una foto, listo para mandar. */
+export async function prepararAportacion(foto: FotoImportada, extra: ExtraAportacion, clavePublica: Uint8Array, invitacionId: string): Promise<Uint8Array<ArrayBuffer>> {
+  // Con los límites que comprueba quien lo recibe: autor sin espacios de más. El nombre del archivo no
+  // viaja (puede decir más de la cuenta): va uno neutro, distinto para cada foto.
+  const datos: DatosAportacion = {
+    v: VERSION_APORTACION,
+    nombreArchivo: nombreNeutro(foto.hash),
+    tipoArchivo: foto.tipoArchivo,
+    hash: foto.hash,
+    ancho: foto.ancho,
+    alto: foto.alto,
+    // Una panorámica puede pasar de MAX_LADO: el original no viaja, y para la calidad basta con eso.
+    anchoOriginal: Math.min(foto.anchoOriginal, MAX_LADO),
+    altoOriginal: Math.min(foto.altoOriginal, MAX_LADO),
+    propuesta: foto.propuesta,
+    autor: extra.autor?.trim().slice(0, MAX_AUTOR) || null,
+    lote: extra.lote,
+    enviadaEn: extra.enviadaEn,
+  };
+  if (extra.fecha !== undefined) datos.fecha = extra.fecha;
+  // La pantalla no deja mandar una frase más larga; si llegara, se corta para que el paquete valga.
+  const frase = limpiarFrase([...limpiarFrase(extra.descripcion ?? "")].slice(0, MAX_DESCRIPCION).join(""));
+  if (frase) datos.descripcion = frase;
+  const [copia, mini] = await Promise.all([foto.copia.arrayBuffer(), foto.mini.arrayBuffer()]);
+  return cifrarAportacion(empaquetar(datos, new Uint8Array(copia), new Uint8Array(mini)), clavePublica, invitacionId);
+}
