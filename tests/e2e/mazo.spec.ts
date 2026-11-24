@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { PDFDict, PDFDocument, PDFName } from "pdf-lib";
-import { PRINT } from "../../config/print";
+import { PLIEGO_PNP_SORIANO, PRINT } from "../../config/print";
 import { leerZip } from "../../src/lib/pdf/zip";
 import catalogo from "../../supabase/catalogo.json";
 import { borrarSoloElMazo, cambiarMazo, conFecha, conMesSugerido, fotos, fotosGuardadas, guardado, leerMazo, literal, ponerAnioALasSinFecha, sinFechaAlSubir } from "./mazo-utiles";
@@ -188,16 +188,22 @@ test.describe("mazo de principio a fin", () => {
     expect(medidas(pdfPinbro.getPage(0).getMediaBox())).toEqual([ancho + 6, alto + 6]);
     expect(pinbro.bytes.length / (2 * piezas)).toBeLessThan(3_000_000);
 
-    // Soriano: 2 mm de sangrado y las marcas de corte en un margen alrededor.
-    const pdfSoriano = await PDFDocument.load((await descargar("Soriano", "PDF")).bytes);
-    expect(pdfSoriano.getPageCount()).toBe(2 * piezas);
-    const soriano = pdfSoriano.getPage(0);
-    expect(medidas(soriano.getTrimBox())).toEqual([ancho, alto]);
-    expect(medidas(soriano.getBleedBox())).toEqual([ancho + 4, alto + 4]);
-    expect(medidas(soriano.getMediaBox())).toEqual([ancho + 4 + 2 * PRINT.marcasCorte.margenMm, alto + 4 + 2 * PRINT.marcasCorte.margenMm]);
-    // Sin ninguna fuente: el rótulo de cada página va como imagen (una sin incrustar no pasa las comprobaciones de la imprenta).
-    const fuentes = pdfSoriano.context.enumerateIndirectObjects().filter(([, o]) => o instanceof PDFDict && o.get(PDFName.of("Type")) === PDFName.of("Font"));
-    expect(fuentes).toHaveLength(0);
+    // Soriano: hojas A4 montadas como las monta su programa (PNP Tool), con 3 × 3 cartas y cada hoja
+    // seguida de su trasera; el nombre lleva el código del trabajo, como el del programa.
+    const soriano = await descargar("Soriano", "PDF");
+    expect(soriano.nombre).toMatch(new RegExp(`^${base}-soriano-SO\\d{17}\\.pdf$`));
+    const pdfSoriano = await PDFDocument.load(soriano.bytes);
+    const { papel, columnas, filas } = PLIEGO_PNP_SORIANO;
+    expect(pdfSoriano.getPageCount()).toBe(2 * Math.ceil(piezas / (columnas * filas)));
+    expect(medidas(pdfSoriano.getPage(0).getMediaBox())).toEqual([papel.anchoMm, papel.altoMm]);
+    expect(medidas(pdfSoriano.getPage(0).getTrimBox())).toEqual([papel.anchoMm, papel.altoMm]);
+    // La única letra es la del programa, Helvetica (el número de hoja y el código del trabajo).
+    const fuentes = pdfSoriano.context
+      .enumerateIndirectObjects()
+      .map(([, o]) => o)
+      .filter((o): o is PDFDict => o instanceof PDFDict && o.get(PDFName.of("Type")) === PDFName.of("Font"))
+      .map((o) => String(o.get(PDFName.of("BaseFont"))));
+    expect(fuentes).toEqual(["/Helvetica"]);
 
     // AGR (Tipia): un ZIP con el PDF de las caras, el de los reversos en el mismo orden y una nota; 4 mm de sangrado.
     const agr = await descargar("AGR · Tipia", "ZIP");

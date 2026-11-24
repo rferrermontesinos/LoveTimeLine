@@ -91,16 +91,18 @@ fotos de la familia: llave privada (IndexedDB),        Supabase (Fráncfort): fu
 - **Un solo estilo de carta, «Naipe», con 6 paletas** (`styles/naipe/style.json` sobre la plantilla `styles/plantillas/naipe.json`). El cliente elige la paleta; el código no conoce estilos concretos y añadir uno es crear su JSON. La plantilla lleva los iconos de la esquina como rutas vectoriales, los mismos en la web y en la carta.
 - **Caras de carta:** recuerdo con foto, recuerdo sin foto (texto grande y la fecha detrás), portada, comodín, carta en blanco y caja (la de siempre o la personalizada). Sin franja de meses: se queda la pestaña de la esquina.
 - **Un solo renderizador** (`src/lib/carta/dibujar.ts`) para la vista previa, la línea temporal, la confirmación, el muestrario y el PDF.
-- **Archivos de impresión** (`src/lib/pdf/`): uno por imprenta, según su perfil en `config/print.ts` (`IMPRENTAS`). Las cartas se dibujan siempre con los 3 mm de sangrado del diseño; si la imprenta pide más, el borde se amplía en espejo, y si pide menos, se recorta. Todas las páginas llevan TrimBox (63 × 88 mm) y BleedBox, a 300 ppp. Orden: portada, recuerdos con y sin foto en orden cronológico, comodines y cartas en blanco (si están encendidos) y, solo con el extra, la caja personalizada.
+- **Archivos de impresión** (`src/lib/pdf/`): uno por imprenta, según su perfil en `config/print.ts` (`IMPRENTAS`). Las cartas se dibujan siempre con los 3 mm de sangrado del diseño; si la imprenta pide más, el borde se amplía en espejo, y si pide menos, se recorta. Las páginas de una carta llevan TrimBox (63 × 88 mm) y BleedBox, a 300 ppp. Orden: portada, recuerdos con y sin foto en orden cronológico, comodines y cartas en blanco (si están encendidos) y, solo con el extra, la caja personalizada.
 
   | Perfil | Sangrado | Marcas de corte | Páginas | Página |
   |---|---|---|---|---|
   | AGR · Tipia | 4 mm | No | Caras y reversos en dos PDF, dentro de un ZIP con un `LEEME.txt` que explica cómo casan | 71 × 96 mm |
   | Pinbro | 3 mm | No | Cada carta seguida de su reverso, un solo PDF; cada página por debajo de 3 MB | 69 × 94 mm |
-  | Soriano | 2 mm | Sí | Cada carta seguida de su reverso | 79 × 104 mm |
+  | Soriano | 1 mm | Las de PNP Tool | Hojas de 3 × 3 cartas, cada una seguida de su trasera (ver abajo) | A4 |
   | Otra imprenta | 3 mm | Sí | Cada carta seguida de su reverso | 81 × 106 mm |
 
-  Todas piden CMYK FOGRA39 y los archivos salen en RGB (sRGB): Pinbro lo convierte; a AGR y a Soriano hay que pedírselo al mandarlo. Convertir a CMYK en la web necesita una librería y un perfil ICC con licencia, y queda pendiente del visto bueno de Ricard.
+  **Soriano** monta las barajas con su programa, PNP Tool (nos lo dijo la imprenta el 24 de noviembre), y el archivo copia la hoja de su estilo «Copisteria Soriano › Carta Estandar» medida en el PDF que generó el programa con el mazo de prueba (`PLIEGO_PNP_SORIANO` en `config/print.ts`, montaje en `src/lib/pdf/pliego.ts`): A4 vertical con 3 × 3 cartas de 63,5 × 88,9 mm y 1 mm de sangrado, 2 mm entre cartas y centradas; líneas de corte de 1 pt del borde del papel a la rejilla, dianas en las cuatro esquinas, la tira de color arriba en la primera hoja, el código del trabajo (`SO` y la fecha y hora) abajo a la izquierda y en el nombre del archivo, y el número de hoja abajo en el centro («1», y «1B» en su trasera). Cada hoja va seguida de su trasera con las columnas al revés (doble cara por el lado largo). La carta de la hoja sale de la cara dibujada sin escalar: lo que mide de más (63,5 × 88,9 frente a 63 × 88) sale de los 3 mm de sangrado del diseño. Como en el PDF del programa, el número y el código van en Helvetica sin incrustar y el color en RGB; solo se dejan fuera los logotipos del programa y de la imprenta.
+
+  Todas piden CMYK FOGRA39 y los archivos salen en RGB (sRGB): Pinbro lo convierte y Soriano imprime el RGB de su programa; a AGR hay que pedírselo al mandarlo. Convertir a CMYK en la web necesita una librería y un perfil ICC con licencia, y queda pendiente del visto bueno de Ricard.
 - **Precio en el servidor:** el navegador solo manda qué quiere; `/api/checkout` valida la petición, recalcula con el catálogo del servidor y crea la sesión de Stripe (solo claves de test) o simula el pago.
 - **Idiomas:** `next-intl` con `es` y `en`; el idioma del mazo (meses, textos de las cartas, recuerdos sin foto sugeridos y folleto) es independiente del de la interfaz. Fechas siempre con `Intl.DateTimeFormat`.
 
@@ -203,7 +205,7 @@ Las fotos de la web y del muestrario son de Pexels (licencia libre, también com
 
 | Qué | Cómo | Estado |
 | --- | --- | --- |
-| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla, subida colaborativa: cifrado, paquetes, servicio y límites) | `pnpm test` (Vitest) | 797 pruebas en 56 archivos |
+| Lógica (fechas, escaneos, cartas listas, precios y ofertas, validación, recortes, mecánicas, reglas, plan de impresión, reductor, paletas, guardado, service worker, fotos de muestra, semilla, subida colaborativa: cifrado, paquetes, servicio y límites) | `pnpm test` (Vitest) | 806 pruebas en 57 archivos |
 | Configurador de principio a fin (empezar en Fotos con un pack, fechas solas y sugeridas de un toque con salto a la siguiente, la misma fecha a varias, fechas de preparar el mazo y fotos de fotos, Estilo y Pedido con cartas pendientes, «Siguiente» con la fecha en blanco, recuerdo sin foto desde las ideas, paleta, caja personalizada con y sin foto, oferta, pago simulado y cancelado, PDF), en escritorio y móvil | `tests/e2e/mazo.spec.ts` | 22 |
 | Pantallas que no pierden nada: pagar o empezar otro mazo mientras entran fotos, las mismas fotos dos veces, girar y deshacer, borrar todas con su «Deshacer», el foco, poner solo el año a muchas cartas con Intro, la dedicatoria que no cabe y el dispositivo sin espacio (abrir el mazo y pagar) | `tests/e2e/pantallas.spec.ts` | 20 |
 | Volver sin conexión y service worker tras un despliegue | `tests/e2e/sin-conexion.spec.ts` | 4 |

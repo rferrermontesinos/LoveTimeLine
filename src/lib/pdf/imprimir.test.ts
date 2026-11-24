@@ -28,15 +28,14 @@ describe("imprentas", () => {
     const por = Object.fromEntries(IMPRENTAS.map((p) => [p.id, p]));
     expect(por.agr).toMatchObject({ sangradoMm: 4, marcasCorte: false, paginas: "separadas" });
     expect(por.pinbro).toMatchObject({ sangradoMm: 3, marcasCorte: false, paginas: "intercaladas", maxBytesPagina: 3_000_000 });
-    expect(por.soriano).toMatchObject({ sangradoMm: 2, marcasCorte: true, paginas: "intercaladas" });
+    expect(por.soriano).toMatchObject({ sangradoMm: 1, marcasCorte: true, paginas: "pliegos" });
   });
 
-  it("la página es la carta con su sangrado y, con marcas, su margen", () => {
+  it("la página es la carta con su sangrado y, con marcas, su margen; si la imprenta monta hojas, el papel", () => {
     const por = Object.fromEntries(IMPRENTAS.map((p) => [p.id, paginaImprenta(p)]));
     expect(por.agr).toMatchObject({ ancho: 71, alto: 96, margen: 0 });
     expect(por.pinbro).toMatchObject({ ancho: 69, alto: 94, margen: 0 });
-    const m = PRINT.marcasCorte.margenMm;
-    expect(por.soriano).toMatchObject({ ancho: 67 + 2 * m, alto: 92 + 2 * m, margen: m, cara: { ancho: 67, alto: 92 } });
+    expect(por.soriano).toMatchObject({ ancho: 210, alto: 297, margen: 0, cara: { ancho: 65.5, alto: 90.9 } });
   });
 });
 
