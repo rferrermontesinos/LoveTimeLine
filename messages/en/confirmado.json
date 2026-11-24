@@ -22,7 +22,7 @@
     "comoJugar": "See how to play",
     "imprentas": "Printers",
     "otraImprenta": "Another printer",
-    "especificaciones": "{sangrado} mm bleed · {marcas, select, si {with crop marks} other {no crop marks}} · {paginas, select, separadas {fronts and backs in two PDFs, inside a ZIP} other {each card followed by its back}}",
+    "especificaciones": "{sangrado} mm bleed · {marcas, select, si {with crop marks} other {no crop marks}} · {paginas, select, separadas {fronts and backs in two PDFs, inside a ZIP} pliegos {{anchoPapel} × {altoPapel} mm sheets of {columnas} × {filas} cards of {anchoCorte} × {altoCorte} mm, each followed by its back, laid out as {programa} does} other {each card followed by its back}}",
     "descargar": "Download {archivo}",
     "descargarPara": "Download {archivo} for {imprenta}",
     "colorConvierten": "They ask for CMYK FOGRA39: the file is RGB and they convert it.",

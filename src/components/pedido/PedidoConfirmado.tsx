@@ -186,6 +186,13 @@ function Contenido({ catalogo, sessionId }: { catalogo: Catalogo; sessionId: str
                               sangrado: perfil.sangradoMm,
                               marcas: perfil.marcasCorte ? "si" : "no",
                               paginas: perfil.paginas,
+                              programa: perfil.pliego?.programa ?? "",
+                              columnas: perfil.pliego?.columnas ?? 0,
+                              filas: perfil.pliego?.filas ?? 0,
+                              anchoCorte: perfil.pliego?.corte.anchoMm ?? 0,
+                              altoCorte: perfil.pliego?.corte.altoMm ?? 0,
+                              anchoPapel: perfil.pliego?.papel.anchoMm ?? 0,
+                              altoPapel: perfil.pliego?.papel.altoMm ?? 0,
                             })}
                           </p>
                         </div>

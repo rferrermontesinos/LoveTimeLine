@@ -22,7 +22,7 @@
     "comoJugar": "Ver cómo se juega",
     "imprentas": "Imprentas",
     "otraImprenta": "Otra imprenta",
-    "especificaciones": "{sangrado} mm de sangrado · {marcas, select, si {con marcas de corte} other {sin marcas de corte}} · {paginas, select, separadas {caras y reversos en dos PDF, dentro de un ZIP} other {cada carta seguida de su reverso}}",
+    "especificaciones": "{sangrado} mm de sangrado · {marcas, select, si {con marcas de corte} other {sin marcas de corte}} · {paginas, select, separadas {caras y reversos en dos PDF, dentro de un ZIP} pliegos {hojas de {anchoPapel} × {altoPapel} mm con {columnas} × {filas} cartas de {anchoCorte} × {altoCorte} mm, cada una seguida de su trasera, como las monta {programa}} other {cada carta seguida de su reverso}}",
     "descargar": "Descargar {archivo}",
     "descargarPara": "Descargar {archivo} para {imprenta}",
     "colorConvierten": "Piden CMYK FOGRA39: el archivo va en RGB y lo convierten ellos.",

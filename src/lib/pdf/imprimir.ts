@@ -4,10 +4,11 @@
  * Cada cara es una página: la cara con sangrado rasterizada a 300 ppp (JPEG) y las cajas TrimBox y
  * BleedBox para la imprenta. Cada imprenta (config/print.ts, IMPRENTAS) pide su sangrado, sus marcas
  * de corte y su reparto: un PDF con cada carta seguida de su reverso o, en un ZIP, un PDF con las
- * caras y otro con los reversos. Las cartas van en el orden del plan (ver plan.ts): la caja solo si
- * es la personalizada.
+ * caras y otro con los reversos. Con pliegos (Soriano), las caras se recortan a la carta de la hoja
+ * y se montan como las monta su programa (ver pliego.ts). Las cartas van en el orden del plan (ver
+ * plan.ts): la caja solo si es la personalizada.
  */
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, type PDFImage } from "pdf-lib";
 import { BRAND_NAME } from "@config/brand";
 import { MM_POR_PULGADA, PRINT, paginaImprenta, type PerfilImprenta } from "@config/print";
 import { dibujarCara, medidasCara } from "@/lib/carta/dibujar";
@@ -16,6 +17,7 @@ import { textosCarta } from "@/lib/carta/textos";
 import type { DatosCarta } from "@/lib/carta/tipos";
 import { obtenerEstilo, obtenerPlantilla, obtenerPaleta, type Tono } from "@/lib/estilos";
 import { crearLienzo, type LienzoTrabajo } from "@/lib/importar/lienzo";
+import { codigoTrabajo, montarPliegos, recorteDesdeDiseno } from "./pliego";
 import { cartasImpresas, type CartaPlan } from "./plan";
 import { crearZip } from "./zip";
 
@@ -106,6 +108,15 @@ function ajustarBorde(origen: LienzoTrabajo, destino: LienzoTrabajo, cambio: num
   ctx.restore();
 }
 
+/** Copia el centro de `origen` en `destino`, quitando `x` píxeles a cada lado y `y` arriba y abajo. */
+function recortarCentro(origen: LienzoTrabajo, destino: LienzoTrabajo, x: number, y: number) {
+  const ctx = destino.ctx;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(origen.canvas, x, y, destino.canvas.width, destino.canvas.height, 0, 0, destino.canvas.width, destino.canvas.height);
+  ctx.restore();
+}
+
 /** La cara en JPEG; si la imprenta pone un límite por página, baja la calidad hasta que quepa. */
 async function aJpeg(l: LienzoTrabajo, maxBytes: number | null): Promise<Uint8Array> {
   // Margen para lo que la página añade al JPEG (cajas, marcas, texto).
@@ -146,7 +157,16 @@ export async function generarArchivoImpresion(e: EntradaPdf, perfil: PerfilImpre
   const ctx = lienzo.ctx as CanvasRenderingContext2D;
   const opciones = { plantilla, estilo, paleta, tono: e.tono, idioma: e.idiomaMazo, textos, conSangrado: true, pxPorMm };
   const ajuste = ajusteSangrado({ anchoPx, altoPx, pxPorMm, disenoMm: PRINT.sangradoMm, imprentaMm: perfil.sangradoMm });
-  const salida = ajuste.cambioPx === 0 ? lienzo : crearLienzo(ajuste.anchoPx, ajuste.altoPx);
+  // Con pliegos, cada cara se recorta a la carta de la hoja (su corte y su sangrado), sin escalar.
+  const hoja = perfil.pliego;
+  const recorte = hoja ? recorteDesdeDiseno(hoja) : null;
+  const recortePx = recorte ? { x: Math.round(recorte.xMm * pxPorMm), y: Math.round(recorte.yMm * pxPorMm) } : null;
+  const salida = recortePx
+    ? crearLienzo(anchoPx - 2 * recortePx.x, altoPx - 2 * recortePx.y)
+    : ajuste.cambioPx === 0
+      ? lienzo
+      : crearLienzo(ajuste.anchoPx, ajuste.altoPx);
+  const enHoja: Record<"anverso" | "reverso", PDFImage[]> = { anverso: [], reverso: [] };
 
   const titulo = e.titulo || BRAND_NAME;
   const base = baseArchivo(e.titulo, cartasImpresas(e.plan));
@@ -175,19 +195,25 @@ export async function generarArchivoImpresion(e: EntradaPdf, perfil: PerfilImpre
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, anchoPx, altoPx);
         ctx.restore();
-        if (salida !== lienzo) ajustarBorde(lienzo, salida, ajuste.cambioPx);
+        if (recortePx) recortarCentro(lienzo, salida, recortePx.x, recortePx.y);
+        else if (salida !== lienzo) ajustarBorde(lienzo, salida, ajuste.cambioPx);
 
         const destino = cara === "anverso" ? caras : reversos;
         const imagen = await destino.pdf.embedJpg(await aJpeg(salida, perfil.maxBytesPagina));
-        const p = destino.pdf.addPage([pt(pagina.ancho), pt(pagina.alto)]);
-        const m = pagina.margen;
-        const s = perfil.sangradoMm;
-        p.drawImage(imagen, { x: pt(m), y: pt(m), width: pt(pagina.cara.ancho), height: pt(pagina.cara.alto) });
-        p.setBleedBox(pt(m), pt(m), pt(pagina.cara.ancho), pt(pagina.cara.alto));
-        p.setTrimBox(pt(m + s), pt(m + s), pt(PRINT.carta.anchoMm), pt(PRINT.carta.altoMm));
-        if (perfil.marcasCorte) {
-          await rotuloPagina(destino.pdf, p, m + s, `${indice + 1}/${e.plan.length} ${carta.clave.slice(0, 24)} ${cara === "anverso" ? "A" : "B"}`);
-          marcasDeCorte(p, m + s, s);
+        if (hoja) {
+          // Las hojas se montan al final, con todas las caras.
+          enHoja[cara].push(imagen);
+        } else {
+          const p = destino.pdf.addPage([pt(pagina.ancho), pt(pagina.alto)]);
+          const m = pagina.margen;
+          const s = perfil.sangradoMm;
+          p.drawImage(imagen, { x: pt(m), y: pt(m), width: pt(pagina.cara.ancho), height: pt(pagina.cara.alto) });
+          p.setBleedBox(pt(m), pt(m), pt(pagina.cara.ancho), pt(pagina.cara.alto));
+          p.setTrimBox(pt(m + s), pt(m + s), pt(PRINT.carta.anchoMm), pt(PRINT.carta.altoMm));
+          if (perfil.marcasCorte) {
+            await rotuloPagina(destino.pdf, p, m + s, `${indice + 1}/${e.plan.length} ${carta.clave.slice(0, 24)} ${cara === "anverso" ? "A" : "B"}`);
+            marcasDeCorte(p, m + s, s);
+          }
         }
         hechas += 1;
         e.alProgresar?.(hechas, total);
@@ -197,6 +223,13 @@ export async function generarArchivoImpresion(e: EntradaPdf, perfil: PerfilImpre
     } finally {
       foto?.cerrar?.();
     }
+  }
+
+  if (hoja) {
+    // Como el programa: el código del trabajo en cada hoja y en el nombre del archivo.
+    const codigo = codigoTrabajo(hoja.codigo.prefijo, new Date());
+    await montarPliegos(caras.pdf, hoja, enHoja.anverso, enHoja.reverso, codigo);
+    return { nombre: `${base}-${perfil.id}-${codigo}.pdf`, bytes: await caras.pdf.save(), tipo: "application/pdf" };
   }
 
   const sufijo = `${PRINT.carta.anchoMm}x${PRINT.carta.altoMm}-${perfil.id}`;
